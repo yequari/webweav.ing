@@ -1,14 +1,23 @@
 package main
 
 import (
-    "net/http"
-    "path/filepath"
-    "text/template"
-    "time"
+	"net/http"
+	"path/filepath"
+	"text/template"
+	"time"
+
+	"git.32bit.cafe/32bitcafe/guestbook/internal/models"
 )
 
 type templateData struct {
     CurrentYear int
+    User models.User
+    Users []models.User
+    Guestbook models.Guestbook
+    Guestbooks []models.Guestbook
+    Comment models.GuestbookComment
+    Comments []models.GuestbookComment
+    Flash string
 }
 
 func humanDate(t time.Time) string {
@@ -17,6 +26,8 @@ func humanDate(t time.Time) string {
 
 var functions = template.FuncMap {
     "humanDate": humanDate,
+    "encodeId": encodeIdB64,
+    "decodeId": decodeIdB64,
 }
 
 func newTemplateCache() (map[string]*template.Template, error) {
@@ -44,8 +55,9 @@ func newTemplateCache() (map[string]*template.Template, error) {
     return cache, nil
 }
 
-func (app *application) newTemplateData(r *http.Request) *templateData {
-    return &templateData {
+func (app *application) newTemplateData(r *http.Request) templateData {
+    return templateData {
         CurrentYear: time.Now().Year(),
+        Flash: app.sessionManager.PopString(r.Context(), "flash"),
     }
 }

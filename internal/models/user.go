@@ -1,9 +1,10 @@
 package models
 
 import (
-	"database/sql"
+    "database/sql"
+    "errors"
 
-	"github.com/google/uuid"
+    "github.com/google/uuid"
 )
 
 type User struct {
@@ -34,7 +35,28 @@ func (m *UserModel) Get(id uuid.UUID) (User, error) {
     var u User
     err := row.Scan(&u.ID, &u.Username, &u.Email, &u.IsDeleted)
     if err != nil {
+	if errors.Is(err, sql.ErrNoRows) {
+	    return User{}, ErrNoRecord
+	}
 	return User{}, err
     }
     return u, nil
+}
+
+func (m *UserModel) GetAll() ([]User, error) {
+    stmt := `SELECT Id, Username, Email, IsDeleted FROM users`
+    rows, err := m.DB.Query(stmt)
+    var users []User
+    for rows.Next() {
+	var u User
+	err = rows.Scan(&u.ID, &u.Username, &u.Email, &u.IsDeleted)
+	if err != nil {
+	    return nil, err
+	}
+	users = append(users, u)
+    }
+    if err = rows.Err(); err != nil {
+	return nil, err
+    }
+    return users, nil
 }

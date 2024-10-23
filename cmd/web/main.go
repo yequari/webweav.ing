@@ -7,9 +7,13 @@ import (
 	"net/http"
 	"os"
 	"text/template"
+	"time"
 
 	"git.32bit.cafe/32bitcafe/guestbook/internal/models"
-	_ "modernc.org/sqlite"
+	"github.com/alexedwards/scs/sqlite3store"
+	"github.com/alexedwards/scs/v2"
+	"github.com/google/uuid"
+	_ "github.com/mattn/go-sqlite3"
 )
 
 type application struct {
@@ -18,6 +22,7 @@ type application struct {
     guestbooks *models.GuestbookModel
     users *models.UserModel
     guestbookComments *models.GuestbookCommentModel
+    sessionManager *scs.SessionManager
 }
 
 func main() {
@@ -25,7 +30,7 @@ func main() {
     dsn := flag.String("dsn", "guestbook.db", "data source name")
     flag.Parse()
 
-    logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
+    logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug}))
 
     db, err := openDB(*dsn)
     if err != nil {
@@ -40,15 +45,20 @@ func main() {
         os.Exit(1)
     }
 
+    sessionManager := scs.New()
+    sessionManager.Store = sqlite3store.New(db)
+    sessionManager.Lifetime = 12 * time.Hour
+
     app := &application{
         templateCache: templateCache,
         logger: logger,
+        sessionManager: sessionManager,
         guestbooks: &models.GuestbookModel{DB: db},
         users: &models.UserModel{DB: db},
         guestbookComments: &models.GuestbookCommentModel{DB: db},
     }
 
-    logger.Info("Starting server on %s", slog.Any("addr", ":4000"))
+    logger.Info("Starting server", slog.Any("addr", *addr))
 
     err = http.ListenAndServe(*addr, app.routes());
     logger.Error(err.Error())
@@ -56,7 +66,7 @@ func main() {
 }
 
 func openDB(dsn string) (*sql.DB, error) {
-    db, err := sql.Open("sqlite", dsn)
+    db, err := sql.Open("sqlite3", dsn)
     if err != nil {
         return nil, err
     }
@@ -64,4 +74,9 @@ func openDB(dsn string) (*sql.DB, error) {
         return nil, err
     }
     return db, nil
+}
+
+func getUserId() uuid.UUID {
+    userId, _ := decodeIdB64("laINnbnkTtyN5SYoCfSbXw")
+    return userId
 }

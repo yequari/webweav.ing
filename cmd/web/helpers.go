@@ -1,8 +1,11 @@
 package main
 
 import (
-    "net/http"
-    "fmt"
+	"encoding/base64"
+	"fmt"
+	"net/http"
+
+	"github.com/google/uuid"
 )
 
 func (app *application) serverError(w http.ResponseWriter, r *http.Request, err error) {
@@ -32,4 +35,26 @@ func (app *application) render(w http.ResponseWriter, r *http.Request, status in
     if err != nil {
         app.serverError(w, r, err)
     }
+}
+
+func encodeIdB64 (id uuid.UUID) (string, error) {
+    b, err := id.MarshalBinary()
+    if err != nil {
+        return "", err
+    }
+    s := base64.RawURLEncoding.EncodeToString(b)
+    return s, nil
+}
+
+func decodeIdB64 (id string) (uuid.UUID, error) {
+    b, err := base64.RawURLEncoding.DecodeString(id)
+    var u uuid.UUID
+    if err != nil {
+        return u, err
+    }
+    err = u.UnmarshalBinary(b)
+    if err != nil {
+        return u, err
+    }
+    return u, nil
 }

@@ -49,5 +49,24 @@ func (m *GuestbookCommentModel) Get(id uuid.UUID) (GuestbookComment, error) {
     return c, nil
 }
 
-func (m *GuestbookCommentModel) GetAll(guestbookId *uuid.UUID) {
+func (m *GuestbookCommentModel) GetAll(guestbookId uuid.UUID) ([]GuestbookComment, error) {
+    stmt := `SELECT Id, GuestbookId, ParentId, AuthorName, AuthorEmail, AuthorSite,
+    CommentText, PageUrl, IsPublished, IsDeleted FROM guestbook_comments WHERE GuestbookId = ?`
+    rows, err := m.DB.Query(stmt, guestbookId)
+    if err != nil {
+	return nil, err
+    }
+    var comments []GuestbookComment
+    for rows.Next() {
+	var c GuestbookComment
+	err = rows.Scan(&c.ID, &c.GuestbookId, &c.ParentId, &c.AuthorName, &c.AuthorEmail, &c.AuthorSite, &c.CommentText, &c.PageUrl, &c.IsPublished, &c.IsDeleted)
+	if err != nil {
+	    return nil, err
+	}
+	comments = append(comments, c)
+    }
+    if err = rows.Err(); err != nil {
+	return nil, err
+    }
+    return comments, nil
 }

@@ -1,0 +1,8 @@
+{{ define "title" }}Create a Guestbook{{ end }}
+{{ define "main" }}
+<form action="/guestbooks/create" method="post">
+    <label for="siteurl">Site URL: </label>
+    <input type="text" name="siteurl" id="siteurl" required />
+    <input type="submit" />
+</form>
+{{ end }}

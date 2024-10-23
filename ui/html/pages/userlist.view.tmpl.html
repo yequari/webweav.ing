@@ -1,0 +1,9 @@
+{{ define "title" }}Users{{ end }}
+{{ define "main" }}
+    <h1>Users</h1>
+    {{ range .Users }}
+        <p>
+        <a href="/users/{{ encodeId .ID }}">{{ .Username }}</a>
+        </p>
+    {{ end }}
+{{ end }}

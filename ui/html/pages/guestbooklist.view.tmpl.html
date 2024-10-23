@@ -1,0 +1,11 @@
+{{ define "title" }} Guestbooks  {{ end }}
+{{ define "main" }}
+<h1>Guestbooks run by ---</h1>
+<ul>
+    {{ range .Guestbooks }}
+    <li><a href="/guestbooks/{{ encodeId .ID }}">{{ with .SiteUrl }}{{ . }}{{ else }}Untitled{{ end }}</a></li>
+    {{ else }}
+    <p>No Guestbooks yet</p>
+    {{ end }}
+</ul>
+{{ end }}

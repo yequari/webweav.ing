@@ -1,0 +1,12 @@
+{{ define "title" }} Guestbook View {{ end }}
+{{ define "main" }}
+<h1>Guestbook for {{ .Guestbook.SiteUrl }}</h1>
+<a href="/guestbooks/{{ encodeId .Guestbook.ID }}/comments/create">New Comment</a>
+<ul>
+{{ range .Comments }}
+<li> {{ .CommentText }} </li>
+{{ else }}
+</ul>
+<p>No comments yet!</p>
+{{ end }}
+{{ end }}

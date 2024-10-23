@@ -1,0 +1,14 @@
+{{ define "title" }}New Comment{{ end }}
+{{ define "main" }}
+<form action="/guestbooks/{{ encodeId .Guestbook.ID }}/comments/create" method="post">
+    <label for="authorname">Name: </label>
+    <input type="text" name="authorname" id="authorname" >
+    <label for="authoremail">Email: </label>
+    <input type="text" name="authoremail" id="authoremail" >
+    <label for="authorsite">Site Url: </label>
+    <input type="text" name="authortext" id="authortext" >
+    <label for="content">Comment: </label>
+    <textarea name="content" id="content"></textarea>
+    <input type="submit" value="Post">
+</form>
+{{ end }}

@@ -1,0 +1,10 @@
+{{ define "title" }}User Registration{{ end }}
+{{ define "main" }}
+<form action="/users/register" method="post">
+    <label for="username">Username: </label>
+    <input type="text" name="username" id="username" required />
+    <label for="email">Email: </label>
+    <input type="text" name="email" id="email" required />
+    <input type="submit" />
+</form>
+{{ end }}

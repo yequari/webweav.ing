@@ -1,11 +1,14 @@
 package main
 
 import (
-	"encoding/base64"
+	"errors"
 	"fmt"
+	"math"
 	"net/http"
+	"strconv"
+	"time"
 
-	"github.com/google/uuid"
+	"github.com/gorilla/schema"
 )
 
 func (app *application) serverError(w http.ResponseWriter, r *http.Request, err error) {
@@ -37,24 +40,60 @@ func (app *application) render(w http.ResponseWriter, r *http.Request, status in
     }
 }
 
-func encodeIdB64 (id uuid.UUID) (string, error) {
-    b, err := id.MarshalBinary()
-    if err != nil {
-        return "", err
+func (app *application) nextSequence () uint16 {
+    val := app.sequence
+    if app.sequence == math.MaxUint16 {
+        app.sequence = 0
+    } else {
+        app.sequence += 1
     }
-    s := base64.RawURLEncoding.EncodeToString(b)
-    return s, nil
+    return val
 }
 
-func decodeIdB64 (id string) (uuid.UUID, error) {
-    b, err := base64.RawURLEncoding.DecodeString(id)
-    var u uuid.UUID
+func (app *application) createShortId () uint64 {
+    now := time.Now().UTC()
+    epoch, err := time.Parse(time.RFC822Z, "01 Jan 20 00:00 -0000")
     if err != nil {
-        return u, err
+        fmt.Println(err)
+        return 0
     }
-    err = u.UnmarshalBinary(b)
+    d := now.Sub(epoch)
+    ms := d.Milliseconds()
+    seq := app.nextSequence()
+    return (uint64(ms) & 0x0FFFFFFFFFFFFFFF) | (uint64(seq) << 48)
+}
+
+func shortIdToSlug(id uint64) string {
+    slug := strconv.FormatUint(id, 36)
+    return slug
+}
+
+func slugToShortId(slug string) uint64 {
+    id, _ := strconv.ParseUint(slug, 36, 64)
+    return id
+}
+
+func (app *application) decodePostForm(r *http.Request, dst any) error {
+    err := r.ParseForm()
     if err != nil {
-        return u, err
+        return err
     }
-    return u, nil
+
+    err = app.formDecoder.Decode(dst, r.PostForm)
+    if err != nil {
+        var multiErrors *schema.MultiError
+        if !errors.As(err, &multiErrors) {
+            panic(err)
+        }
+        return err
+    }
+    return nil
+}
+
+func (app *application) isAuthenticated(r *http.Request) bool {
+    isAuthenticated, ok := r.Context().Value(isAuthenticatedContextKey).(bool)
+    if !ok {
+        return false
+    }
+    return isAuthenticated
 }

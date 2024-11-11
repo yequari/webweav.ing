@@ -2,14 +2,15 @@ package models
 
 import (
 	"database/sql"
-
-	"github.com/google/uuid"
+	"time"
 )
 
 type Guestbook struct {
-    ID uuid.UUID
+    ID int64
+    ShortId uint64
     SiteUrl string
-    UserId uuid.UUID
+    UserId int64
+    Created time.Time
     IsDeleted bool
     IsActive bool
 }
@@ -18,23 +19,26 @@ type GuestbookModel struct {
     DB *sql.DB
 }
 
-func (m *GuestbookModel) Insert(siteUrl string, userId uuid.UUID) (uuid.UUID, error) {
-    id := uuid.New()
-    stmt := `INSERT INTO guestbooks (Id, SiteUrl, UserId, IsDeleted, IsActive)
-    VALUES(?, ?, ?, FALSE, TRUE)`
-    _, err := m.DB.Exec(stmt, id, siteUrl, userId)
+func (m *GuestbookModel) Insert(shortId uint64, siteUrl string, userId int64) (int64, error) {
+    stmt := `INSERT INTO guestbooks (ShortId, SiteUrl, UserId, Created, IsDeleted, IsActive)
+    VALUES(?, ?, ?, ?, FALSE, TRUE)`
+    result, err := m.DB.Exec(stmt, shortId, siteUrl, userId, time.Now().UTC())
     if err != nil {
-        return uuid.UUID{}, err
+        return -1, err
+    }
+    id, err := result.LastInsertId()
+    if err != nil {
+        return -1, err
     }
     return id, nil
 }
 
-func (m *GuestbookModel) Get(id uuid.UUID) (Guestbook, error) {
-    stmt := `SELECT Id, SiteUrl, UserId, IsDeleted, IsActive FROM guestbooks
-    WHERE id = ?`
-    row := m.DB.QueryRow(stmt, id)
+func (m *GuestbookModel) Get(shortId uint64) (Guestbook, error) {
+    stmt := `SELECT Id, ShortId, SiteUrl, UserId, Created, IsDeleted, IsActive FROM guestbooks
+    WHERE ShortId = ?`
+    row := m.DB.QueryRow(stmt, shortId)
     var g Guestbook
-    err := row.Scan(&g.ID, &g.SiteUrl, &g.UserId, &g.IsDeleted, &g.IsActive)
+    err := row.Scan(&g.ID, &g.ShortId, &g.SiteUrl, &g.UserId, &g.Created, &g.IsDeleted, &g.IsActive)
     if err != nil {
         return Guestbook{}, err
     }
@@ -42,8 +46,8 @@ func (m *GuestbookModel) Get(id uuid.UUID) (Guestbook, error) {
     return g, nil
 }
 
-func (m *GuestbookModel) GetAll(userId uuid.UUID) ([]Guestbook, error) {
-    stmt := `SELECT Id, SiteUrl, UserId, IsDeleted, IsActive FROM guestbooks
+func (m *GuestbookModel) GetAll(userId int64) ([]Guestbook, error) {
+    stmt := `SELECT Id, ShortId, SiteUrl, UserId, Created, IsDeleted, IsActive FROM guestbooks
     WHERE UserId = ?`
     rows, err := m.DB.Query(stmt, userId)
     if err != nil {
@@ -52,7 +56,7 @@ func (m *GuestbookModel) GetAll(userId uuid.UUID) ([]Guestbook, error) {
     var guestbooks []Guestbook
     for rows.Next() {
         var g Guestbook
-        err = rows.Scan(&g.ID, &g.SiteUrl, &g.UserId, &g.IsDeleted, &g.IsActive)
+        err = rows.Scan(&g.ID, &g.ShortId, &g.SiteUrl, &g.UserId, &g.Created, &g.IsDeleted, &g.IsActive)
         if err != nil {
             return nil, err
         }

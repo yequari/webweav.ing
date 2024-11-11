@@ -1,6 +1,7 @@
 package main
 
 import (
+	"crypto/tls"
 	"database/sql"
 	"flag"
 	"log/slog"
@@ -12,17 +13,19 @@ import (
 	"git.32bit.cafe/32bitcafe/guestbook/internal/models"
 	"github.com/alexedwards/scs/sqlite3store"
 	"github.com/alexedwards/scs/v2"
-	"github.com/google/uuid"
+	"github.com/gorilla/schema"
 	_ "github.com/mattn/go-sqlite3"
 )
 
 type application struct {
+    sequence uint16
     logger *slog.Logger
     templateCache map[string]*template.Template
     guestbooks *models.GuestbookModel
     users *models.UserModel
     guestbookComments *models.GuestbookCommentModel
     sessionManager *scs.SessionManager
+    formDecoder *schema.Decoder
 }
 
 func main() {
@@ -49,18 +52,37 @@ func main() {
     sessionManager.Store = sqlite3store.New(db)
     sessionManager.Lifetime = 12 * time.Hour
 
+    formDecoder := schema.NewDecoder()
+    formDecoder.IgnoreUnknownKeys(true)
+
     app := &application{
+        sequence: 0,
         templateCache: templateCache,
         logger: logger,
         sessionManager: sessionManager,
         guestbooks: &models.GuestbookModel{DB: db},
         users: &models.UserModel{DB: db},
         guestbookComments: &models.GuestbookCommentModel{DB: db},
+        formDecoder: formDecoder,
+    }
+
+    tlsConfig := &tls.Config{
+        CurvePreferences: []tls.CurveID{tls.X25519, tls.CurveP256},
+    }
+
+    srv := &http.Server {
+        Addr: *addr,
+        Handler: app.routes(),
+        ErrorLog: slog.NewLogLogger(logger.Handler(), slog.LevelError),
+        TLSConfig: tlsConfig,
+        IdleTimeout: time.Minute,
+        ReadTimeout: 5 * time.Second,
+        WriteTimeout: 10 * time.Second,
     }
 
     logger.Info("Starting server", slog.Any("addr", *addr))
 
-    err = http.ListenAndServe(*addr, app.routes());
+    err = srv.ListenAndServeTLS("./tls/cert.pem", "./tls/key.pem")
     logger.Error(err.Error())
     os.Exit(1)
 }
@@ -76,7 +98,6 @@ func openDB(dsn string) (*sql.DB, error) {
     return db, nil
 }
 
-func getUserId() uuid.UUID {
-    userId, _ := decodeIdB64("laINnbnkTtyN5SYoCfSbXw")
-    return userId
+func getUserId() int64 {
+    return 1
 }

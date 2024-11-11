@@ -1,10 +1,30 @@
 {{ define "title" }}User Registration{{ end }}
 {{ define "main" }}
 <form action="/users/register" method="post">
-    <label for="username">Username: </label>
-    <input type="text" name="username" id="username" required />
-    <label for="email">Email: </label>
-    <input type="text" name="email" id="email" required />
-    <input type="submit" />
+    <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+    <div>
+        <label for="username">Username: </label>
+        {{ with .Form.FieldErrors.name }}
+            <label class="error">{{.}}</label>
+        {{ end }}
+        <input type="text" name="username" id="username" value="{{ .Form.Name }}" required />
+    </div>
+    <div>
+        <label for="email">Email: </label>
+        {{ with .Form.FieldErrors.email }}
+            <label class="error">{{.}}</label>
+        {{ end }}
+        <input type="text" name="email" id="email" value="{{ .Form.Email }}" required />
+    </div>
+    <div>
+        <label for="password">Password: </label>
+        {{ with .Form.FieldErrors.password }}
+            <label class="error">{{.}}</label>
+        {{ end }}
+        <input type="password" name="password" id="password" />
+    </div>
+    <div>
+        <input type="submit" value="Register"/>
+    </div> 
 </form>
 {{ end }}

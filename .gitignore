@@ -27,3 +27,4 @@ go.work
 # air config
 .air.toml
 /tmp
+tls/

@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"git.32bit.cafe/32bitcafe/guestbook/internal/models"
+	"github.com/justinas/nosurf"
 )
 
 type templateData struct {
@@ -18,6 +19,9 @@ type templateData struct {
     Comment models.GuestbookComment
     Comments []models.GuestbookComment
     Flash string
+    Form any
+    IsAuthenticated bool
+    CSRFToken string
 }
 
 func humanDate(t time.Time) string {
@@ -26,8 +30,8 @@ func humanDate(t time.Time) string {
 
 var functions = template.FuncMap {
     "humanDate": humanDate,
-    "encodeId": encodeIdB64,
-    "decodeId": decodeIdB64,
+    "shortIdToSlug": shortIdToSlug,
+    "slugToShortId": slugToShortId,
 }
 
 func newTemplateCache() (map[string]*template.Template, error) {
@@ -59,5 +63,7 @@ func (app *application) newTemplateData(r *http.Request) templateData {
     return templateData {
         CurrentYear: time.Now().Year(),
         Flash: app.sessionManager.PopString(r.Context(), "flash"),
+        IsAuthenticated: app.isAuthenticated(r),
+        CSRFToken: nosurf.Token(r),
     }
 }

@@ -3,7 +3,7 @@
     <h1>Users</h1>
     {{ range .Users }}
         <p>
-        <a href="/users/{{ encodeId .ID }}">{{ .Username }}</a>
+        <a href="/users/{{ shortIdToSlug .ShortId }}">{{ .Username }}</a>
         </p>
     {{ end }}
 {{ end }}

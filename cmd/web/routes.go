@@ -1,25 +1,38 @@
 package main
 
 import (
-    "net/http"
+	"net/http"
+
+	"github.com/justinas/alice"
 )
 
 func (app *application) routes() http.Handler {
     mux := http.NewServeMux()
     fileServer := http.FileServer(http.Dir("./ui/static"))
     mux.Handle("GET /static/", http.StripPrefix("/static", fileServer))
+    
+    dynamic := alice.New(app.sessionManager.LoadAndSave, noSurf, app.authenticate)
 
-    mux.Handle("/{$}", app.sessionManager.LoadAndSave(http.HandlerFunc(app.home)))
-    mux.Handle("GET /users", app.sessionManager.LoadAndSave(http.HandlerFunc(app.getUsersList)))
-    mux.Handle("GET /users/{id}", app.sessionManager.LoadAndSave(http.HandlerFunc(app.getUser)))
-    mux.Handle("GET /users/register", app.sessionManager.LoadAndSave(http.HandlerFunc(app.getUserRegister)))
-    mux.Handle("POST /users/register", app.sessionManager.LoadAndSave(http.HandlerFunc(app.postUserRegister)))
-    mux.Handle("GET /guestbooks", app.sessionManager.LoadAndSave(http.HandlerFunc(app.getGuestbookList)))
-    mux.Handle("GET /guestbooks/{id}", app.sessionManager.LoadAndSave(http.HandlerFunc(app.getGuestbook)))
-    mux.Handle("GET /guestbooks/create", app.sessionManager.LoadAndSave(http.HandlerFunc(app.getGuestbookCreate)))
-    mux.Handle("POST /guestbooks/create", app.sessionManager.LoadAndSave(http.HandlerFunc(app.postGuestbookCreate)))
-    mux.Handle("GET /guestbooks/{id}/comments/create", app.sessionManager.LoadAndSave(http.HandlerFunc(app.getGuestbookCommentCreate)))
-    mux.Handle("POST /guestbooks/{id}/comments/create", app.sessionManager.LoadAndSave(http.HandlerFunc(app.postGuestbookCommentCreate)))
-    return app.recoverPanic(app.logRequest(commonHeaders(mux)))
+    mux.Handle("/{$}", dynamic.ThenFunc(app.home))
+    mux.Handle("POST /guestbooks/{id}/comments/create", dynamic.ThenFunc(app.postGuestbookCommentCreate))
+    mux.Handle("GET /guestbooks/{id}", dynamic.ThenFunc(app.getGuestbook))
+    mux.Handle("GET /users/register", dynamic.ThenFunc(app.getUserRegister))
+    mux.Handle("POST /users/register", dynamic.ThenFunc(app.postUserRegister))
+    mux.Handle("GET /users/login", dynamic.ThenFunc(app.getUserLogin))
+    mux.Handle("POST /users/login", dynamic.ThenFunc(app.postUserLogin))
+
+    protected := dynamic.Append(app.requireAuthentication)
+
+    mux.Handle("GET /users", protected.ThenFunc(app.getUsersList))
+    mux.Handle("GET /users/{id}", protected.ThenFunc(app.getUser))
+    mux.Handle("POST /users/logout", protected.ThenFunc(app.postUserLogout))
+    mux.Handle("GET /guestbooks", protected.ThenFunc(app.getGuestbookList))
+    mux.Handle("GET /guestbooks/create", protected.ThenFunc(app.getGuestbookCreate))
+    mux.Handle("POST /guestbooks/create", protected.ThenFunc(app.postGuestbookCreate))
+    mux.Handle("GET /guestbooks/{id}/comments/create", protected.ThenFunc(app.getGuestbookCommentCreate))
+
+    standard := alice.New(app.recoverPanic, app.logRequest, commonHeaders)
+
+    return standard.Then(mux)
 }
 

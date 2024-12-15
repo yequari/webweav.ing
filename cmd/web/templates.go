@@ -22,6 +22,7 @@ type templateData struct {
     Form any
     IsAuthenticated bool
     CSRFToken string
+    CurrentUser *models.User
 }
 
 func humanDate(t time.Time) string {
@@ -32,6 +33,23 @@ var functions = template.FuncMap {
     "humanDate": humanDate,
     "shortIdToSlug": shortIdToSlug,
     "slugToShortId": slugToShortId,
+}
+
+func newHTMXTemplateCache() (map[string]*template.Template, error) {
+    cache := map[string]*template.Template{}
+    pages, err := filepath.Glob("./ui/html/htmx/*.part.html")
+    if err != nil {
+        return nil, err
+    }
+    for _, page := range pages {
+        name := filepath.Base(page)
+        ts, err := template.New(name).Funcs(functions).ParseFiles(page)
+        if err != nil {
+            return nil, err
+        }
+        cache[name] = ts
+    }
+    return cache, nil
 }
 
 func newTemplateCache() (map[string]*template.Template, error) {
@@ -65,5 +83,6 @@ func (app *application) newTemplateData(r *http.Request) templateData {
         Flash: app.sessionManager.PopString(r.Context(), "flash"),
         IsAuthenticated: app.isAuthenticated(r),
         CSRFToken: nosurf.Token(r),
+        CurrentUser: app.getCurrentUser(r),
     }
 }

@@ -21,6 +21,7 @@ type application struct {
     sequence uint16
     logger *slog.Logger
     templateCache map[string]*template.Template
+    templateCacheHTMX map[string]*template.Template
     guestbooks *models.GuestbookModel
     users *models.UserModel
     guestbookComments *models.GuestbookCommentModel
@@ -48,6 +49,12 @@ func main() {
         os.Exit(1)
     }
 
+    templateCacheHTMX, err := newHTMXTemplateCache()
+    if err != nil {
+        logger.Error(err.Error())
+        os.Exit(1)
+    }
+
     sessionManager := scs.New()
     sessionManager.Store = sqlite3store.New(db)
     sessionManager.Lifetime = 12 * time.Hour
@@ -58,6 +65,7 @@ func main() {
     app := &application{
         sequence: 0,
         templateCache: templateCache,
+        templateCacheHTMX: templateCacheHTMX,
         logger: logger,
         sessionManager: sessionManager,
         guestbooks: &models.GuestbookModel{DB: db},

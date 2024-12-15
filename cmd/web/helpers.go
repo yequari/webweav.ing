@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"time"
 
+	"git.32bit.cafe/32bitcafe/guestbook/internal/models"
 	"github.com/gorilla/schema"
 )
 
@@ -23,6 +24,21 @@ func (app *application) serverError(w http.ResponseWriter, r *http.Request, err 
 
 func (app *application) clientError(w http.ResponseWriter, status int) {
     http.Error(w, http.StatusText(status), status)
+}
+
+func (app *application) renderHTMX(w http.ResponseWriter, r *http.Request, status int, page string, data templateData) {
+    ts, ok := app.templateCacheHTMX[page]
+    if !ok {
+        err := fmt.Errorf("the template %s does not exist", page)
+        app.serverError(w, r, err)
+        return
+    }
+
+    w.WriteHeader(status)
+    err := ts.Execute(w, data)
+    if err != nil {
+        app.serverError(w, r, err)
+    }
 }
 
 func (app *application) render(w http.ResponseWriter, r *http.Request, status int, page string, data templateData) {
@@ -96,4 +112,15 @@ func (app *application) isAuthenticated(r *http.Request) bool {
         return false
     }
     return isAuthenticated
+}
+
+func (app *application) getCurrentUser(r *http.Request) *models.User {
+    if !app.isAuthenticated(r) {
+        return nil
+    }
+    user, ok := r.Context().Value(userNameContextKey).(models.User)
+    if !ok {
+        return nil
+    }
+    return &user
 }

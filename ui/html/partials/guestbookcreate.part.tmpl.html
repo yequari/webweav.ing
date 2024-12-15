@@ -1,0 +1,8 @@
+{{ define "guestbookcreate" }}
+<form action="/guestbooks/create" method="post">
+    <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+    <label for="siteurl">Site URL: </label>
+    <input type="text" name="siteurl" id="siteurl" required />
+    <input type="submit" />
+</form>
+{{ end }}

@@ -1,7 +1,10 @@
 {{ define "title" }} Guestbooks  {{ end }}
 {{ define "main" }}
 <h1>Guestbooks run by {{ .User.Username }}</h1>
-<ul>
+<div>
+    <button hx-get="/guestbooks/create" hx-target="closest div">New Guestbook</button>
+</div>
+<ul id="guestbooks" hx-get="/guestbooks" hx-trigger="newGuestbook from:body" hx-swap="outerHTML">
     {{ range .Guestbooks }}
     <li><a href="/guestbooks/{{ shortIdToSlug .ShortId }}">{{ with .SiteUrl }}{{ . }}{{ else }}Untitled{{ end }}</a></li>
     {{ else }}

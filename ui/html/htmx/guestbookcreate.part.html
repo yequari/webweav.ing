@@ -1,0 +1,6 @@
+<form hx-post="/guestbooks/create" hx-target="closest div">
+    <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+    <label for="siteurl">Site URL: </label>
+    <input type="text" name="siteurl" id="siteurl" required />
+    <button type="submit">Submit</button>
+</form>

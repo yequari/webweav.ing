@@ -161,10 +161,15 @@ func (app *application) getUser(w http.ResponseWriter, r *http.Request) {
 
 func (app *application) getGuestbookCreate(w http.ResponseWriter, r* http.Request) {
     data := app.newTemplateData(r)
+    if r.Header.Get("HX-Request") == "true" {
+        app.renderHTMX(w, r, http.StatusOK, "guestbookcreate.part.html", data)
+        return
+    }
     app.render(w, r, http.StatusOK, "guestbookcreate.view.tmpl.html", data)
 }
 
 func (app *application) postGuestbookCreate(w http.ResponseWriter, r* http.Request) {
+    userId := app.sessionManager.GetInt64(r.Context(), "authenticatedUserId")
     err := r.ParseForm()
     if err != nil {
         app.serverError(w, r, err)
@@ -172,23 +177,29 @@ func (app *application) postGuestbookCreate(w http.ResponseWriter, r* http.Reque
     }
     siteUrl := r.Form.Get("siteurl")
     shortId := app.createShortId()
-    _, err = app.guestbooks.Insert(shortId, siteUrl, 0)
+    _, err = app.guestbooks.Insert(shortId, siteUrl, userId)
     if err != nil {
         app.serverError(w, r, err)
         return
     }
     app.sessionManager.Put(r.Context(), "flash", "Guestbook successfully created!")
+    if r.Header.Get("HX-Request") == "true" {
+        w.Header().Add("HX-Trigger", "newGuestbook")
+        data := app.newTemplateData(r)
+        app.renderHTMX(w, r, http.StatusOK, "guestbookcreatebutton.part.html", data)
+        return
+    }
     http.Redirect(w, r, fmt.Sprintf("/guestbooks/%s", shortIdToSlug(shortId)), http.StatusSeeOther)
 }
 
 func (app *application) getGuestbookList(w http.ResponseWriter, r *http.Request) {
     userId := app.sessionManager.GetInt64(r.Context(), "authenticatedUserId")
-    guestbooks, err := app.guestbooks.GetAll(userId)
+    user, err := app.users.GetById(userId)
     if err != nil {
         app.serverError(w, r, err)
         return
     }
-    user, err := app.users.GetById(userId)
+    guestbooks, err := app.guestbooks.GetAll(userId)
     if err != nil {
         app.serverError(w, r, err)
         return
@@ -196,6 +207,10 @@ func (app *application) getGuestbookList(w http.ResponseWriter, r *http.Request)
     data := app.newTemplateData(r)
     data.Guestbooks = guestbooks
     data.User = user
+    if r.Header.Get("HX-Request") == "true" {
+        app.renderHTMX(w, r, http.StatusCreated, "guestbooklist.part.html", data)
+        return
+    }
     app.render(w, r, http.StatusOK, "guestbooklist.view.tmpl.html", data)
 }
 
@@ -311,4 +326,10 @@ func (app *application) postGuestbookCommentCreate(w http.ResponseWriter, r *htt
     }
     app.sessionManager.Put(r.Context(), "flash", "Comment successfully posted!")
     http.Redirect(w, r, fmt.Sprintf("/guestbooks/%s", guestbookSlug), http.StatusSeeOther)
+}
+
+func (app *application) deleteGuestbookComment(w http.ResponseWriter, r *http.Request) {
+    // slug := r.PathValue("id")
+    // shortId := slugToShortId(slug)
+    // app.guestbookComments.Delete(shortId)
 }

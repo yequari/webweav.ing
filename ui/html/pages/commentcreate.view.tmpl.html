@@ -1,6 +1,7 @@
 {{ define "title" }}New Comment{{ end }}
 {{ define "main" }}
 <form action="/guestbooks/{{ shortIdToSlug .Guestbook.ShortId }}/comments/create" method="post">
+    <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
     <div>
         <label for="authorname">Name: </label>
         {{ with .Form.FieldErrors.authorName }}

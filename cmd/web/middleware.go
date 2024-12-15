@@ -79,8 +79,14 @@ func (app *application) authenticate(next http.Handler) http.Handler {
             app.serverError(w, r, err)
             return
         }
+        user, err := app.users.GetById(id)
+        if err != nil {
+            app.serverError(w, r, err)
+            return
+        }
         if exists {
             ctx := context.WithValue(r.Context(), isAuthenticatedContextKey, true)
+            ctx = context.WithValue(ctx, userNameContextKey, user)
             r = r.WithContext(ctx)
         }
         next.ServeHTTP(w, r)

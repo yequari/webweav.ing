@@ -30,6 +30,8 @@ func (app *application) routes() http.Handler {
     mux.Handle("GET /guestbooks", protected.ThenFunc(app.getGuestbookList))
     mux.Handle("GET /guestbooks/create", protected.ThenFunc(app.getGuestbookCreate))
     mux.Handle("POST /guestbooks/create", protected.ThenFunc(app.postGuestbookCreate))
+    mux.Handle("GET /guestbooks/{id}/dashboard", protected.ThenFunc(app.getGuestbookDashboard))
+    mux.Handle("GET /guestbooks/{id}/dashboard/comments", protected.ThenFunc(app.getGuestbookComments))
     mux.Handle("GET /guestbooks/{id}/comments/create", protected.ThenFunc(app.getGuestbookCommentCreate))
 
 

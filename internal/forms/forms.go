@@ -15,3 +15,11 @@ type UserLoginForm struct {
     validator.Validator `schema:"-"`
 }
 
+type CommentCreateForm struct {
+    AuthorName  string  `schema:"authorname"`
+    AuthorEmail string  `schema:"authoremail"`
+    AuthorSite  string  `schema:"authorsite"`
+    Content     string  `schema:"content,required"`
+    validator.Validator `schema:"-"`
+}
+

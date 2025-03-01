@@ -192,7 +192,27 @@ func (app *application) getGuestbook(w http.ResponseWriter, r *http.Request) {
         return
     }
     data := app.newCommonData(r)
-    views.GuestbookView("Guestbook", data, guestbook, comments).Render(r.Context(), w)
+    views.GuestbookView("Guestbook", data, guestbook, comments, forms.CommentCreateForm{}).Render(r.Context(), w)
+}
+
+func (app *application) getGuestbookDashboard(w http.ResponseWriter, r *http.Request) {
+    slug := r.PathValue("id")
+    guestbook, err := app.guestbooks.Get(slugToShortId(slug))
+    if err != nil {
+        if errors.Is(err, models.ErrNoRecord) {
+            http.NotFound(w, r)
+        } else {
+            app.serverError(w, r, err)
+        }
+        return
+    }
+    comments, err := app.guestbookComments.GetAll(guestbook.ID)
+    if err != nil {
+        app.serverError(w, r, err)
+        return
+    }
+    data := app.newCommonData(r)
+    views.GuestbookDashboardView("Guestbook", data, guestbook, comments).Render(r.Context(), w)
 }
 
 func (app *application) getGuestbookComments(w http.ResponseWriter, r *http.Request) {
@@ -211,18 +231,8 @@ func (app *application) getGuestbookComments(w http.ResponseWriter, r *http.Requ
         app.serverError(w, r, err)
         return
     }
-    data := app.newTemplateData(r)
-    data.Guestbook = guestbook
-    data.Comments = comments
-    app.render(w, r, http.StatusOK, "commentlist.view.tmpl.html", data)
-}
-
-type commentCreateForm struct {
-    AuthorName  string  `schema:"authorname"`
-    AuthorEmail string  `schema:"authoremail"`
-    AuthorSite  string  `schema:"authorsite"`
-    Content     string  `schema:"content,required"`
-    validator.Validator `schema:"-"`
+    data := app.newCommonData(r)
+    views.GuestbookDashboardCommentsView("Comments", data, guestbook, comments).Render(r.Context(), w)
 }
 
 func (app *application) getGuestbookCommentCreate(w http.ResponseWriter, r *http.Request) {
@@ -239,7 +249,7 @@ func (app *application) getGuestbookCommentCreate(w http.ResponseWriter, r *http
     }
     data := app.newTemplateData(r)
     data.Guestbook = guestbook
-    data.Form = commentCreateForm{}
+    data.Form = forms.CommentCreateForm{}
     app.render(w, r, http.StatusOK, "commentcreate.view.tmpl.html", data)
 }
 
@@ -255,7 +265,7 @@ func (app *application) postGuestbookCommentCreate(w http.ResponseWriter, r *htt
         return
     }
 
-    var form commentCreateForm
+    var form forms.CommentCreateForm
     err = app.decodePostForm(r, &form)
     if err != nil {
         app.clientError(w, http.StatusBadRequest)

@@ -12,18 +12,44 @@ Untitled
 </form>
 <form action=\"/guestbooks/create\" method=\"post\">
 </form>
-<nav><div><h3>Messages</h3><ul><li><a href=\"
+<nav><div><a href=\"
+\" target=\"_blank\">View Guestbook</a><h3>Messages</h3><ul><li><a href=\"
+\">Dashboard</a></li><li><a href=\"
 \">Manage messages</a></li><li><a href=\"
 \">Review message queue</a></li><li><a href=\"
 \">Block users</a></li><li><a href=\"
 \">Trash</a></li></ul></div><div><h3>Design</h3><ul><li><a href=\"
 \">Themes</a></li><li><a href=\"
 \">Custom CSS</a></li></ul></div><div><h3>Account</h3><ul><li><a href=\"/users/settings\">Settings</a></li><li><a href=\"/users/privacy\">Privacy</a></li><li><a href=\"/help\">Help</a></li></ul></div></nav>
-<div id=\"main\">
+<div id=\"dashboard\">
 <div><h1>Guestbook for 
+</h1><p>Stats and stuff will go here</p></div></div>
+<div id=\"dashboard\">
+<div><h1>Comments on 
 </h1>
-<p><a href=\"
-\">New Comment</a></p>
+<p>No comments yet!</p>
+<div><strong>
+</strong> 
+<p>
+</p></div>
+</div></div>
+<form action=\"
+\" method=\"post\"><input type=\"hidden\" name=\"csrf_token\" value=\"
+\"><div><label for=\"authorname\">Name: </label>
+<label class=\"error\">
+</label> 
+<input type=\"text\" name=\"authorname\" id=\"authorname\"></div><div><label for=\"authoremail\">Email: </label>
+<label class=\"error\">
+</label> 
+<input type=\"text\" name=\"authoremail\" id=\"authoremail\"></div><div><label for=\"authorsite\">Site Url: </label>
+<label class=\"error\">
+</label> 
+<input type=\"text\" name=\"authorsite\" id=\"authorsite\"></div><div><label for=\"content\">Comment: </label>
+<label class=\"error\">
+</label> 
+<textarea name=\"content\" id=\"content\"></textarea></div><div><input type=\"submit\" value=\"Submit\"></div></form>
+<div id=\"main\"><div><h1>Guestbook for 
+</h1>
 <p>No comments yet!</p>
 <div><strong>
 </strong> 

@@ -2,6 +2,11 @@ package views
 
 import "fmt"
 import "git.32bit.cafe/32bitcafe/guestbook/internal/models"
+import "git.32bit.cafe/32bitcafe/guestbook/internal/forms"
+
+func gbUrl(gb models.Guestbook) string {
+    return fmt.Sprintf("/guestbooks/%s", gb.Slug())
+}
 
 templ gbCreateForm(csrf_token string) {
     <input type="hidden" name="csrf_token" value={ csrf_token }>
@@ -16,8 +21,7 @@ templ gbList(guestbooks []models.Guestbook) {
     } else {
         <ul id="guestbooks" hx-get="/guestbooks" hx-trigger="newGuestbook from:body" hx-swap="outerHTML">
             for _, gb := range guestbooks {
-                {{ gbUrl := fmt.Sprintf("/guestbooks/%s", gb.Slug()) }}
-                <li><a href={ templ.URL(gbUrl) }>
+                <li><a href={ templ.URL(gbUrl(gb) + "/dashboard") }>
                     if len(gb.SiteUrl) == 0 {
                         Untitled
                     } else {
@@ -59,22 +63,24 @@ templ GuestbookCreate(title string, data CommonData) {
 }
 
 templ sidebar(guestbook models.Guestbook) {
-    {{ gbUrl := fmt.Sprintf("/guestbooks/%s", guestbook.Slug()) }}
+    {{ dashUrl := gbUrl(guestbook) + "/dashboard" }}
     <nav>
         <div>
+            <a href={ templ.URL(gbUrl(guestbook)) } target="_blank">View Guestbook</a>
             <h3>Messages</h3>
             <ul>
-                <li><a href={ templ.URL(gbUrl + "/comments") }>Manage messages</a></li>
-                <li><a href={ templ.URL(gbUrl + "/comments/queue") }>Review message queue</a></li>
-                <li><a href={ templ.URL(gbUrl + "/blocklist") }>Block users</a></li>
-                <li><a href={ templ.URL(gbUrl + "/comments/trash") }>Trash</a></li>
+                <li><a href={ templ.URL(dashUrl) }>Dashboard</a></li>
+                <li><a href={ templ.URL(dashUrl + "/comments") }>Manage messages</a></li>
+                <li><a href={ templ.URL(dashUrl + "/comments/queue") }>Review message queue</a></li>
+                <li><a href={ templ.URL(dashUrl + "/blocklist") }>Block users</a></li>
+                <li><a href={ templ.URL(dashUrl + "/comments/trash") }>Trash</a></li>
             </ul>
         </div>
         <div>
             <h3>Design</h3>
             <ul>
-                <li><a href={ templ.URL(gbUrl + "/themes") }>Themes</a></li>
-                <li><a href={ templ.URL(gbUrl + "/customize") }>Custom CSS</a></li>
+                <li><a href={ templ.URL(dashUrl + "/themes") }>Themes</a></li>
+                <li><a href={ templ.URL(dashUrl + "/customize") }>Custom CSS</a></li>
             </ul>
         </div>
         <div>
@@ -88,16 +94,24 @@ templ sidebar(guestbook models.Guestbook) {
     </nav>
 }
 
-templ GuestbookView(title string, data CommonData, guestbook models.Guestbook, comments []models.GuestbookComment) {
+templ GuestbookDashboardView(title string, data CommonData, guestbook models.Guestbook, comments []models.GuestbookComment) {
     @base(title, data) {
-        <div id="main">
+        <div id="dashboard">
             @sidebar(guestbook)
             <div>
                 <h1>Guestbook for { guestbook.SiteUrl }</h1>
-                {{ commentCreateUrl := fmt.Sprintf("/guestbooks/%s/comments/create", guestbook.Slug()) }}
-                <p>
-                    <a href={ templ.URL(commentCreateUrl) }>New Comment</a>
-                </p>
+                <p>Stats and stuff will go here</p>
+            </div>
+        </div>
+    }
+}
+
+templ GuestbookDashboardCommentsView(title string, data CommonData, guestbook models.Guestbook, comments []models.GuestbookComment) {
+    @base(title, data) {
+        <div id="dashboard">
+            @sidebar(guestbook)
+            <div>
+                <h1>Comments on { guestbook.SiteUrl }</h1>
                 if len(comments) == 0 {
                     <p>No comments yet!</p>
                 }
@@ -113,4 +127,67 @@ templ GuestbookView(title string, data CommonData, guestbook models.Guestbook, c
             </div>
         </div>
     }
+}
+
+templ commentForm(data CommonData, gb models.Guestbook, form forms.CommentCreateForm) {
+    {{ postUrl := fmt.Sprintf("/guestbooks/%s/comments/create", gb.Slug()) }}
+    <form action={ templ.URL(postUrl) } method="post">
+        <input type="hidden" name="csrf_token" value={data.CSRFToken}>
+        <div>
+            <label for="authorname">Name: </label>
+            {{ error, exists := form.FieldErrors["authorName"] }}
+            if exists {
+                <label class="error">{ error }</label>
+            }
+            <input type="text" name="authorname" id="authorname" >
+        </div>
+        <div>
+            <label for="authoremail">Email: </label>
+            {{ error, exists = form.FieldErrors["authorEmail"] }}
+            if exists {
+                <label class="error">{ error }</label>
+            }
+            <input type="text" name="authoremail" id="authoremail" >
+        </div>
+        <div>
+            <label for="authorsite">Site Url: </label>
+            {{ error, exists = form.FieldErrors["authorSite"] }}
+            if exists {
+                <label class="error">{ error }</label>
+            }
+            <input type="text" name="authorsite" id="authorsite" >
+        </div>
+        <div>
+            <label for="content">Comment: </label>
+            {{ error, exists = form.FieldErrors["content"] }}
+            if exists {
+                <label class="error">{ error }</label>
+            }
+            <textarea name="content" id="content"></textarea>
+        </div>
+        <div>
+            <input type="submit" value="Submit">
+        </div>
+    </form>
+    }
+
+templ GuestbookView(title string, data CommonData, guestbook models.Guestbook, comments []models.GuestbookComment, form forms.CommentCreateForm) {
+        <div id="main">
+            <div>
+                <h1>Guestbook for { guestbook.SiteUrl }</h1>
+                @commentForm(data, guestbook, form)
+                if len(comments) == 0 {
+                    <p>No comments yet!</p>
+                }
+                for  _, c := range comments {
+                    <div>
+                        <strong>{ c.AuthorName }</strong>
+                        { c.Created.Format("01-02-2006 03:04PM") }
+                        <p>
+                            { c.CommentText }
+                        </p>
+                    </div>
+                }
+            </div>
+        </div>
 }

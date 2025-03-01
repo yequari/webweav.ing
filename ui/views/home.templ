@@ -1,0 +1,25 @@
+package views
+
+templ loggedInHome() {
+    <h2>Tools</h2>
+    <p>
+        <a href="/guestbooks">Guestbooks</a>
+    </p>
+}
+
+templ loggedOutHome() {
+    <h2>Welcome</h2>
+    <p>
+        Welcome to webweav.ing, a collection of webmastery tools created by the <a href="https://32bit.cafe">32-Bit Cafe</a>.
+    </p>
+}
+
+templ Home(title string, data CommonData) {
+    @base(title, data) {
+        if data.IsAuthenticated {
+            @loggedInHome()
+        } else {
+            @loggedOutHome()
+        }
+    }
+}

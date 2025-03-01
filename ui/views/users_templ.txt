@@ -1,0 +1,31 @@
+<h1>Login</h1><form action=\"/users/login\" method=\"POST\" novalidate><input type=\"hidden\" name=\"csrf_token\" value=\"
+\"> 
+<div class=\"error\">
+</div>
+<div><label>Email: </label>
+<label class=\"error\">
+</label> 
+<input type=\"email\" name=\"email\" value=\"
+\"></div><div><label>Password: </label>
+<label class=\"error\">
+</label> 
+<input type=\"password\" name=\"password\"></div><div><input type=\"submit\" value=\"login\"></div></form>
+<h1>User Registration</h1><form action=\"/users/register\" method=\"post\"><input type=\"hidden\" name=\"csrf_token\" value=\"
+\"><div>
+<label for=\"username\">Username: </label> 
+<label class=\"error\">
+</label> 
+<input type=\"text\" name=\"username\" id=\"username\" value=\"
+\" required></div><div>
+<label for=\"email\">Email: </label> 
+<label class=\"error\">
+</label> 
+<input type=\"text\" name=\"email\" id=\"email\" value=\"
+\" required></div><div>
+<label for=\"password\">Password: </label> 
+<label class=\"error\">
+</label> 
+<input type=\"password\" name=\"password\" id=\"password\"></div><div><input type=\"submit\" value=\"Register\"></div></form>
+<h1>
+</h1><p>
+</p>

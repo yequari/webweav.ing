@@ -2,6 +2,7 @@ package models
 
 import (
 	"database/sql"
+	"strconv"
 	"time"
 )
 
@@ -13,6 +14,10 @@ type Guestbook struct {
     Created time.Time
     IsDeleted bool
     IsActive bool
+}
+
+func (gb Guestbook) Slug() string {
+    return strconv.FormatUint(gb.ShortId, 36)
 }
 
 type GuestbookModel struct {

@@ -1,0 +1,83 @@
+package views
+
+import (
+	"git.32bit.cafe/32bitcafe/guestbook/internal/forms"
+	"git.32bit.cafe/32bitcafe/guestbook/internal/models"
+)
+
+templ UserLogin (title string, data CommonData, form forms.UserLoginForm) {
+    @base(title, data) {
+        <h1>Login</h1>
+        <form action="/users/login" method="POST" novalidate>
+            <input type="hidden" name="csrf_token" value={ data.CSRFToken }>
+            for _, error := range form.NonFieldErrors {
+                <div class="error">{ error }</div>
+            }
+            <div>
+                <label>Email: </label>
+                {{ error, exists := form.FieldErrors["email"] }}
+                if exists {
+                    <label class="error">{ error }</label>
+                }
+                <input type="email" name="email" value={form.Email}>
+            </div>
+            <div>
+                <label>Password: </label>
+                {{ error, exists = form.FieldErrors["password"] }}
+                if exists {
+                    <label class="error">{ error }</label>
+                }
+                <input type="password" name="password">
+            </div>
+            <div>
+                <input type="submit" value="login">
+            </div>
+        </form>
+    }
+}
+
+templ UserRegistration (title string, data CommonData, form forms.UserRegistrationForm) {
+    @base(title, data) {
+        <h1>User Registration</h1>
+        <form action="/users/register" method="post">
+            <input type="hidden" name="csrf_token" value={ data.CSRFToken }>
+            <div>
+                {{ error, exists := form.FieldErrors["name"] }}
+                <label for="username">Username: </label>
+                if exists {
+                    <label class="error">{ error }</label>
+                }
+                <input type="text" name="username" id="username" value={form.Name} required />
+            </div>
+            <div>
+                {{ error, exists = form.FieldErrors["email"] }}
+                <label for="email">Email: </label>
+                if exists {
+                    <label class="error">{ error }</label>
+                }
+                <input type="text" name="email" id="email" value={form.Email} required />
+            </div>
+            <div>
+                {{ error, exists = form.FieldErrors["password"] }}
+                <label for="password">Password: </label>
+                if exists {
+                    <label class="error">{ error }</label>
+                }
+                <input type="password" name="password" id="password" />
+            </div>
+            <div>
+                <input type="submit" value="Register" />
+            </div>
+        </form>
+    }
+}
+
+templ UserProfile (title string, data CommonData, user models.User) {
+    @base(title, data) {
+        <h1>{ user.Username }</h1>
+        <p>{ user.Email }</p>
+    }
+}
+
+templ UserSettings () {
+}

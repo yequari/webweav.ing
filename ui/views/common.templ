@@ -1,0 +1,81 @@
+package views
+
+import "git.32bit.cafe/32bitcafe/guestbook/internal/models"
+import "strconv"
+
+type CommonData struct {
+    CurrentYear int
+    Flash string
+    IsAuthenticated bool
+    CSRFToken string
+    CurrentUser *models.User
+    IsHtmx bool
+}
+
+func slugToShortId(slug string) uint64 {
+    id, _ := strconv.ParseUint(slug, 36, 64)
+    return id
+}
+
+templ commonHeader() {
+    <header>
+        <h1><a href="/">webweav.ing</a></h1>
+    </header>
+}
+
+templ topNav(data CommonData) {
+    <nav>
+        <div>
+            <ul>
+                <li><a href="/guestbooks">Guestbooks</a></li>
+                <li>RSS Feeds</li>
+            </ul>
+        </div>
+        <div>
+            if data.IsAuthenticated {
+                Welcome, { data.CurrentUser.Username }
+                <a href="/users/settings">Settings</a> | 
+                <form action="/users/logout" method="post">
+                    <input type="hidden" name="csrf_token" value={ data.CSRFToken }>
+                    <button>Logout</button>
+                </form>
+            } else {
+                <a href="/users/register">Create an Account</a> | 
+                <a href="/users/login">Login</a>
+            }
+        </div>
+    </nav>
+}
+
+
+templ commonFooter() {
+    <footer>
+        <p>Generated with Templ</p>
+        <p>A <a href="https://32bit.cafe">32-bit cafe</a> Project</p>
+    </footer>
+}
+
+templ base(title string, data CommonData) {
+    <!DOCTYPE html>
+    <html lang="en">
+        <head>
+            <title>{ title } - webweav.ing</title>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1">
+            <link href="/static/css/style.css" rel="stylesheet">
+            <script src="/static/js/htmx.min.js"></script>
+        </head>
+        <body>
+            @commonHeader()
+            @topNav(data)
+            <main>
+                if data.Flash != "" {
+                    <div class="flash">{ data.Flash }</div>
+                }
+                { children... }
+            </main>
+            @commonFooter()
+        </body>
+    </html>
+}
+

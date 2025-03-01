@@ -1,0 +1,116 @@
+package views
+
+import "fmt"
+import "git.32bit.cafe/32bitcafe/guestbook/internal/models"
+
+templ gbCreateForm(csrf_token string) {
+    <input type="hidden" name="csrf_token" value={ csrf_token }>
+    <label for="siteurl">Site URL: </label>
+    <input type="text" name="siteurl" id="siteurl" required />
+    <button type="submit">Submit</button>
+}
+
+templ gbList(guestbooks []models.Guestbook) {
+    if len(guestbooks) == 0 {
+        <p>No Guestbooks yet</p>
+    } else {
+        <ul id="guestbooks" hx-get="/guestbooks" hx-trigger="newGuestbook from:body" hx-swap="outerHTML">
+            for _, gb := range guestbooks {
+                {{ gbUrl := fmt.Sprintf("/guestbooks/%s", gb.Slug()) }}
+                <li><a href={ templ.URL(gbUrl) }>
+                    if len(gb.SiteUrl) == 0 {
+                        Untitled
+                    } else {
+                        { gb.SiteUrl }
+                    }
+                </a></li>
+
+            }
+        </ul>
+    }
+}
+
+templ GuestbookList(title string, data CommonData, guestbooks []models.Guestbook) {
+    if data.IsHtmx {
+        @gbList(guestbooks)
+    } else {
+        @base(title, data) {
+            <h1>My Guestbooks</h1>
+            <div>
+                <button hx-get="/guestbooks/create" hx-target="closest div">New Guestbook</button>
+            </div>
+            @gbList(guestbooks)
+        }
+    }
+}
+
+templ GuestbookCreate(title string, data CommonData) {
+    if data.IsHtmx {
+        <form hx-post="/guestbooks/create" hx-target="closest div">
+            @gbCreateForm(data.CSRFToken)
+        </form>
+    } else {
+        @base(title, data) {
+            <form action="/guestbooks/create" method="post">
+                @gbCreateForm(data.CSRFToken)
+            </form>
+        }
+    }
+}
+
+templ sidebar(guestbook models.Guestbook) {
+    {{ gbUrl := fmt.Sprintf("/guestbooks/%s", guestbook.Slug()) }}
+    <nav>
+        <div>
+            <h3>Messages</h3>
+            <ul>
+                <li><a href={ templ.URL(gbUrl + "/comments") }>Manage messages</a></li>
+                <li><a href={ templ.URL(gbUrl + "/comments/queue") }>Review message queue</a></li>
+                <li><a href={ templ.URL(gbUrl + "/blocklist") }>Block users</a></li>
+                <li><a href={ templ.URL(gbUrl + "/comments/trash") }>Trash</a></li>
+            </ul>
+        </div>
+        <div>
+            <h3>Design</h3>
+            <ul>
+                <li><a href={ templ.URL(gbUrl + "/themes") }>Themes</a></li>
+                <li><a href={ templ.URL(gbUrl + "/customize") }>Custom CSS</a></li>
+            </ul>
+        </div>
+        <div>
+            <h3>Account</h3>
+            <ul>
+                <li><a href="/users/settings">Settings</a></li>
+                <li><a href="/users/privacy">Privacy</a></li>
+                <li><a href="/help">Help</a></li>
+            </ul>
+        </div>
+    </nav>
+}
+
+templ GuestbookView(title string, data CommonData, guestbook models.Guestbook, comments []models.GuestbookComment) {
+    @base(title, data) {
+        <div id="main">
+            @sidebar(guestbook)
+            <div>
+                <h1>Guestbook for { guestbook.SiteUrl }</h1>
+                {{ commentCreateUrl := fmt.Sprintf("/guestbooks/%s/comments/create", guestbook.Slug()) }}
+                <p>
+                    <a href={ templ.URL(commentCreateUrl) }>New Comment</a>
+                </p>
+                if len(comments) == 0 {
+                    <p>No comments yet!</p>
+                }
+                for  _, c := range comments {
+                    <div>
+                        <strong>{ c.AuthorName }</strong>
+                        { c.Created.Format("01-02-2006 03:04PM") }
+                        <p>
+                            { c.CommentText }
+                        </p>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+}

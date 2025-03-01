@@ -1,0 +1,32 @@
+<input type=\"hidden\" name=\"csrf_token\" value=\"
+\"> <label for=\"siteurl\">Site URL: </label> <input type=\"text\" name=\"siteurl\" id=\"siteurl\" required> <button type=\"submit\">Submit</button>
+<p>No Guestbooks yet</p>
+<ul id=\"guestbooks\" hx-get=\"/guestbooks\" hx-trigger=\"newGuestbook from:body\" hx-swap=\"outerHTML\">
+<li><a href=\"
+\">
+Untitled
+</a></li>
+</ul>
+<h1>My Guestbooks</h1><div><button hx-get=\"/guestbooks/create\" hx-target=\"closest div\">New Guestbook</button></div>
+<form hx-post=\"/guestbooks/create\" hx-target=\"closest div\">
+</form>
+<form action=\"/guestbooks/create\" method=\"post\">
+</form>
+<nav><div><h3>Messages</h3><ul><li><a href=\"
+\">Manage messages</a></li><li><a href=\"
+\">Review message queue</a></li><li><a href=\"
+\">Block users</a></li><li><a href=\"
+\">Trash</a></li></ul></div><div><h3>Design</h3><ul><li><a href=\"
+\">Themes</a></li><li><a href=\"
+\">Custom CSS</a></li></ul></div><div><h3>Account</h3><ul><li><a href=\"/users/settings\">Settings</a></li><li><a href=\"/users/privacy\">Privacy</a></li><li><a href=\"/help\">Help</a></li></ul></div></nav>
+<div id=\"main\">
+<div><h1>Guestbook for 
+</h1>
+<p><a href=\"
+\">New Comment</a></p>
+<p>No comments yet!</p>
+<div><strong>
+</strong> 
+<p>
+</p></div>
+</div></div>

@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"git.32bit.cafe/32bitcafe/guestbook/internal/models"
+	"git.32bit.cafe/32bitcafe/guestbook/ui/views"
 	"github.com/justinas/nosurf"
 )
 
@@ -75,6 +76,17 @@ func newTemplateCache() (map[string]*template.Template, error) {
         cache[name] = ts
     }
     return cache, nil
+}
+
+func (app *application) newCommonData(r *http.Request) views.CommonData {
+    return views.CommonData {
+        CurrentYear: time.Now().Year(),
+        Flash: app.sessionManager.PopString(r.Context(), "flash"),
+        IsAuthenticated: app.isAuthenticated(r),
+        CSRFToken: nosurf.Token(r),
+        CurrentUser: app.getCurrentUser(r),
+        IsHtmx: r.Header.Get("Hx-Request") == "true",
+    }
 }
 
 func (app *application) newTemplateData(r *http.Request) templateData {

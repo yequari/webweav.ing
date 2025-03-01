@@ -10,6 +10,7 @@ require (
 )
 
 require (
+	github.com/a-h/templ v0.3.833 // indirect
 	github.com/gorilla/schema v1.4.1 // indirect
 	github.com/justinas/alice v1.2.0 // indirect
 	github.com/justinas/nosurf v1.1.1 // indirect

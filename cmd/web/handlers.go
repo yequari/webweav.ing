@@ -298,8 +298,36 @@ func (app *application) postGuestbookCommentCreate(w http.ResponseWriter, r *htt
     http.Redirect(w, r, fmt.Sprintf("/guestbooks/%s", guestbookSlug), http.StatusSeeOther)
 }
 
+func (app *application) updateGuestbookComment(w http.ResponseWriter, r *http.Request) {
+}
+
 func (app *application) deleteGuestbookComment(w http.ResponseWriter, r *http.Request) {
     // slug := r.PathValue("id")
     // shortId := slugToShortId(slug)
     // app.guestbookComments.Delete(shortId)
+}
+
+func (app *application) getCommentQueue(w http.ResponseWriter, r *http.Request) []models.GuestbookComment {
+    guestbookSlug := r.PathValue("id")
+    guestbook, err := app.guestbooks.Get(slugToShortId(guestbookSlug))
+    if err != nil {
+        if errors.Is(err, models.ErrNoRecord) {
+            http.NotFound(w, r)
+        } else {
+            app.serverError(w, r, err)
+        }
+        return []models.GuestbookComment{}
+    }
+
+    comments, err := app.guestbookComments.GetQueue(guestbook.ID)
+    if err != nil {
+        if errors.Is(err, models.ErrNoRecord) {
+            http.NotFound(w, r)
+        } else {
+            app.serverError(w, r, err)
+        }
+        return []models.GuestbookComment{}
+    }
+
+    return comments
 }

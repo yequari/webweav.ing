@@ -55,7 +55,35 @@ func (m *GuestbookCommentModel) Get(shortId uint64) (GuestbookComment, error) {
 
 func (m *GuestbookCommentModel) GetAll(guestbookId int64) ([]GuestbookComment, error) {
     stmt := `SELECT Id, ShortId, GuestbookId, ParentId, AuthorName, AuthorEmail, AuthorSite,
-    CommentText, PageUrl, Created, IsPublished, IsDeleted FROM guestbook_comments WHERE GuestbookId = ? AND IsDeleted = FALSE ORDER BY Created DESC`
+    CommentText, PageUrl, Created, IsPublished, IsDeleted 
+	    FROM guestbook_comments 
+	    WHERE GuestbookId = ? AND IsDeleted = FALSE AND IsPublished = TRUE
+	    ORDER BY Created DESC`
+    rows, err := m.DB.Query(stmt, guestbookId)
+    if err != nil {
+	return nil, err
+    }
+    var comments []GuestbookComment
+    for rows.Next() {
+	var c GuestbookComment
+	err = rows.Scan(&c.ID, &c.ShortId, &c.GuestbookId, &c.ParentId, &c.AuthorName, &c.AuthorEmail, &c.AuthorSite, &c.CommentText, &c.PageUrl, &c.Created, &c.IsPublished, &c.IsDeleted)
+	if err != nil {
+	    return nil, err
+	}
+	comments = append(comments, c)
+    }
+    if err = rows.Err(); err != nil {
+	return nil, err
+    }
+    return comments, nil
+}
+
+func (m *GuestbookCommentModel) GetQueue(guestbookId int64) ([]GuestbookComment, error) {
+    stmt := `SELECT Id, ShortId, GuestbookId, ParentId, AuthorName, AuthorEmail, AuthorSite,
+    CommentText, PageUrl, Created, IsPublished, IsDeleted 
+	    FROM guestbook_comments 
+	    WHERE GuestbookId = ? AND IsDeleted = FALSE AND IsPublished = FALSE
+	    ORDER BY Created DESC`
     rows, err := m.DB.Query(stmt, guestbookId)
     if err != nil {
 	return nil, err

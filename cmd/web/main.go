@@ -105,7 +105,3 @@ func openDB(dsn string) (*sql.DB, error) {
     }
     return db, nil
 }
-
-func getUserId() int64 {
-    return 1
-}

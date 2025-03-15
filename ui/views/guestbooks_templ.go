@@ -13,7 +13,7 @@ import "git.32bit.cafe/32bitcafe/guestbook/internal/models"
 import "git.32bit.cafe/32bitcafe/guestbook/internal/forms"
 
 func gbUrl(gb models.Guestbook) string {
-	return fmt.Sprintf("/guestbooks/%s", gb.Slug())
+	return fmt.Sprintf("/guestbooks/%s", shortIdToSlug(gb.ShortId))
 }
 
 func gbCreateForm(csrf_token string) templ.Component {
@@ -575,7 +575,7 @@ func commentForm(data CommonData, gb models.Guestbook, form forms.CommentCreateF
 			templ_7745c5c3_Var28 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		postUrl := fmt.Sprintf("/guestbooks/%s/comments/create", gb.Slug())
+		postUrl := fmt.Sprintf("/guestbooks/%s/comments/create", shortIdToSlug(gb.ShortId))
 		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 36, "<form action=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err

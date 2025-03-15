@@ -5,7 +5,7 @@ import "git.32bit.cafe/32bitcafe/guestbook/internal/models"
 import "git.32bit.cafe/32bitcafe/guestbook/internal/forms"
 
 func gbUrl(gb models.Guestbook) string {
-    return fmt.Sprintf("/guestbooks/%s", gb.Slug())
+    return fmt.Sprintf("/guestbooks/%s", shortIdToSlug(gb.ShortId))
 }
 
 templ gbCreateForm(csrf_token string) {
@@ -130,7 +130,7 @@ templ GuestbookDashboardCommentsView(title string, data CommonData, guestbook mo
 }
 
 templ commentForm(data CommonData, gb models.Guestbook, form forms.CommentCreateForm) {
-    {{ postUrl := fmt.Sprintf("/guestbooks/%s/comments/create", gb.Slug()) }}
+    {{ postUrl := fmt.Sprintf("/guestbooks/%s/comments/create", shortIdToSlug(gb.ShortId)) }}
     <form action={ templ.URL(postUrl) } method="post">
         <input type="hidden" name="csrf_token" value={data.CSRFToken}>
         <div>

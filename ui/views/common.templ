@@ -12,6 +12,10 @@ type CommonData struct {
     IsHtmx bool
 }
 
+func shortIdToSlug(shortId uint64) string {
+    return strconv.FormatUint(shortId, 36)
+}
+
 func slugToShortId(slug string) uint64 {
     id, _ := strconv.ParseUint(slug, 36, 64)
     return id

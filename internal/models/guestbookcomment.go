@@ -102,3 +102,14 @@ func (m *GuestbookCommentModel) GetQueue(guestbookId int64) ([]GuestbookComment,
     }
     return comments, nil
 }
+
+func (m *GuestbookCommentModel) UpdateComment(comment *GuestbookComment) error {
+    stmt := `UPDATE guestbook_comments (CommentText, PageUrl, IsPublished, IsDeleted)
+		VALUES (?, ?, ?, ?)
+		WHERE Id = ?`
+    _, err := m.DB.Exec(stmt, comment.CommentText, comment.PageUrl, comment.IsPublished, comment.IsDeleted, comment.ID)
+    if err != nil {
+	return err
+    }
+    return nil
+}

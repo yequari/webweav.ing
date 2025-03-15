@@ -33,6 +33,7 @@ func (app *application) routes() http.Handler {
     mux.Handle("GET /guestbooks/{id}/dashboard", protected.ThenFunc(app.getGuestbookDashboard))
     mux.Handle("GET /guestbooks/{id}/dashboard/comments", protected.ThenFunc(app.getGuestbookComments))
     mux.Handle("GET /guestbooks/{id}/comments/create", protected.ThenFunc(app.getGuestbookCommentCreate))
+    mux.Handle("GET /guestbooks/{id}/dashboard/comments/queue", protected.ThenFunc(app.getCommentQueue))
 
 
     return standard.Then(mux)

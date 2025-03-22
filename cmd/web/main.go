@@ -7,7 +7,6 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
-	"text/template"
 	"time"
 
 	"git.32bit.cafe/32bitcafe/guestbook/internal/models"
@@ -18,90 +17,76 @@ import (
 )
 
 type application struct {
-    sequence uint16
-    logger *slog.Logger
-    templateCache map[string]*template.Template
-    templateCacheHTMX map[string]*template.Template
-    guestbooks *models.GuestbookModel
-    users *models.UserModel
-    guestbookComments *models.GuestbookCommentModel
-    sessionManager *scs.SessionManager
-    formDecoder *schema.Decoder
+	sequence          uint16
+	logger            *slog.Logger
+	websites          *models.WebsiteModel
+	guestbooks        *models.GuestbookModel
+	users             *models.UserModel
+	guestbookComments *models.GuestbookCommentModel
+	sessionManager    *scs.SessionManager
+	formDecoder       *schema.Decoder
 }
 
 func main() {
-    addr := flag.String("addr", ":3000", "HTTP network address")
-    dsn := flag.String("dsn", "guestbook.db", "data source name")
-    flag.Parse()
+	addr := flag.String("addr", ":3000", "HTTP network address")
+	dsn := flag.String("dsn", "guestbook.db", "data source name")
+	flag.Parse()
 
-    logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug}))
+	logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug}))
 
-    db, err := openDB(*dsn)
-    if err != nil {
-        logger.Error(err.Error())
-        os.Exit(1)
-    }
-    defer db.Close()
+	db, err := openDB(*dsn)
+	if err != nil {
+		logger.Error(err.Error())
+		os.Exit(1)
+	}
+	defer db.Close()
 
-    templateCache, err := newTemplateCache()
-    if err != nil {
-        logger.Error(err.Error())
-        os.Exit(1)
-    }
+	sessionManager := scs.New()
+	sessionManager.Store = sqlite3store.New(db)
+	sessionManager.Lifetime = 12 * time.Hour
 
-    templateCacheHTMX, err := newHTMXTemplateCache()
-    if err != nil {
-        logger.Error(err.Error())
-        os.Exit(1)
-    }
+	formDecoder := schema.NewDecoder()
+	formDecoder.IgnoreUnknownKeys(true)
 
-    sessionManager := scs.New()
-    sessionManager.Store = sqlite3store.New(db)
-    sessionManager.Lifetime = 12 * time.Hour
+	app := &application{
+		sequence:          0,
+		logger:            logger,
+		sessionManager:    sessionManager,
+		websites:          &models.WebsiteModel{DB: db},
+		guestbooks:        &models.GuestbookModel{DB: db},
+		users:             &models.UserModel{DB: db},
+		guestbookComments: &models.GuestbookCommentModel{DB: db},
+		formDecoder:       formDecoder,
+	}
 
-    formDecoder := schema.NewDecoder()
-    formDecoder.IgnoreUnknownKeys(true)
+	tlsConfig := &tls.Config{
+		CurvePreferences: []tls.CurveID{tls.X25519, tls.CurveP256},
+	}
 
-    app := &application{
-        sequence: 0,
-        templateCache: templateCache,
-        templateCacheHTMX: templateCacheHTMX,
-        logger: logger,
-        sessionManager: sessionManager,
-        guestbooks: &models.GuestbookModel{DB: db},
-        users: &models.UserModel{DB: db},
-        guestbookComments: &models.GuestbookCommentModel{DB: db},
-        formDecoder: formDecoder,
-    }
+	srv := &http.Server{
+		Addr:         *addr,
+		Handler:      app.routes(),
+		ErrorLog:     slog.NewLogLogger(logger.Handler(), slog.LevelError),
+		TLSConfig:    tlsConfig,
+		IdleTimeout:  time.Minute,
+		ReadTimeout:  5 * time.Second,
+		WriteTimeout: 10 * time.Second,
+	}
 
-    tlsConfig := &tls.Config{
-        CurvePreferences: []tls.CurveID{tls.X25519, tls.CurveP256},
-    }
+	logger.Info("Starting server", slog.Any("addr", *addr))
 
-    srv := &http.Server {
-        Addr: *addr,
-        Handler: app.routes(),
-        ErrorLog: slog.NewLogLogger(logger.Handler(), slog.LevelError),
-        TLSConfig: tlsConfig,
-        IdleTimeout: time.Minute,
-        ReadTimeout: 5 * time.Second,
-        WriteTimeout: 10 * time.Second,
-    }
-
-    logger.Info("Starting server", slog.Any("addr", *addr))
-
-    err = srv.ListenAndServeTLS("./tls/cert.pem", "./tls/key.pem")
-    logger.Error(err.Error())
-    os.Exit(1)
+	err = srv.ListenAndServeTLS("./tls/cert.pem", "./tls/key.pem")
+	logger.Error(err.Error())
+	os.Exit(1)
 }
 
 func openDB(dsn string) (*sql.DB, error) {
-    db, err := sql.Open("sqlite3", dsn)
-    if err != nil {
-        return nil, err
-    }
-    if err = db.Ping(); err != nil {
-        return nil, err
-    }
-    return db, nil
+	db, err := sql.Open("sqlite3", dsn)
+	if err != nil {
+		return nil, err
+	}
+	if err = db.Ping(); err != nil {
+		return nil, err
+	}
+	return db, nil
 }

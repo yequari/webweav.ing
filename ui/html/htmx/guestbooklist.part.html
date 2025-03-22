@@ -1,7 +1,0 @@
-<ul id="guestbooks" hx-get="/guestbooks" hx-trigger="newGuestbook from:body">
-    {{ range .Guestbooks }}
-    <li><a href="/guestbooks/{{ shortIdToSlug .ShortId }}">{{ with .SiteUrl }}{{ . }}{{ else }}Untitled{{ end }}</a></li>
-    {{ else }}
-    <p>No Guestbooks yet</p>
-    {{ end }}
-</ul>

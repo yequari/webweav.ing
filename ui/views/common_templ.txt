@@ -1,7 +1,8 @@
 <header><h1><a href=\"/\">webweav.ing</a></h1></header>
-<nav><div><ul><li><a href=\"/guestbooks\">Guestbooks</a></li><li>RSS Feeds</li></ul></div><div>
+<nav><div>
 Welcome, 
- <a href=\"/users/settings\">Settings</a> | <form action=\"/users/logout\" method=\"post\"><input type=\"hidden\" name=\"csrf_token\" value=\"
+</div><div>
+<a href=\"/websites\">My Websites</a> |  <a href=\"/users/settings\">Settings</a> | <form action=\"/users/logout\" method=\"post\"><input type=\"hidden\" name=\"csrf_token\" value=\"
 \"> <button>Logout</button></form>
 <a href=\"/users/register\">Create an Account</a> |  <a href=\"/users/login\">Login</a>
 </div></nav>

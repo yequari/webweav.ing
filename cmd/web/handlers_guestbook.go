@@ -11,35 +11,6 @@ import (
 	"git.32bit.cafe/32bitcafe/guestbook/ui/views"
 )
 
-func (app *application) getGuestbookCreate(w http.ResponseWriter, r *http.Request) {
-	data := app.newCommonData(r)
-	views.GuestbookCreate("New Guestbook", data).Render(r.Context(), w)
-}
-
-func (app *application) postGuestbookCreate(w http.ResponseWriter, r *http.Request) {
-	userId := app.sessionManager.GetInt64(r.Context(), "authenticatedUserId")
-	err := r.ParseForm()
-	if err != nil {
-		app.serverError(w, r, err)
-		return
-	}
-	siteUrl := r.Form.Get("siteurl")
-	shortId := app.createShortId()
-	_, err = app.guestbooks.Insert(shortId, siteUrl, userId)
-	if err != nil {
-		app.serverError(w, r, err)
-		return
-	}
-	app.sessionManager.Put(r.Context(), "flash", "Guestbook successfully created!")
-	if r.Header.Get("HX-Request") == "true" {
-		w.Header().Add("HX-Trigger", "newGuestbook")
-		data := app.newTemplateData(r)
-		app.renderHTMX(w, r, http.StatusOK, "guestbookcreatebutton.part.html", data)
-		return
-	}
-	http.Redirect(w, r, fmt.Sprintf("/guestbooks/%s", shortIdToSlug(shortId)), http.StatusSeeOther)
-}
-
 func (app *application) getGuestbookList(w http.ResponseWriter, r *http.Request) {
 	userId := app.sessionManager.GetInt64(r.Context(), "authenticatedUserId")
 	guestbooks, err := app.guestbooks.GetAll(userId)
@@ -53,7 +24,7 @@ func (app *application) getGuestbookList(w http.ResponseWriter, r *http.Request)
 
 func (app *application) getGuestbook(w http.ResponseWriter, r *http.Request) {
 	slug := r.PathValue("id")
-	guestbook, err := app.guestbooks.Get(slugToShortId(slug))
+	website, err := app.websites.Get(slugToShortId(slug))
 	if err != nil {
 		if errors.Is(err, models.ErrNoRecord) {
 			http.NotFound(w, r)
@@ -62,42 +33,18 @@ func (app *application) getGuestbook(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
-	comments, err := app.guestbookComments.GetAll(guestbook.ID)
+	comments, err := app.guestbookComments.GetAll(website.Guestbook.ID)
 	if err != nil {
 		app.serverError(w, r, err)
 		return
 	}
 	data := app.newCommonData(r)
-	views.GuestbookView("Guestbook", data, guestbook, comments, forms.CommentCreateForm{}).Render(r.Context(), w)
-}
-
-func (app *application) getGuestbookDashboard(w http.ResponseWriter, r *http.Request) {
-	slug := r.PathValue("id")
-	guestbook, err := app.guestbooks.Get(slugToShortId(slug))
-	if err != nil {
-		if errors.Is(err, models.ErrNoRecord) {
-			http.NotFound(w, r)
-		} else {
-			app.serverError(w, r, err)
-		}
-		return
-	}
-	user := app.getCurrentUser(r)
-	if user.ID != guestbook.UserId {
-		app.clientError(w, http.StatusUnauthorized)
-	}
-	comments, err := app.guestbookComments.GetAll(guestbook.ID)
-	if err != nil {
-		app.serverError(w, r, err)
-		return
-	}
-	data := app.newCommonData(r)
-	views.GuestbookDashboardView("Guestbook", data, guestbook, comments).Render(r.Context(), w)
+	views.GuestbookView("Guestbook", data, website, website.Guestbook, comments, forms.CommentCreateForm{}).Render(r.Context(), w)
 }
 
 func (app *application) getGuestbookComments(w http.ResponseWriter, r *http.Request) {
 	slug := r.PathValue("id")
-	guestbook, err := app.guestbooks.Get(slugToShortId(slug))
+	website, err := app.websites.Get(slugToShortId(slug))
 	if err != nil {
 		if errors.Is(err, models.ErrNoRecord) {
 			http.NotFound(w, r)
@@ -106,19 +53,19 @@ func (app *application) getGuestbookComments(w http.ResponseWriter, r *http.Requ
 		}
 		return
 	}
-	comments, err := app.guestbookComments.GetAll(guestbook.ID)
+	comments, err := app.guestbookComments.GetAll(website.Guestbook.ID)
 	if err != nil {
 		app.serverError(w, r, err)
 		return
 	}
 	data := app.newCommonData(r)
-	views.GuestbookDashboardCommentsView("Comments", data, guestbook, comments).Render(r.Context(), w)
+	views.GuestbookDashboardCommentsView("Comments", data, website, website.Guestbook, comments).Render(r.Context(), w)
 }
 
 func (app *application) getGuestbookCommentCreate(w http.ResponseWriter, r *http.Request) {
 	// TODO: This will be the embeddable form
 	slug := r.PathValue("id")
-	guestbook, err := app.guestbooks.Get(slugToShortId(slug))
+	website, err := app.websites.Get(slugToShortId(slug))
 	if err != nil {
 		if errors.Is(err, models.ErrNoRecord) {
 			http.NotFound(w, r)
@@ -127,15 +74,15 @@ func (app *application) getGuestbookCommentCreate(w http.ResponseWriter, r *http
 		}
 		return
 	}
-	data := app.newTemplateData(r)
-	data.Guestbook = guestbook
-	data.Form = forms.CommentCreateForm{}
-	app.render(w, r, http.StatusOK, "commentcreate.view.tmpl.html", data)
+
+	data := app.newCommonData(r)
+	form := forms.CommentCreateForm{}
+	views.CreateGuestbookComment("New Comment", data, website, website.Guestbook, form).Render(r.Context(), w)
 }
 
 func (app *application) postGuestbookCommentCreate(w http.ResponseWriter, r *http.Request) {
-	guestbookSlug := r.PathValue("id")
-	guestbook, err := app.guestbooks.Get(slugToShortId(guestbookSlug))
+	slug := r.PathValue("id")
+	website, err := app.websites.Get(slugToShortId(slug))
 	if err != nil {
 		if errors.Is(err, models.ErrNoRecord) {
 			http.NotFound(w, r)
@@ -161,21 +108,24 @@ func (app *application) postGuestbookCommentCreate(w http.ResponseWriter, r *htt
 	form.CheckField(validator.NotBlank(form.Content), "content", "This field cannot be blank")
 
 	if !form.Valid() {
-		data := app.newTemplateData(r)
-		data.Guestbook = guestbook
-		data.Form = form
-		app.render(w, r, http.StatusUnprocessableEntity, "commentcreate.view.tmpl.html", data)
+		comments, err := app.guestbookComments.GetAll(website.Guestbook.ID)
+		if err != nil {
+			app.serverError(w, r, err)
+			return
+		}
+		data := app.newCommonData(r)
+		views.GuestbookView("Guestbook", data, website, website.Guestbook, comments, forms.CommentCreateForm{}).Render(r.Context(), w)
 		return
 	}
 
 	shortId := app.createShortId()
-	_, err = app.guestbookComments.Insert(shortId, guestbook.ID, 0, form.AuthorName, form.AuthorEmail, form.AuthorSite, form.Content, "", true)
+	_, err = app.guestbookComments.Insert(shortId, website.Guestbook.ID, 0, form.AuthorName, form.AuthorEmail, form.AuthorSite, form.Content, "", true)
 	if err != nil {
 		app.serverError(w, r, err)
 		return
 	}
 	// app.sessionManager.Put(r.Context(), "flash", "Comment successfully posted!")
-	http.Redirect(w, r, fmt.Sprintf("/guestbooks/%s", guestbookSlug), http.StatusSeeOther)
+	http.Redirect(w, r, fmt.Sprintf("/websites/%s/guestbook", slug), http.StatusSeeOther)
 }
 
 func (app *application) updateGuestbookComment(w http.ResponseWriter, r *http.Request) {
@@ -188,8 +138,8 @@ func (app *application) deleteGuestbookComment(w http.ResponseWriter, r *http.Re
 }
 
 func (app *application) getCommentQueue(w http.ResponseWriter, r *http.Request) {
-	guestbookSlug := r.PathValue("id")
-	guestbook, err := app.guestbooks.Get(slugToShortId(guestbookSlug))
+	slug := r.PathValue("id")
+	website, err := app.websites.Get(slugToShortId(slug))
 	if err != nil {
 		if errors.Is(err, models.ErrNoRecord) {
 			http.NotFound(w, r)
@@ -199,7 +149,7 @@ func (app *application) getCommentQueue(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	comments, err := app.guestbookComments.GetQueue(guestbook.ID)
+	comments, err := app.guestbookComments.GetQueue(website.Guestbook.ID)
 	if err != nil {
 		if errors.Is(err, models.ErrNoRecord) {
 			http.NotFound(w, r)
@@ -210,7 +160,7 @@ func (app *application) getCommentQueue(w http.ResponseWriter, r *http.Request) 
 	}
 
 	data := app.newCommonData(r)
-	views.GuestbookDashboardCommentsView("Message Queue", data, guestbook, comments).Render(r.Context(), w)
+	views.GuestbookDashboardCommentsView("Message Queue", data, website, website.Guestbook, comments).Render(r.Context(), w)
 }
 
 func (app *application) putHideGuestbookComment(w http.ResponseWriter, r *http.Request) {

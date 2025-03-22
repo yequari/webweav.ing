@@ -30,14 +30,13 @@ templ commonHeader() {
 templ topNav(data CommonData) {
     <nav>
         <div>
-            <ul>
-                <li><a href="/guestbooks">Guestbooks</a></li>
-                <li>RSS Feeds</li>
-            </ul>
+            if data.IsAuthenticated {
+                Welcome, { data.CurrentUser.Username }
+            }
         </div>
         <div>
             if data.IsAuthenticated {
-                Welcome, { data.CurrentUser.Username }
+                <a href="/websites">My Websites</a> | 
                 <a href="/users/settings">Settings</a> | 
                 <form action="/users/logout" method="post">
                     <input type="hidden" name="csrf_token" value={ data.CSRFToken }>

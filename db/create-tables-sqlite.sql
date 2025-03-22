@@ -9,15 +9,32 @@ CREATE TABLE users (
     Created datetime NOT NULL
 );
 
+CREATE TABLE websites (
+    Id integer primary key autoincrement,
+    ShortId integer UNIQUE NOT NULL,
+    Name varchar(256) NOT NULL,
+    SiteUrl varchar(512) NOT NULL,
+    AuthorName varchar(512) NOT NULL,
+    UserId integer NOT NULL,
+    Created datetime NOT NULL,
+    Deleted datetime,
+    FOREIGN KEY (UserId) REFERENCES users(Id)
+        ON DELETE RESTRICT
+        ON UPDATE RESTRICT
+);
+
 CREATE TABLE guestbooks (
     Id integer primary key autoincrement,
     ShortId integer UNIQUE NOT NULL,
-    SiteUrl varchar(512) NOT NULL,
+    WebsiteId integer UNIQUE NOT NULL,
     UserId integer NOT NULL,
     Created datetime NOT NULL,
     IsDeleted boolean NOT NULL DEFAULT FALSE,
     IsActive boolean NOT NULL DEFAULT TRUE,
     FOREIGN KEY (UserId) REFERENCES users(Id)
+        ON DELETE RESTRICT
+        ON UPDATE RESTRICT
+    FOREIGN KEY (WebsiteId) REFERENCES websites(Id)
         ON DELETE RESTRICT
         ON UPDATE RESTRICT
 );
@@ -43,4 +60,10 @@ CREATE TABLE guestbook_comments (
         REFERENCES guestbook_comments(Id)
         ON DELETE RESTRICT
         ON UPDATE RESTRICT
+);
+
+CREATE TABLE sessions (
+    token CHAR(43) primary key,
+    data BLOB NOT NULL,
+    expiry TEXT NOT NULL
 );

@@ -28,3 +28,6 @@ go.work
 .air.toml
 /tmp
 tls/
+test.db.old
+.gitignore
+.nvim/session

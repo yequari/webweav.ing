@@ -1,5 +1,0 @@
-{{ with .Guestbook }}
-<li>
-    <a href="/guestbooks/{{ shortIdToSlug .ShortId }}">{{ with .SiteUrl }}{{ . }}{{ else }}Untitled{{ end }}</a>
-</li>
-{{ end }}

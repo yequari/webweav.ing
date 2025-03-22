@@ -11,7 +11,7 @@ import (
 )
 
 type User struct {
-	ID             int
+	ID             int64
 	ShortId        uint64
 	Username       string
 	Email          string

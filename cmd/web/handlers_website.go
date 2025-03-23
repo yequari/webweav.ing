@@ -87,6 +87,9 @@ func (app *application) getWebsiteList(w http.ResponseWriter, r *http.Request) {
 		app.serverError(w, r, err)
 		return
 	}
+	if r.Header.Get("HX-Request") == "true" {
+		w.Header().Add("HX-Trigger", "newWebsite")
+	}
 	data := app.newCommonData(r)
 	views.WebsiteList("My Websites", data, websites).Render(r.Context(), w)
 }

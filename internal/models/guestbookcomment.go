@@ -118,7 +118,7 @@ func (m *GuestbookCommentModel) GetUnpublished(guestbookId int64) ([]GuestbookCo
 	stmt := `SELECT Id, ShortId, GuestbookId, ParentId, AuthorName, AuthorEmail, AuthorSite,
     CommentText, PageUrl, Created, IsPublished 
 	    FROM guestbook_comments 
-	    WHERE GuestbookId = ? AND IsDeleted IS NULL AND IsPublished = FALSE
+	    WHERE GuestbookId = ? AND Deleted IS NULL AND IsPublished = FALSE
 	    ORDER BY Created DESC`
 	rows, err := m.DB.Query(stmt, guestbookId)
 	if err != nil {
@@ -147,7 +147,12 @@ func (m *GuestbookCommentModel) UpdateComment(comment *GuestbookComment) error {
 				IsPublished = ?,
 				Deleted = ?
 		WHERE Id = ?`
-	_, err := m.DB.Exec(stmt, comment.CommentText, comment.PageUrl, comment.IsPublished, comment.Deleted, comment.ID)
+	var err error
+	if comment.Deleted.IsZero() {
+		_, err = m.DB.Exec(stmt, comment.CommentText, comment.PageUrl, comment.IsPublished, nil, comment.ID)
+	} else {
+		_, err = m.DB.Exec(stmt, comment.CommentText, comment.PageUrl, comment.IsPublished, comment.Deleted, comment.ID)
+	}
 	if err != nil {
 		return err
 	}

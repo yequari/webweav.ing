@@ -4,14 +4,6 @@
 <div><h1>Comments on 
 </h1>
 <p>No comments yet!</p>
-<div><strong>
-</strong> 
- 
-<a href=\"#\" hx-delete=\"
-\" hx-target=\"closest div\" hx-headers=\"
-\">Delete</a>
-<p>
-</p></div>
 </div></div>
 <div><label for=\"authorname\">Name: </label>
 <label class=\"error\">
@@ -44,3 +36,20 @@
 <form action=\"
 \" method=\"post\">
 </form>
+<div><strong>
+</strong> 
+<p>
+</p></div>
+<div><strong>
+</strong> 
+ 
+<a href=\"#\" hx-delete=\"
+\" hx-target=\"closest div\" hx-headers=\"
+\">Delete</a> <a href=\"#\" hx-put=\"
+\" hx-target=\"closest div\" hx-headers=\"
+\">
+Publish
+Hide
+</a>
+<p>
+</p></div>

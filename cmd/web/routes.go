@@ -38,6 +38,7 @@ func (app *application) routes() http.Handler {
 	mux.Handle("GET /websites/{id}/dashboard/guestbook/comments", protected.ThenFunc(app.getGuestbookComments))
 	mux.Handle("GET /websites/{id}/dashboard/guestbook/comments/queue", protected.ThenFunc(app.getCommentQueue))
 	mux.Handle("DELETE /websites/{id}/dashboard/guestbook/comments/{commentId}", protected.ThenFunc(app.deleteGuestbookComment))
+	mux.Handle("PUT /websites/{id}/dashboard/guestbook/comments/{commentId}", protected.ThenFunc(app.putHideGuestbookComment))
 	mux.Handle("GET /websites/{id}/dashboard/guestbook/blocklist", protected.ThenFunc(app.getComingSoon))
 	mux.Handle("GET /websites/{id}/dashboard/guestbook/comments/trash", protected.ThenFunc(app.getCommentTrash))
 	mux.Handle("GET /websites/{id}/dashboard/guestbook/themes", protected.ThenFunc(app.getComingSoon))

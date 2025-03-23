@@ -171,7 +171,37 @@ func (app *application) getCommentTrash(w http.ResponseWriter, r *http.Request) 
 }
 
 func (app *application) putHideGuestbookComment(w http.ResponseWriter, r *http.Request) {
-
+	user := app.getCurrentUser(r)
+	wSlug := r.PathValue("id")
+	website, err := app.websites.Get(slugToShortId(wSlug))
+	if err != nil {
+		app.logger.Info("website 404")
+		if errors.Is(err, models.ErrNoRecord) {
+			http.NotFound(w, r)
+		} else {
+			app.serverError(w, r, err)
+		}
+		return
+	}
+	if user.ID != website.UserId {
+		app.clientError(w, http.StatusUnauthorized)
+	}
+	cSlug := r.PathValue("commentId")
+	comment, err := app.guestbookComments.Get(slugToShortId(cSlug))
+	if err != nil {
+		app.logger.Info("comment 404")
+		if errors.Is(err, models.ErrNoRecord) {
+			http.NotFound(w, r)
+		} else {
+			app.serverError(w, r, err)
+		}
+		return
+	}
+	comment.IsPublished = !comment.IsPublished
+	err = app.guestbookComments.UpdateComment(&comment)
+	if err != nil {
+		app.serverError(w, r, err)
+	}
 }
 
 func (app *application) deleteGuestbookComment(w http.ResponseWriter, r *http.Request) {
@@ -206,9 +236,4 @@ func (app *application) deleteGuestbookComment(w http.ResponseWriter, r *http.Re
 	if err != nil {
 		app.serverError(w, r, err)
 	}
-	comments, err := app.guestbookComments.GetAll(website.Guestbook.ID)
-	if err != nil {
-		app.serverError(w, r, err)
-	}
-	views.GuestbookCommentList(comments).Render(r.Context(), w)
 }

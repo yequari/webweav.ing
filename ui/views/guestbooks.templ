@@ -25,19 +25,7 @@ templ GuestbookDashboardCommentsView(title string, data CommonData, website mode
                     <p>No comments yet!</p>
                 }
                 for  _, c := range comments {
-                    <div>
-                        <strong>{ c.AuthorName }</strong>
-                        { c.Created.Format("01-02-2006 03:04PM") }
-                        if c.Deleted.IsZero() {
-                            {{ commentUrl := fmt.Sprintf("%s/dashboard/guestbook/comments/%s", wUrl(website), shortIdToSlug(c.ShortId)) }}
-                            {{ hxHeaders := fmt.Sprintf("{\"X-CSRF-Token\": \"%s\"}", data.CSRFToken) }}
-                            <a href="#" hx-delete={ commentUrl } hx-target="closest div" hx-headers={ hxHeaders }>Delete</a>
-                        }
-                        
-                        <p>
-                            { c.CommentText }
-                        </p>
-                    </div>
+                    @GuestbookDashboardCommentView(data, website, c)
                 }
             </div>
         </div>
@@ -137,4 +125,36 @@ templ CreateGuestbookComment(title string, data CommonData, website models.Websi
             </form>
         }
     }
+}
+
+templ GuestbookCommentView(c models.GuestbookComment) {
+    <div>
+        <strong>{ c.AuthorName }</strong>
+        { c.Created.Format("01-02-2006 03:04PM") }
+        <p>
+            { c.CommentText }
+        </p>
+    </div>
+}
+
+templ GuestbookDashboardCommentView(data CommonData, w models.Website, c models.GuestbookComment) {
+    {{ commentUrl := fmt.Sprintf("%s/dashboard/guestbook/comments/%s", wUrl(w), shortIdToSlug(c.ShortId)) }}
+    {{ hxHeaders := fmt.Sprintf("{\"X-CSRF-Token\": \"%s\"}", data.CSRFToken) }}
+    <div>
+        <strong>{ c.AuthorName }</strong>
+        { c.Created.Format("01-02-2006 03:04PM") }
+        if c.Deleted.IsZero() {
+            <a href="#" hx-delete={ commentUrl } hx-target="closest div" hx-headers={ hxHeaders }>Delete</a>
+            <a href="#" hx-put={ commentUrl } hx-target="closest div" hx-headers={ hxHeaders }>
+                if !c.IsPublished {
+                    Publish
+                } else {
+                    Hide
+                }
+            </a> 
+        }
+        <p>
+            { c.CommentText }
+        </p>
+    </div>
 }

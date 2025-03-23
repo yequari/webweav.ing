@@ -1,23 +1,9 @@
 <input type=\"hidden\" name=\"csrf_token\" value=\"
 \"> <label for=\"siteurl\">Site URL: </label> <input type=\"text\" name=\"siteurl\" id=\"siteurl\" required> <button type=\"submit\">Submit</button>
-<p>No Guestbooks yet</p>
-<ul id=\"guestbooks\" hx-get=\"/guestbooks\" hx-trigger=\"newGuestbook from:body\" hx-swap=\"outerHTML\">
-<li><a href=\"
-\"></a></li>
-</ul>
-<h1>My Guestbooks</h1><div><button hx-get=\"/guestbooks/create\" hx-target=\"closest div\">New Guestbook</button></div>
-<form hx-post=\"/guestbooks/create\" hx-target=\"closest div\">
-</form>
-<form action=\"/guestbooks/create\" method=\"post\">
-</form>
 <div id=\"dashboard\">
 <div><h1>Comments on 
 </h1>
 <p>No comments yet!</p>
-<div><strong>
-</strong> 
-<p>
-</p></div>
 </div></div>
 <div><label for=\"authorname\">Name: </label>
 <label class=\"error\">
@@ -37,15 +23,39 @@
 </strong> 
 <p>
 </p></div>
-<div id=\"main\"><div><h1>Guestbook for 
+<html><head><title>
+</title></head><body><main><div><h1>Guestbook for 
 </h1><form action=\"
 \" method=\"post\"><input type=\"hidden\" name=\"csrf_token\" value=\"
 \">
 </form></div><div id=\"comments\">
-</div></div>
+</div></main></body></html>
 <form hx-post=\"
 \" hx-target=\"closest div\">
 </form>
 <form action=\"
 \" method=\"post\">
 </form>
+<div><strong>
+</strong> 
+<p>
+</p></div>
+<div><strong>
+</strong> 
+ 
+<a href=\"#\" hx-delete=\"
+\" hx-target=\"closest div\" hx-headers=\"
+\">Delete</a> <a href=\"#\" hx-put=\"
+\" hx-target=\"closest div\" hx-headers=\"
+\">
+Publish
+Hide
+</a>
+<p>
+</p></div>
+<div><h1>All Guestbooks</h1><p>This page exists only for testing the service.</p><ul>
+<li>
+<a href=\"
+\" target=\"_blank\">
+</a></li>
+</ul></div>

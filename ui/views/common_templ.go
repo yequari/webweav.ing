@@ -103,14 +103,14 @@ func topNav(data CommonData) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		if data.IsAuthenticated {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<a href=\"/websites\">My Websites</a> |  <a href=\"/users/settings\">Settings</a> | <form action=\"/users/logout\" method=\"post\"><input type=\"hidden\" name=\"csrf_token\" value=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<a href=\"/guestbooks\">All Guestbooks</a> | <a href=\"/websites\">My Websites</a> |  <a href=\"/users/settings\">Settings</a> | <form action=\"/users/logout\" method=\"post\"><input type=\"hidden\" name=\"csrf_token\" value=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var4 string
 			templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(data.CSRFToken)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/views/common.templ`, Line: 42, Col: 81}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/views/common.templ`, Line: 43, Col: 81}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 			if templ_7745c5c3_Err != nil {
@@ -191,7 +191,7 @@ func base(title string, data CommonData) templ.Component {
 		var templ_7745c5c3_Var7 string
 		templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(title)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/views/common.templ`, Line: 65, Col: 26}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/views/common.templ`, Line: 66, Col: 26}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 		if templ_7745c5c3_Err != nil {
@@ -221,7 +221,7 @@ func base(title string, data CommonData) templ.Component {
 			var templ_7745c5c3_Var8 string
 			templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(data.Flash)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/views/common.templ`, Line: 76, Col: 51}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/views/common.templ`, Line: 77, Col: 51}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 			if templ_7745c5c3_Err != nil {

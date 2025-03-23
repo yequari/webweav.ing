@@ -82,11 +82,32 @@ func (app *application) getWebsiteDashboard(w http.ResponseWriter, r *http.Reque
 func (app *application) getWebsiteList(w http.ResponseWriter, r *http.Request) {
 
 	userId := app.sessionManager.GetInt64(r.Context(), "authenticatedUserId")
-	websites, err := app.websites.GetAll(userId)
+	websites, err := app.websites.GetAllUser(userId)
 	if err != nil {
 		app.serverError(w, r, err)
 		return
 	}
+	if r.Header.Get("HX-Request") == "true" {
+		w.Header().Add("HX-Trigger", "newWebsite")
+	}
 	data := app.newCommonData(r)
 	views.WebsiteList("My Websites", data, websites).Render(r.Context(), w)
+}
+
+func (app *application) getComingSoon(w http.ResponseWriter, r *http.Request) {
+	slug := r.PathValue("id")
+	user := app.getCurrentUser(r)
+	website, err := app.websites.Get(slugToShortId(slug))
+	if err != nil {
+		if errors.Is(err, models.ErrNoRecord) {
+			http.NotFound(w, r)
+		} else {
+			app.serverError(w, r, err)
+		}
+		return
+	}
+	if website.UserId != user.ID {
+		app.clientError(w, http.StatusForbidden)
+	}
+	views.WebsiteDashboardComingSoon("Coming Soon", app.newCommonData(r), website).Render(r.Context(), w)
 }

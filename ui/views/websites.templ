@@ -13,6 +13,7 @@ templ wSidebar(website models.Website) {
     {{ gbUrl := wUrl(website) + "/guestbook" }}
     <nav>
         <div>
+            <h2>{ website.Name}</h2>
             <ul>
                 <li><a href={ templ.URL(dashUrl) }>Dashboard</a></li>
                 <li><a href={ templ.URL(website.SiteUrl) }>View Website</a></li>
@@ -120,6 +121,20 @@ templ WebsiteDashboard(title string, data CommonData, website models.Website) {
                 <h1>{ website.Name }</h1>
                 <p>
                     Stats and stuff will go here.
+                </p>
+            </div>
+        </div>
+    }
+}
+
+templ WebsiteDashboardComingSoon(title string, data CommonData, website models.Website) {
+    @base(title, data) {
+        <div id="dashboard">
+            @wSidebar(website) 
+            <div>
+                <h1>{ website.Name }</h1>
+                <p>
+                    Coming Soon
                 </p>
             </div>
         </div>

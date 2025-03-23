@@ -36,48 +36,38 @@ func (m *WebsiteModel) Insert(shortId uint64, userId int64, siteName, siteUrl, a
 }
 
 func (m *WebsiteModel) Get(shortId uint64) (Website, error) {
-	stmt := `SELECT w.Id, w.ShortId, w.Name, w.SiteUrl, w.AuthorName, w.UserId, w.Created, w.Deleted,
-	g.Id, g.ShortId, g.Created, g.IsDeleted, g.IsActive
+	stmt := `SELECT w.Id, w.ShortId, w.Name, w.SiteUrl, w.AuthorName, w.UserId, w.Created,
+	g.Id, g.ShortId, g.Created, g.IsActive
 	FROM websites AS w INNER JOIN guestbooks AS g ON w.Id = g.WebsiteId
-	WHERE w.ShortId = ?`
+	WHERE w.ShortId = ? AND w.DELETED IS NULL`
 	row := m.DB.QueryRow(stmt, shortId)
-	var t sql.NullTime
 	var w Website
-	err := row.Scan(&w.ID, &w.ShortId, &w.Name, &w.SiteUrl, &w.AuthorName, &w.UserId, &w.Created, &t,
-		&w.Guestbook.ID, &w.Guestbook.ShortId, &w.Guestbook.Created, &w.Guestbook.IsDeleted, &w.Guestbook.IsActive)
+	err := row.Scan(&w.ID, &w.ShortId, &w.Name, &w.SiteUrl, &w.AuthorName, &w.UserId, &w.Created,
+		&w.Guestbook.ID, &w.Guestbook.ShortId, &w.Guestbook.Created, &w.Guestbook.IsActive)
 	if err != nil {
 		return Website{}, err
-	}
-	// handle if Deleted is null
-	if t.Valid {
-		w.Deleted = t.Time
 	}
 	return w, nil
 }
 
 func (m *WebsiteModel) GetById(id int64) (Website, error) {
-	stmt := `SELECT w.Id, w.ShortId, w.Name, w.SiteUrl, w.AuthorName, w.UserId, w.Created, w.Deleted,
-	g.Id, g.ShortId, g.Created, g.IsDeleted, g.IsActive
+	stmt := `SELECT w.Id, w.ShortId, w.Name, w.SiteUrl, w.AuthorName, w.UserId, w.Created,
+	g.Id, g.ShortId, g.Created, g.IsActive
 	FROM websites AS w INNER JOIN guestbooks AS g ON w.Id = g.WebsiteId
-	WHERE w.Id = ?`
+	WHERE w.Id = ? AND w.DELETED IS NULL`
 	row := m.DB.QueryRow(stmt, id)
-	var t sql.NullTime
 	var w Website
-	err := row.Scan(&w.ID, &w.ShortId, &w.Name, &w.SiteUrl, &w.AuthorName, &w.UserId, &w.Created, &t,
-		&w.Guestbook.ID, &w.Guestbook.ShortId, &w.Guestbook.Created, &w.Guestbook.IsDeleted, &w.Guestbook.IsActive)
+	err := row.Scan(&w.ID, &w.ShortId, &w.Name, &w.SiteUrl, &w.AuthorName, &w.UserId, &w.Created,
+		&w.Guestbook.ID, &w.Guestbook.ShortId, &w.Guestbook.Created, &w.Guestbook.IsActive)
 	if err != nil {
 		return Website{}, err
-	}
-	// handle if Deleted is null
-	if t.Valid {
-		w.Deleted = t.Time
 	}
 	return w, nil
 }
 
-func (m *WebsiteModel) GetAll(userId int64) ([]Website, error) {
-	stmt := `SELECT w.Id, w.ShortId, w.Name, w.SiteUrl, w.AuthorName, w.UserId, w.Created, w.Deleted,
-	g.Id, g.ShortId, g.Created, g.IsDeleted, g.IsActive
+func (m *WebsiteModel) GetAllUser(userId int64) ([]Website, error) {
+	stmt := `SELECT w.Id, w.ShortId, w.Name, w.SiteUrl, w.AuthorName, w.UserId, w.Created, 
+	g.Id, g.ShortId, g.Created, g.IsActive
 	FROM websites AS w INNER JOIN guestbooks AS g ON w.Id = g.WebsiteId
 	WHERE w.UserId = ?`
 	rows, err := m.DB.Query(stmt, userId)
@@ -86,10 +76,33 @@ func (m *WebsiteModel) GetAll(userId int64) ([]Website, error) {
 	}
 	var websites []Website
 	for rows.Next() {
-		var t sql.NullTime
 		var w Website
-		err := rows.Scan(&w.ID, &w.ShortId, &w.Name, &w.SiteUrl, &w.AuthorName, &w.UserId, &w.Created, &t,
-			&w.Guestbook.ID, &w.Guestbook.ShortId, &w.Guestbook.Created, &w.Guestbook.IsDeleted, &w.Guestbook.IsActive)
+		err := rows.Scan(&w.ID, &w.ShortId, &w.Name, &w.SiteUrl, &w.AuthorName, &w.UserId, &w.Created,
+			&w.Guestbook.ID, &w.Guestbook.ShortId, &w.Guestbook.Created, &w.Guestbook.IsActive)
+		if err != nil {
+			return nil, err
+		}
+		websites = append(websites, w)
+	}
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+	return websites, nil
+}
+
+func (m *WebsiteModel) GetAll() ([]Website, error) {
+	stmt := `SELECT w.Id, w.ShortId, w.Name, w.SiteUrl, w.AuthorName, w.UserId, w.Created, 
+	g.Id, g.ShortId, g.Created, g.IsActive
+	FROM websites AS w INNER JOIN guestbooks AS g ON w.Id = g.WebsiteId`
+	rows, err := m.DB.Query(stmt)
+	if err != nil {
+		return nil, err
+	}
+	var websites []Website
+	for rows.Next() {
+		var w Website
+		err := rows.Scan(&w.ID, &w.ShortId, &w.Name, &w.SiteUrl, &w.AuthorName, &w.UserId, &w.Created,
+			&w.Guestbook.ID, &w.Guestbook.ShortId, &w.Guestbook.Created, &w.Guestbook.IsActive)
 		if err != nil {
 			return nil, err
 		}

@@ -90,3 +90,21 @@ func (app *application) getWebsiteList(w http.ResponseWriter, r *http.Request) {
 	data := app.newCommonData(r)
 	views.WebsiteList("My Websites", data, websites).Render(r.Context(), w)
 }
+
+func (app *application) getComingSoon(w http.ResponseWriter, r *http.Request) {
+	slug := r.PathValue("id")
+	user := app.getCurrentUser(r)
+	website, err := app.websites.Get(slugToShortId(slug))
+	if err != nil {
+		if errors.Is(err, models.ErrNoRecord) {
+			http.NotFound(w, r)
+		} else {
+			app.serverError(w, r, err)
+		}
+		return
+	}
+	if website.UserId != user.ID {
+		app.clientError(w, http.StatusForbidden)
+	}
+	views.WebsiteDashboardComingSoon("Coming Soon", app.newCommonData(r), website).Render(r.Context(), w)
+}

@@ -35,6 +35,9 @@
 <div id=\"dashboard\">
 <div><h1>
 </h1><p>Stats and stuff will go here.</p></div></div>
+<div id=\"dashboard\">
+<div><h1>
+</h1><p>Coming Soon</p></div></div>
 <form hx-post=\"/websites/create\" hx-target=\"closest div\">
 </form>
 <form action=\"/websites/create\" method=\"post\">

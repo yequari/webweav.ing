@@ -11,17 +11,6 @@ import (
 	"git.32bit.cafe/32bitcafe/guestbook/ui/views"
 )
 
-func (app *application) getGuestbookList(w http.ResponseWriter, r *http.Request) {
-	userId := app.sessionManager.GetInt64(r.Context(), "authenticatedUserId")
-	guestbooks, err := app.guestbooks.GetAll(userId)
-	if err != nil {
-		app.serverError(w, r, err)
-		return
-	}
-	data := app.newCommonData(r)
-	views.GuestbookList("Guestbooks", data, guestbooks).Render(r.Context(), w)
-}
-
 func (app *application) getGuestbook(w http.ResponseWriter, r *http.Request) {
 	slug := r.PathValue("id")
 	website, err := app.websites.Get(slugToShortId(slug))
@@ -126,15 +115,6 @@ func (app *application) postGuestbookCommentCreate(w http.ResponseWriter, r *htt
 	}
 	// app.sessionManager.Put(r.Context(), "flash", "Comment successfully posted!")
 	http.Redirect(w, r, fmt.Sprintf("/websites/%s/guestbook", slug), http.StatusSeeOther)
-}
-
-func (app *application) updateGuestbookComment(w http.ResponseWriter, r *http.Request) {
-}
-
-func (app *application) deleteGuestbookComment(w http.ResponseWriter, r *http.Request) {
-	// slug := r.PathValue("id")
-	// shortId := slugToShortId(slug)
-	// app.guestbookComments.Delete(shortId)
 }
 
 func (app *application) getCommentQueue(w http.ResponseWriter, r *http.Request) {

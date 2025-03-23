@@ -126,6 +126,20 @@ templ WebsiteDashboard(title string, data CommonData, website models.Website) {
     }
 }
 
+templ WebsiteDashboardComingSoon(title string, data CommonData, website models.Website) {
+    @base(title, data) {
+        <div id="dashboard">
+            @wSidebar(website) 
+            <div>
+                <h1>{ website.Name }</h1>
+                <p>
+                    Coming Soon
+                </p>
+            </div>
+        </div>
+    }
+}
+
 templ WebsiteCreate(title string, data CommonData, form forms.WebsiteCreateForm) {
     if data.IsHtmx {
         <form hx-post="/websites/create" hx-target="closest div">

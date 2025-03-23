@@ -15,48 +15,6 @@ templ gbCreateForm(csrf_token string) {
     <button type="submit">Submit</button>
 }
 
-templ gbList(guestbooks []models.Guestbook) {
-    if len(guestbooks) == 0 {
-        <p>No Guestbooks yet</p>
-    } else {
-        <ul id="guestbooks" hx-get="/guestbooks" hx-trigger="newGuestbook from:body" hx-swap="outerHTML">
-            for _, gb := range guestbooks {
-                <li><a href={ templ.URL(gbUrl(gb) + "/dashboard") }>
-                </a></li>
-
-            }
-        </ul>
-    }
-}
-
-templ GuestbookList(title string, data CommonData, guestbooks []models.Guestbook) {
-    if data.IsHtmx {
-        @gbList(guestbooks)
-    } else {
-        @base(title, data) {
-            <h1>My Guestbooks</h1>
-            <div>
-                <button hx-get="/guestbooks/create" hx-target="closest div">New Guestbook</button>
-            </div>
-            @gbList(guestbooks)
-        }
-    }
-}
-
-templ GuestbookCreate(title string, data CommonData) {
-    if data.IsHtmx {
-        <form hx-post="/guestbooks/create" hx-target="closest div">
-            @gbCreateForm(data.CSRFToken)
-        </form>
-    } else {
-        @base(title, data) {
-            <form action="/guestbooks/create" method="post">
-                @gbCreateForm(data.CSRFToken)
-            </form>
-        }
-    }
-}
-
 templ GuestbookDashboardCommentsView(title string, data CommonData, website models.Website, guestbook models.Guestbook, comments []models.GuestbookComment) {
     @base(title, data) {
         <div id="dashboard">

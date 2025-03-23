@@ -1,15 +1,5 @@
 <input type=\"hidden\" name=\"csrf_token\" value=\"
 \"> <label for=\"siteurl\">Site URL: </label> <input type=\"text\" name=\"siteurl\" id=\"siteurl\" required> <button type=\"submit\">Submit</button>
-<p>No Guestbooks yet</p>
-<ul id=\"guestbooks\" hx-get=\"/guestbooks\" hx-trigger=\"newGuestbook from:body\" hx-swap=\"outerHTML\">
-<li><a href=\"
-\"></a></li>
-</ul>
-<h1>My Guestbooks</h1><div><button hx-get=\"/guestbooks/create\" hx-target=\"closest div\">New Guestbook</button></div>
-<form hx-post=\"/guestbooks/create\" hx-target=\"closest div\">
-</form>
-<form action=\"/guestbooks/create\" method=\"post\">
-</form>
 <div id=\"dashboard\">
 <div><h1>Comments on 
 </h1>

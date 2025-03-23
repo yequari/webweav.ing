@@ -8,3 +8,9 @@ templ Home(title string, data CommonData) {
         </p>
     }
 }
+
+templ ComingSoon(title string, data CommonData) {
+    @base(title, data) {
+        <h2>Coming Soon</h2>
+    }
+}

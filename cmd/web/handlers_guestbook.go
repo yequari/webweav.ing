@@ -237,3 +237,11 @@ func (app *application) deleteGuestbookComment(w http.ResponseWriter, r *http.Re
 		app.serverError(w, r, err)
 	}
 }
+
+func (app *application) getAllGuestbooks(w http.ResponseWriter, r *http.Request) {
+	websites, err := app.websites.GetAll()
+	if err != nil {
+		app.serverError(w, r, err)
+	}
+	views.AllGuestbooksView(app.newCommonData(r), websites).Render(r.Context(), w)
+}

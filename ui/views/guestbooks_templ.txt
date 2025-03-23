@@ -53,3 +53,9 @@ Hide
 </a>
 <p>
 </p></div>
+<div><h1>All Guestbooks</h1><p>This page exists only for testing the service.</p><ul>
+<li>
+<a href=\"
+\" target=\"_blank\">
+</a></li>
+</ul></div>

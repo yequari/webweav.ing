@@ -82,7 +82,7 @@ func (app *application) getWebsiteDashboard(w http.ResponseWriter, r *http.Reque
 func (app *application) getWebsiteList(w http.ResponseWriter, r *http.Request) {
 
 	userId := app.sessionManager.GetInt64(r.Context(), "authenticatedUserId")
-	websites, err := app.websites.GetAll(userId)
+	websites, err := app.websites.GetAllUser(userId)
 	if err != nil {
 		app.serverError(w, r, err)
 		return

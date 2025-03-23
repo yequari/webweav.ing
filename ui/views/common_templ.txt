@@ -2,7 +2,7 @@
 <nav><div>
 Welcome, 
 </div><div>
-<a href=\"/websites\">My Websites</a> |  <a href=\"/users/settings\">Settings</a> | <form action=\"/users/logout\" method=\"post\"><input type=\"hidden\" name=\"csrf_token\" value=\"
+<a href=\"/guestbooks\">All Guestbooks</a> | <a href=\"/websites\">My Websites</a> |  <a href=\"/users/settings\">Settings</a> | <form action=\"/users/logout\" method=\"post\"><input type=\"hidden\" name=\"csrf_token\" value=\"
 \"> <button>Logout</button></form>
 <a href=\"/users/register\">Create an Account</a> |  <a href=\"/users/login\">Login</a>
 </div></nav>

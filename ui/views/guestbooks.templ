@@ -158,3 +158,22 @@ templ GuestbookDashboardCommentView(data CommonData, w models.Website, c models.
         </p>
     </div>
 }
+
+templ AllGuestbooksView(data CommonData, websites []models.Website) {
+    @base("All Guestbooks", data) {
+        <div>
+            <h1>All Guestbooks</h1>
+            <p>
+                This page exists only for testing the service.
+            </p>
+            <ul>
+                for _, w := range websites {
+                    <li>
+                        {{  gbUrl := fmt.Sprintf("/websites/%s/guestbook", shortIdToSlug(w.ShortId))}}
+                        <a href={ templ.URL(gbUrl) } target="_blank">{ w.Name }</a>
+                    </li>
+                }
+            </ul>
+        </div>
+    }
+}

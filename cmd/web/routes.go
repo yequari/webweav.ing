@@ -30,6 +30,7 @@ func (app *application) routes() http.Handler {
 	mux.Handle("POST /users/logout", protected.ThenFunc(app.postUserLogout))
 	mux.Handle("GET /users/settings", protected.ThenFunc(app.notImplemented))
 	mux.Handle("GET /users/privacy", protected.ThenFunc(app.notImplemented))
+	mux.Handle("GET /guestbooks", protected.ThenFunc(app.getAllGuestbooks))
 
 	mux.Handle("GET /websites", protected.ThenFunc(app.getWebsiteList))
 	mux.Handle("GET /websites/create", protected.ThenFunc(app.getWebsiteCreate))

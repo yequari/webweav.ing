@@ -65,12 +65,36 @@ func (m *WebsiteModel) GetById(id int64) (Website, error) {
 	return w, nil
 }
 
-func (m *WebsiteModel) GetAll(userId int64) ([]Website, error) {
+func (m *WebsiteModel) GetAllUser(userId int64) ([]Website, error) {
 	stmt := `SELECT w.Id, w.ShortId, w.Name, w.SiteUrl, w.AuthorName, w.UserId, w.Created, 
 	g.Id, g.ShortId, g.Created, g.IsActive
 	FROM websites AS w INNER JOIN guestbooks AS g ON w.Id = g.WebsiteId
 	WHERE w.UserId = ?`
 	rows, err := m.DB.Query(stmt, userId)
+	if err != nil {
+		return nil, err
+	}
+	var websites []Website
+	for rows.Next() {
+		var w Website
+		err := rows.Scan(&w.ID, &w.ShortId, &w.Name, &w.SiteUrl, &w.AuthorName, &w.UserId, &w.Created,
+			&w.Guestbook.ID, &w.Guestbook.ShortId, &w.Guestbook.Created, &w.Guestbook.IsActive)
+		if err != nil {
+			return nil, err
+		}
+		websites = append(websites, w)
+	}
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+	return websites, nil
+}
+
+func (m *WebsiteModel) GetAll() ([]Website, error) {
+	stmt := `SELECT w.Id, w.ShortId, w.Name, w.SiteUrl, w.AuthorName, w.UserId, w.Created, 
+	g.Id, g.ShortId, g.Created, g.IsActive
+	FROM websites AS w INNER JOIN guestbooks AS g ON w.Id = g.WebsiteId`
+	rows, err := m.DB.Query(stmt)
 	if err != nil {
 		return nil, err
 	}

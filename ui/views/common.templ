@@ -36,6 +36,7 @@ templ topNav(data CommonData) {
         </div>
         <div>
             if data.IsAuthenticated {
+                <a href="/guestbooks">All Guestbooks</a> |
                 <a href="/websites">My Websites</a> | 
                 <a href="/users/settings">Settings</a> | 
                 <form action="/users/logout" method="post">

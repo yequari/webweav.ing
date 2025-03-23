@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"time"
 
 	"git.32bit.cafe/32bitcafe/guestbook/internal/forms"
 	"git.32bit.cafe/32bitcafe/guestbook/internal/models"
@@ -129,7 +130,7 @@ func (app *application) getCommentQueue(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	comments, err := app.guestbookComments.GetQueue(website.Guestbook.ID)
+	comments, err := app.guestbookComments.GetUnpublished(website.Guestbook.ID)
 	if err != nil {
 		if errors.Is(err, models.ErrNoRecord) {
 			http.NotFound(w, r)
@@ -143,9 +144,71 @@ func (app *application) getCommentQueue(w http.ResponseWriter, r *http.Request) 
 	views.GuestbookDashboardCommentsView("Message Queue", data, website, website.Guestbook, comments).Render(r.Context(), w)
 }
 
+func (app *application) getCommentTrash(w http.ResponseWriter, r *http.Request) {
+	slug := r.PathValue("id")
+	website, err := app.websites.Get(slugToShortId(slug))
+	if err != nil {
+		if errors.Is(err, models.ErrNoRecord) {
+			http.NotFound(w, r)
+		} else {
+			app.serverError(w, r, err)
+		}
+		return
+	}
+
+	comments, err := app.guestbookComments.GetDeleted(website.Guestbook.ID)
+	if err != nil {
+		if errors.Is(err, models.ErrNoRecord) {
+			http.NotFound(w, r)
+		} else {
+			app.serverError(w, r, err)
+		}
+		return
+	}
+
+	data := app.newCommonData(r)
+	views.GuestbookDashboardCommentsView("Trash", data, website, website.Guestbook, comments).Render(r.Context(), w)
+}
+
 func (app *application) putHideGuestbookComment(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func (app *application) putDeleteGuestbookComment(w http.ResponseWriter, r *http.Request) {
+func (app *application) deleteGuestbookComment(w http.ResponseWriter, r *http.Request) {
+	user := app.getCurrentUser(r)
+	wSlug := r.PathValue("id")
+	website, err := app.websites.Get(slugToShortId(wSlug))
+	if err != nil {
+		app.logger.Info("website 404")
+		if errors.Is(err, models.ErrNoRecord) {
+			http.NotFound(w, r)
+		} else {
+			app.serverError(w, r, err)
+		}
+		return
+	}
+	if user.ID != website.UserId {
+		app.clientError(w, http.StatusUnauthorized)
+	}
+	cSlug := r.PathValue("commentId")
+	comment, err := app.guestbookComments.Get(slugToShortId(cSlug))
+	if err != nil {
+		app.logger.Info("comment 404")
+		if errors.Is(err, models.ErrNoRecord) {
+			http.NotFound(w, r)
+		} else {
+			app.serverError(w, r, err)
+		}
+		return
+	}
+	comment.Deleted = time.Now().UTC()
+	err = app.guestbookComments.UpdateComment(&comment)
+	if err != nil {
+		app.serverError(w, r, err)
+	}
+	comments, err := app.guestbookComments.GetAll(website.Guestbook.ID)
+	if err != nil {
+		app.serverError(w, r, err)
+	}
+	views.GuestbookCommentList(comments).Render(r.Context(), w)
 }

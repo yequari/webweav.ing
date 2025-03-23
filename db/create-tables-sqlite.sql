@@ -29,7 +29,7 @@ CREATE TABLE guestbooks (
     WebsiteId integer UNIQUE NOT NULL,
     UserId integer NOT NULL,
     Created datetime NOT NULL,
-    IsDeleted boolean NOT NULL DEFAULT FALSE,
+    Deleted datetime,
     IsActive boolean NOT NULL DEFAULT TRUE,
     FOREIGN KEY (UserId) REFERENCES users(Id)
         ON DELETE RESTRICT
@@ -51,7 +51,7 @@ CREATE TABLE guestbook_comments (
     PageUrl varchar(256),
     Created datetime NOT NULL,
     IsPublished boolean NOT NULL DEFAULT TRUE,
-    IsDeleted boolean NOT NULL DEFAULT FALSE,
+    Deleted datetime,
     FOREIGN KEY (GuestbookId) 
         REFERENCES guestbooks(Id)
         ON DELETE RESTRICT

@@ -1,2 +1,2 @@
-<h2>Welcome</h2><p>Welcome to webweav.ing, a collection of webmastery tools created by the <a href=\"https://32bit.cafe\">32-Bit Cafe</a>.</p>
+<h2>Welcome</h2><p>Welcome to webweav.ing, a collection of webmastery tools created by the <a href=\"https://32bit.cafe\">32-Bit Cafe</a>.</p><p>Note this service is in a pre-alpha state. Your account and data can disappear at any time. </p>
 <h2>Coming Soon</h2>

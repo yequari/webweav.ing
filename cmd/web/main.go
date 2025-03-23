@@ -25,11 +25,13 @@ type application struct {
 	guestbookComments *models.GuestbookCommentModel
 	sessionManager    *scs.SessionManager
 	formDecoder       *schema.Decoder
+	debug             bool
 }
 
 func main() {
 	addr := flag.String("addr", ":3000", "HTTP network address")
 	dsn := flag.String("dsn", "guestbook.db", "data source name")
+	debug := flag.Bool("debug", false, "enable debug mode")
 	flag.Parse()
 
 	logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug}))
@@ -57,6 +59,7 @@ func main() {
 		users:             &models.UserModel{DB: db},
 		guestbookComments: &models.GuestbookCommentModel{DB: db},
 		formDecoder:       formDecoder,
+		debug:             *debug,
 	}
 
 	tlsConfig := &tls.Config{

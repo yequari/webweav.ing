@@ -13,6 +13,7 @@ templ wSidebar(website models.Website) {
     {{ gbUrl := wUrl(website) + "/guestbook" }}
     <nav>
         <div>
+            <h2>{ website.Name}</h2>
             <ul>
                 <li><a href={ templ.URL(dashUrl) }>Dashboard</a></li>
                 <li><a href={ templ.URL(website.SiteUrl) }>View Website</a></li>

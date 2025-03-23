@@ -28,6 +28,12 @@ templ GuestbookDashboardCommentsView(title string, data CommonData, website mode
                     <div>
                         <strong>{ c.AuthorName }</strong>
                         { c.Created.Format("01-02-2006 03:04PM") }
+                        if c.Deleted.IsZero() {
+                            {{ commentUrl := fmt.Sprintf("%s/dashboard/guestbook/comments/%s", wUrl(website), shortIdToSlug(c.ShortId)) }}
+                            {{ hxHeaders := fmt.Sprintf("{\"X-CSRF-Token\": \"%s\"}", data.CSRFToken) }}
+                            <a href="#" hx-delete={ commentUrl } hx-target="closest div" hx-headers={ hxHeaders }>Delete</a>
+                        }
+                        
                         <p>
                             { c.CommentText }
                         </p>
@@ -96,18 +102,25 @@ templ GuestbookView(title string, data CommonData, website models.Website, guest
     if data.IsHtmx {
         @commentForm(form)
     } else {
-        <div id="main">
-            <div>
-                <h1>Guestbook for { website.SiteUrl }</h1>
-                <form action={ templ.URL(postUrl) } method="post">
-                    <input type="hidden" name="csrf_token" value={data.CSRFToken}>
-                    @commentForm(form)
-                </form>
-            </div>
-            <div id="comments">
-                @GuestbookCommentList(comments)
-            </div>
-        </div>
+        <html>
+            <head>
+            <title>{ title }</title>
+            </head>
+            <body>
+                <main>
+                    <div>
+                        <h1>Guestbook for { website.SiteUrl }</h1>
+                        <form action={ templ.URL(postUrl) } method="post">
+                            <input type="hidden" name="csrf_token" value={data.CSRFToken}>
+                            @commentForm(form)
+                        </form>
+                    </div>
+                    <div id="comments">
+                        @GuestbookCommentList(comments)
+                    </div>
+                </main>
+            </body>
+        </html>
     }
 }
 

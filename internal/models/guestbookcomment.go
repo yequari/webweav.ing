@@ -16,8 +16,8 @@ type GuestbookComment struct {
 	CommentText string
 	PageUrl     string
 	Created     time.Time
+	Deleted     time.Time
 	IsPublished bool
-	IsDeleted   bool
 }
 
 type GuestbookCommentModel struct {
@@ -27,8 +27,8 @@ type GuestbookCommentModel struct {
 func (m *GuestbookCommentModel) Insert(shortId uint64, guestbookId, parentId int64, authorName,
 	authorEmail, authorSite, commentText, pageUrl string, isPublished bool) (int64, error) {
 	stmt := `INSERT INTO guestbook_comments (ShortId, GuestbookId, ParentId, AuthorName,
-    AuthorEmail, AuthorSite, CommentText, PageUrl, Created, IsPublished, IsDeleted)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, FALSE)`
+    AuthorEmail, AuthorSite, CommentText, PageUrl, Created, IsPublished)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
 	result, err := m.DB.Exec(stmt, shortId, guestbookId, parentId, authorName, authorEmail,
 		authorSite, commentText, pageUrl, time.Now().UTC(), isPublished)
 	if err != nil {
@@ -43,21 +43,26 @@ func (m *GuestbookCommentModel) Insert(shortId uint64, guestbookId, parentId int
 
 func (m *GuestbookCommentModel) Get(shortId uint64) (GuestbookComment, error) {
 	stmt := `SELECT Id, ShortId, GuestbookId, ParentId, AuthorName, AuthorEmail, AuthorSite,
-    CommentText, PageUrl, Created, IsPublished, IsDeleted FROM guestbook_comments WHERE ShortId = ?`
+    CommentText, PageUrl, Created, IsPublished, Deleted FROM guestbook_comments WHERE ShortId = ?`
 	row := m.DB.QueryRow(stmt, shortId)
 	var c GuestbookComment
-	err := row.Scan(&c.ID, &c.ShortId, &c.GuestbookId, &c.ParentId, &c.AuthorName, &c.AuthorEmail, &c.AuthorSite, &c.CommentText, &c.PageUrl, &c.Created, &c.IsPublished, &c.IsDeleted)
+	var t sql.NullTime
+	err := row.Scan(&c.ID, &c.ShortId, &c.GuestbookId, &c.ParentId, &c.AuthorName, &c.AuthorEmail, &c.AuthorSite,
+		&c.CommentText, &c.PageUrl, &c.Created, &c.IsPublished, &t)
 	if err != nil {
 		return GuestbookComment{}, err
+	}
+	if t.Valid {
+		c.Deleted = t.Time
 	}
 	return c, nil
 }
 
 func (m *GuestbookCommentModel) GetAll(guestbookId int64) ([]GuestbookComment, error) {
 	stmt := `SELECT Id, ShortId, GuestbookId, ParentId, AuthorName, AuthorEmail, AuthorSite,
-    CommentText, PageUrl, Created, IsPublished, IsDeleted 
+    CommentText, PageUrl, Created, IsPublished 
 	    FROM guestbook_comments 
-	    WHERE GuestbookId = ? AND IsDeleted = FALSE AND IsPublished = TRUE
+	    WHERE GuestbookId = ? AND IsPublished = TRUE AND DELETED IS NULL
 	    ORDER BY Created DESC`
 	rows, err := m.DB.Query(stmt, guestbookId)
 	if err != nil {
@@ -66,7 +71,8 @@ func (m *GuestbookCommentModel) GetAll(guestbookId int64) ([]GuestbookComment, e
 	var comments []GuestbookComment
 	for rows.Next() {
 		var c GuestbookComment
-		err = rows.Scan(&c.ID, &c.ShortId, &c.GuestbookId, &c.ParentId, &c.AuthorName, &c.AuthorEmail, &c.AuthorSite, &c.CommentText, &c.PageUrl, &c.Created, &c.IsPublished, &c.IsDeleted)
+		err = rows.Scan(&c.ID, &c.ShortId, &c.GuestbookId, &c.ParentId, &c.AuthorName, &c.AuthorEmail, &c.AuthorSite,
+			&c.CommentText, &c.PageUrl, &c.Created, &c.IsPublished)
 		if err != nil {
 			return nil, err
 		}
@@ -78,11 +84,11 @@ func (m *GuestbookCommentModel) GetAll(guestbookId int64) ([]GuestbookComment, e
 	return comments, nil
 }
 
-func (m *GuestbookCommentModel) GetQueue(guestbookId int64) ([]GuestbookComment, error) {
+func (m *GuestbookCommentModel) GetDeleted(guestbookId int64) ([]GuestbookComment, error) {
 	stmt := `SELECT Id, ShortId, GuestbookId, ParentId, AuthorName, AuthorEmail, AuthorSite,
-    CommentText, PageUrl, Created, IsPublished, IsDeleted 
+    CommentText, PageUrl, Created, IsPublished, Deleted
 	    FROM guestbook_comments 
-	    WHERE GuestbookId = ? AND IsDeleted = FALSE AND IsPublished = FALSE
+	    WHERE GuestbookId = ? AND Deleted IS NOT NULL
 	    ORDER BY Created DESC`
 	rows, err := m.DB.Query(stmt, guestbookId)
 	if err != nil {
@@ -91,7 +97,38 @@ func (m *GuestbookCommentModel) GetQueue(guestbookId int64) ([]GuestbookComment,
 	var comments []GuestbookComment
 	for rows.Next() {
 		var c GuestbookComment
-		err = rows.Scan(&c.ID, &c.ShortId, &c.GuestbookId, &c.ParentId, &c.AuthorName, &c.AuthorEmail, &c.AuthorSite, &c.CommentText, &c.PageUrl, &c.Created, &c.IsPublished, &c.IsDeleted)
+		var t sql.NullTime
+		err = rows.Scan(&c.ID, &c.ShortId, &c.GuestbookId, &c.ParentId, &c.AuthorName, &c.AuthorEmail, &c.AuthorSite,
+			&c.CommentText, &c.PageUrl, &c.Created, &c.IsPublished, &t)
+		if err != nil {
+			return nil, err
+		}
+		if t.Valid {
+			c.Deleted = t.Time
+		}
+		comments = append(comments, c)
+	}
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+	return comments, nil
+}
+
+func (m *GuestbookCommentModel) GetUnpublished(guestbookId int64) ([]GuestbookComment, error) {
+	stmt := `SELECT Id, ShortId, GuestbookId, ParentId, AuthorName, AuthorEmail, AuthorSite,
+    CommentText, PageUrl, Created, IsPublished 
+	    FROM guestbook_comments 
+	    WHERE GuestbookId = ? AND IsDeleted IS NULL AND IsPublished = FALSE
+	    ORDER BY Created DESC`
+	rows, err := m.DB.Query(stmt, guestbookId)
+	if err != nil {
+		return nil, err
+	}
+	var comments []GuestbookComment
+	for rows.Next() {
+		var c GuestbookComment
+		err = rows.Scan(&c.ID, &c.ShortId, &c.GuestbookId, &c.ParentId, &c.AuthorName, &c.AuthorEmail, &c.AuthorSite,
+			&c.CommentText, &c.PageUrl, &c.Created, &c.IsPublished)
 		if err != nil {
 			return nil, err
 		}
@@ -104,10 +141,13 @@ func (m *GuestbookCommentModel) GetQueue(guestbookId int64) ([]GuestbookComment,
 }
 
 func (m *GuestbookCommentModel) UpdateComment(comment *GuestbookComment) error {
-	stmt := `UPDATE guestbook_comments (CommentText, PageUrl, IsPublished, IsDeleted)
-		VALUES (?, ?, ?, ?)
+	stmt := `UPDATE guestbook_comments
+			SET CommentText = ?,
+				PageUrl = ?,
+				IsPublished = ?,
+				Deleted = ?
 		WHERE Id = ?`
-	_, err := m.DB.Exec(stmt, comment.CommentText, comment.PageUrl, comment.IsPublished, comment.IsDeleted, comment.ID)
+	_, err := m.DB.Exec(stmt, comment.CommentText, comment.PageUrl, comment.IsPublished, comment.Deleted, comment.ID)
 	if err != nil {
 		return err
 	}

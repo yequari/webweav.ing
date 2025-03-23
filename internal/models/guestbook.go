@@ -11,7 +11,7 @@ type Guestbook struct {
 	UserId    int64
 	WebsiteId int64
 	Created   time.Time
-	IsDeleted bool
+	Deleted   time.Time
 	IsActive  bool
 }
 
@@ -20,8 +20,8 @@ type GuestbookModel struct {
 }
 
 func (m *GuestbookModel) Insert(shortId uint64, userId int64, websiteId int64) (int64, error) {
-	stmt := `INSERT INTO guestbooks (ShortId, UserId, WebsiteId, Created, IsDeleted, IsActive)
-    VALUES(?, ?, ?, ?, FALSE, TRUE)`
+	stmt := `INSERT INTO guestbooks (ShortId, UserId, WebsiteId, Created, IsActive)
+    VALUES(?, ?, ?, ?, TRUE)`
 	result, err := m.DB.Exec(stmt, shortId, userId, websiteId, time.Now().UTC())
 	if err != nil {
 		return -1, err
@@ -34,21 +34,24 @@ func (m *GuestbookModel) Insert(shortId uint64, userId int64, websiteId int64) (
 }
 
 func (m *GuestbookModel) Get(shortId uint64) (Guestbook, error) {
-	stmt := `SELECT Id, ShortId, UserId, WebsiteId, Created, IsDeleted, IsActive FROM guestbooks
+	stmt := `SELECT Id, ShortId, UserId, WebsiteId, Created, Deleted, IsActive FROM guestbooks
     WHERE ShortId = ?`
 	row := m.DB.QueryRow(stmt, shortId)
 	var g Guestbook
-	err := row.Scan(&g.ID, &g.ShortId, &g.UserId, &g.WebsiteId, &g.Created, &g.IsDeleted, &g.IsActive)
+	var t sql.NullTime
+	err := row.Scan(&g.ID, &g.ShortId, &g.UserId, &g.WebsiteId, &g.Created, &t, &g.IsActive)
 	if err != nil {
 		return Guestbook{}, err
 	}
-
+	if t.Valid {
+		g.Deleted = t.Time
+	}
 	return g, nil
 }
 
 func (m *GuestbookModel) GetAll(userId int64) ([]Guestbook, error) {
-	stmt := `SELECT Id, ShortId, UserId, WebsiteId, Created, IsDeleted, IsActive FROM guestbooks
-    WHERE UserId = ?`
+	stmt := `SELECT Id, ShortId, UserId, WebsiteId, Created, IsActive FROM guestbooks
+    WHERE UserId = ? AND DELETED IS NULL`
 	rows, err := m.DB.Query(stmt, userId)
 	if err != nil {
 		return nil, err
@@ -56,7 +59,7 @@ func (m *GuestbookModel) GetAll(userId int64) ([]Guestbook, error) {
 	var guestbooks []Guestbook
 	for rows.Next() {
 		var g Guestbook
-		err = rows.Scan(&g.ID, &g.ShortId, &g.UserId, &g.WebsiteId, &g.Created, &g.IsDeleted, &g.IsActive)
+		err = rows.Scan(&g.ID, &g.ShortId, &g.UserId, &g.WebsiteId, &g.Created, &g.IsActive)
 		if err != nil {
 			return nil, err
 		}

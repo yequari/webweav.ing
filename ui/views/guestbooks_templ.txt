@@ -6,6 +6,10 @@
 <p>No comments yet!</p>
 <div><strong>
 </strong> 
+ 
+<a href=\"#\" hx-delete=\"
+\" hx-target=\"closest div\" hx-headers=\"
+\">Delete</a>
 <p>
 </p></div>
 </div></div>
@@ -27,12 +31,13 @@
 </strong> 
 <p>
 </p></div>
-<div id=\"main\"><div><h1>Guestbook for 
+<html><head><title>
+</title></head><body><main><div><h1>Guestbook for 
 </h1><form action=\"
 \" method=\"post\"><input type=\"hidden\" name=\"csrf_token\" value=\"
 \">
 </form></div><div id=\"comments\">
-</div></div>
+</div></main></body></html>
 <form hx-post=\"
 \" hx-target=\"closest div\">
 </form>

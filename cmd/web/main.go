@@ -78,7 +78,11 @@ func main() {
 
 	logger.Info("Starting server", slog.Any("addr", *addr))
 
-	err = srv.ListenAndServeTLS("./tls/cert.pem", "./tls/key.pem")
+	if app.debug {
+		err = srv.ListenAndServeTLS("./tls/cert.pem", "./tls/key.pem")
+	} else {
+		err = srv.ListenAndServe()
+	}
 	logger.Error(err.Error())
 	os.Exit(1)
 }

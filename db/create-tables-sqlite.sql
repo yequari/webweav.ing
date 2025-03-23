@@ -3,7 +3,7 @@ CREATE TABLE users (
     ShortId integer UNIQUE NOT NULL,
     Username varchar(32) NOT NULL,
     Email varchar(256) UNIQUE NOT NULL,
-    IsDeleted boolean NOT NULL DEFAULT FALSE,
+    Deleted datetime,
     IsBanned boolean NOT NULL DEFAULT FALSE,
     HashedPassword char(60) NOT NULL,
     Created datetime NOT NULL

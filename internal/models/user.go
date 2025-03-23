@@ -15,7 +15,7 @@ type User struct {
 	ShortId        uint64
 	Username       string
 	Email          string
-	IsDeleted      bool
+	Deleted        bool
 	IsBanned       bool
 	HashedPassword []byte
 	Created        time.Time
@@ -30,8 +30,8 @@ func (m *UserModel) Insert(shortId uint64, username string, email string, passwo
 	if err != nil {
 		return err
 	}
-	stmt := `INSERT INTO users (ShortId, Username, Email, IsDeleted, IsBanned, HashedPassword, Created)
-    VALUES (?, ?, ?, FALSE, FALSE, ?, ?)`
+	stmt := `INSERT INTO users (ShortId, Username, Email, IsBanned, HashedPassword, Created)
+    VALUES (?, ?, ?, FALSE, ?, ?)`
 	_, err = m.DB.Exec(stmt, shortId, username, email, hashedPassword, time.Now().UTC())
 	if err != nil {
 		if sqliteError, ok := err.(sqlite3.Error); ok {
@@ -45,7 +45,7 @@ func (m *UserModel) Insert(shortId uint64, username string, email string, passwo
 }
 
 func (m *UserModel) Get(id uint64) (User, error) {
-	stmt := `SELECT Id, ShortId, Username, Email, Created FROM users WHERE ShortId = ? AND IsDeleted = FALSE`
+	stmt := `SELECT Id, ShortId, Username, Email, Created FROM users WHERE ShortId = ? AND Deleted IS NULL`
 	row := m.DB.QueryRow(stmt, id)
 	var u User
 	err := row.Scan(&u.ID, &u.ShortId, &u.Username, &u.Email, &u.Created)
@@ -59,7 +59,7 @@ func (m *UserModel) Get(id uint64) (User, error) {
 }
 
 func (m *UserModel) GetById(id int64) (User, error) {
-	stmt := `SELECT Id, ShortId, Username, Email, Created FROM users WHERE Id = ? AND IsDeleted = FALSE`
+	stmt := `SELECT Id, ShortId, Username, Email, Created FROM users WHERE Id = ? AND Deleted IS NULL`
 	row := m.DB.QueryRow(stmt, id)
 	var u User
 	err := row.Scan(&u.ID, &u.ShortId, &u.Username, &u.Email, &u.Created)
@@ -73,7 +73,7 @@ func (m *UserModel) GetById(id int64) (User, error) {
 }
 
 func (m *UserModel) GetAll() ([]User, error) {
-	stmt := `SELECT Id, ShortId, Username, Email, Created FROM users WHERE IsDeleted = FALSE`
+	stmt := `SELECT Id, ShortId, Username, Email, Created FROM users WHERE DELETED IS NULL`
 	rows, err := m.DB.Query(stmt)
 	if err != nil {
 		return nil, err
@@ -121,7 +121,7 @@ func (m *UserModel) Authenticate(email, password string) (int64, error) {
 
 func (m *UserModel) Exists(id int64) (bool, error) {
 	var exists bool
-	stmt := `SELECT EXISTS(SELECT true FROM users WHERE Id = ? AND IsDeleted = False)`
+	stmt := `SELECT EXISTS(SELECT true FROM users WHERE Id = ? AND DELETED IS NULL)`
 	err := m.DB.QueryRow(stmt, id).Scan(&exists)
 	return exists, err
 }

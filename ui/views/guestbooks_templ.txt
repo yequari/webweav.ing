@@ -1,10 +1,28 @@
-<input type=\"hidden\" name=\"csrf_token\" value=\"
-\"> <label for=\"siteurl\">Site URL: </label> <input type=\"text\" name=\"siteurl\" id=\"siteurl\" required> <button type=\"submit\">Submit</button>
 <div id=\"dashboard\">
 <div><h1>Comments on 
-</h1>
+</h1><hr>
 <p>No comments yet!</p>
 </div></div>
+<div class=\"comment\"><div>
+<button class=\"danger\" hx-delete=\"
+\" hx-target=\"closest div.comment\" hx-headers=\"
+\">Delete</button> <button class=\"outline\" hx-put=\"
+\" hx-target=\"closest div.comment\" hx-headers=\"
+\">
+Publish
+Hide
+</button>
+</div><div><strong>
+</strong> 
+| <a href=\"
+\" target=\"_blank\">
+</a> 
+| <a href=\"
+\" target=\"_blank\">
+</a>
+<p>
+</p></div><p>
+</p><hr></div>
 <div><label for=\"authorname\">Name: </label>
 <label class=\"error\">
 </label> 
@@ -18,17 +36,17 @@
 <label class=\"error\">
 </label> 
 <textarea name=\"content\" id=\"content\"></textarea></div><div><input type=\"submit\" value=\"Submit\"></div>
-<p>No comments yet!</p>
-<div><strong>
-</strong> 
-<p>
-</p></div>
 <html><head><title>
-</title></head><body><main><div><h1>Guestbook for 
+</title><link href=\"/static/css/classless.min.css\" rel=\"stylesheet\"></head><body><main><div><h1>Guestbook for 
 </h1><form action=\"
 \" method=\"post\"><input type=\"hidden\" name=\"csrf_token\" value=\"
 \">
 </form></div><div id=\"comments\">
+<p>No comments yet!</p>
+<div><h3>
+</h3>
+<p>
+</p></div>
 </div></main></body></html>
 <form hx-post=\"
 \" hx-target=\"closest div\">
@@ -36,23 +54,6 @@
 <form action=\"
 \" method=\"post\">
 </form>
-<div><strong>
-</strong> 
-<p>
-</p></div>
-<div><strong>
-</strong> 
- 
-<a href=\"#\" hx-delete=\"
-\" hx-target=\"closest div\" hx-headers=\"
-\">Delete</a> <a href=\"#\" hx-put=\"
-\" hx-target=\"closest div\" hx-headers=\"
-\">
-Publish
-Hide
-</a>
-<p>
-</p></div>
 <div><h1>All Guestbooks</h1><p>This page exists only for testing the service.</p><ul>
 <li>
 <a href=\"

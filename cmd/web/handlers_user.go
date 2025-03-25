@@ -98,7 +98,8 @@ func (app *application) postUserLogout(w http.ResponseWriter, r *http.Request) {
 	}
 	app.sessionManager.Remove(r.Context(), "authenticatedUserId")
 	app.sessionManager.Put(r.Context(), "flash", "You've been logged out successfully!")
-	http.Redirect(w, r, "/", http.StatusSeeOther)
+	w.Header().Add("HX-Redirect", "/")
+	// http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
 // func (app *application) getUsersList(w http.ResponseWriter, r *http.Request) {

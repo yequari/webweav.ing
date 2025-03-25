@@ -16,7 +16,7 @@ templ wSidebar(website models.Website) {
             <h2>{ website.Name}</h2>
             <ul>
                 <li><a href={ templ.URL(dashUrl) }>Dashboard</a></li>
-                <li><a href={ templ.URL(website.SiteUrl) }>View Website</a></li>
+                <li><a href={ templ.URL(externalUrl(website.SiteUrl)) } target="_blank">View Website</a></li>
             </ul>
             <h3>Guestbook</h3>
             <ul>

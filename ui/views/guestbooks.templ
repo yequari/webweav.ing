@@ -4,23 +4,13 @@ import "fmt"
 import "git.32bit.cafe/32bitcafe/guestbook/internal/models"
 import "git.32bit.cafe/32bitcafe/guestbook/internal/forms"
 
-func gbUrl(gb models.Guestbook) string {
-    return fmt.Sprintf("/guestbooks/%s", shortIdToSlug(gb.ShortId))
-}
-
-templ gbCreateForm(csrf_token string) {
-    <input type="hidden" name="csrf_token" value={ csrf_token }>
-    <label for="siteurl">Site URL: </label>
-    <input type="text" name="siteurl" id="siteurl" required />
-    <button type="submit">Submit</button>
-}
-
 templ GuestbookDashboardCommentsView(title string, data CommonData, website models.Website, guestbook models.Guestbook, comments []models.GuestbookComment) {
     @base(title, data) {
         <div id="dashboard">
             @wSidebar(website)
             <div>
                 <h1>Comments on { website.SiteUrl }</h1>
+                <hr>
                 if len(comments) == 0 {
                     <p>No comments yet!</p>
                 }
@@ -30,6 +20,42 @@ templ GuestbookDashboardCommentsView(title string, data CommonData, website mode
             </div>
         </div>
     }
+}
+
+templ GuestbookDashboardCommentView(data CommonData, w models.Website, c models.GuestbookComment) {
+    {{ commentUrl := fmt.Sprintf("%s/dashboard/guestbook/comments/%s", wUrl(w), shortIdToSlug(c.ShortId)) }}
+    {{ hxHeaders := fmt.Sprintf("{\"X-CSRF-Token\": \"%s\"}", data.CSRFToken) }}
+    <div class="comment">
+        <div>
+            if c.Deleted.IsZero() {
+                <button class="danger" hx-delete={ commentUrl } hx-target="closest div.comment" hx-headers={ hxHeaders }>Delete</button>
+                <button class="outline" hx-put={ commentUrl } hx-target="closest div.comment" hx-headers={ hxHeaders }>
+                    if !c.IsPublished {
+                        Publish
+                    } else {
+                        Hide
+                    }
+                </button> 
+            }
+        </div>
+        <div>
+            <strong>{ c.AuthorName }</strong>
+            if len(c.AuthorEmail) > 0 {
+                {{ email := "mailto:" + c.AuthorEmail}}
+                | <a href={ templ.URL(email) } target="_blank">{ c.AuthorEmail }</a>
+            }
+            if len(c.AuthorSite) > 0 {
+                | <a href={ templ.URL(externalUrl(c.AuthorSite))} target="_blank">{ c.AuthorSite }</a>
+            }
+            <p>
+                { c.Created.Format("01-02-2006 03:04PM") }
+            </p>
+        </div>
+        <p>
+            { c.CommentText }
+        </p>
+        <hr>
+    </div>
 }
 
 templ commentForm(form forms.CommentCreateForm) {
@@ -70,21 +96,6 @@ templ commentForm(form forms.CommentCreateForm) {
     </div>
 }
 
-templ GuestbookCommentList(comments []models.GuestbookComment) {
-    if len(comments) == 0 {
-        <p>No comments yet!</p>
-    }
-    for _, c := range comments {
-        <div>
-            <strong>{ c.AuthorName }</strong>
-            { c.Created.Format("01-02-2006 03:04PM") }
-            <p>
-                { c.CommentText }
-            </p>
-        </div>
-    }
-}
-
 templ GuestbookView(title string, data CommonData, website models.Website, guestbook models.Guestbook, comments []models.GuestbookComment, form forms.CommentCreateForm) {
     {{ postUrl := fmt.Sprintf("/websites/%s/guestbook/comments/create", shortIdToSlug(website.ShortId)) }}
     if data.IsHtmx {
@@ -93,29 +104,41 @@ templ GuestbookView(title string, data CommonData, website models.Website, guest
         <html>
             <head>
             <title>{ title }</title>
+            <link href="/static/css/classless.min.css" rel="stylesheet">
             </head>
             <body>
                 <main>
                     <div>
-                        <h1>Guestbook for { website.SiteUrl }</h1>
+                        <h1>Guestbook for { website.Name }</h1>
                         <form action={ templ.URL(postUrl) } method="post">
                             <input type="hidden" name="csrf_token" value={data.CSRFToken}>
                             @commentForm(form)
                         </form>
                     </div>
                     <div id="comments">
-                        @GuestbookCommentList(comments)
+                        if len(comments) == 0 {
+                            <p>No comments yet!</p>
+                        }
+                        for _, c := range comments {
+                            <div>
+                                <h3>{ c.AuthorName }</h3>
+                                { c.Created.Format("01-02-2006 03:04PM") }
+                                <p>
+                                    { c.CommentText }
+                                </p>
+                            </div>
+                        }
                     </div>
-                </main>
-            </body>
-        </html>
+                    </main>
+                </body>
+            </html>
+        }
     }
-}
 
-templ CreateGuestbookComment(title string, data CommonData, website models.Website, guestbook models.Guestbook, form forms.CommentCreateForm) {
-    {{ postUrl := fmt.Sprintf("/websites/%s/guestbook/comments/create", shortIdToSlug(website.ShortId)) }}
-    if data.IsHtmx {
-        <form hx-post={ postUrl } hx-target="closest div">
+    templ CreateGuestbookComment(title string, data CommonData, website models.Website, guestbook models.Guestbook, form forms.CommentCreateForm) {
+        {{ postUrl := fmt.Sprintf("/websites/%s/guestbook/comments/create", shortIdToSlug(website.ShortId)) }}
+        if data.IsHtmx {
+            <form hx-post={ postUrl } hx-target="closest div">
             @commentForm(form)
         </form>
     } else {
@@ -125,38 +148,6 @@ templ CreateGuestbookComment(title string, data CommonData, website models.Websi
             </form>
         }
     }
-}
-
-templ GuestbookCommentView(c models.GuestbookComment) {
-    <div>
-        <strong>{ c.AuthorName }</strong>
-        { c.Created.Format("01-02-2006 03:04PM") }
-        <p>
-            { c.CommentText }
-        </p>
-    </div>
-}
-
-templ GuestbookDashboardCommentView(data CommonData, w models.Website, c models.GuestbookComment) {
-    {{ commentUrl := fmt.Sprintf("%s/dashboard/guestbook/comments/%s", wUrl(w), shortIdToSlug(c.ShortId)) }}
-    {{ hxHeaders := fmt.Sprintf("{\"X-CSRF-Token\": \"%s\"}", data.CSRFToken) }}
-    <div>
-        <strong>{ c.AuthorName }</strong>
-        { c.Created.Format("01-02-2006 03:04PM") }
-        if c.Deleted.IsZero() {
-            <a href="#" hx-delete={ commentUrl } hx-target="closest div" hx-headers={ hxHeaders }>Delete</a>
-            <a href="#" hx-put={ commentUrl } hx-target="closest div" hx-headers={ hxHeaders }>
-                if !c.IsPublished {
-                    Publish
-                } else {
-                    Hide
-                }
-            </a> 
-        }
-        <p>
-            { c.CommentText }
-        </p>
-    </div>
 }
 
 templ AllGuestbooksView(data CommonData, websites []models.Website) {

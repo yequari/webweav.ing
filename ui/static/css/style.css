@@ -1,12 +1,12 @@
-html {
+/* html {
   background: lightgray;
-}
+} */
 
 body {
   max-width: 1024px;
   margin: 1rem auto;
   padding: 1rem;
-  background: white;
+  /* background: white; */
   font-size: 1.2rem;
   line-height: 1.5;
   font-family: Arial, Helvetica, sans-serif;
@@ -41,8 +41,8 @@ nav button {
   background: none;
   font-family: unset;
   font-size: unset;
-  color: blue;
-  text-decoration: underline;
+  /* color: blue; */
+  /* text-decoration: underline; */
   cursor: pointer;
 }
 
@@ -75,5 +75,5 @@ footer {
 }
 
 a {
-  color: blue;
+  /* color: blue; */
 }

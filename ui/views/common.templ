@@ -2,6 +2,8 @@ package views
 
 import "git.32bit.cafe/32bitcafe/guestbook/internal/models"
 import "strconv"
+import "fmt"
+import "strings"
 
 type CommonData struct {
     CurrentYear int
@@ -21,6 +23,13 @@ func slugToShortId(slug string) uint64 {
     return id
 }
 
+func externalUrl(url string) string {
+    if !strings.HasPrefix(url, "http") {
+        return "http://" + url
+    }
+    return url
+}
+
 templ commonHeader() {
     <header>
         <h1><a href="/">webweav.ing</a></h1>
@@ -28,6 +37,7 @@ templ commonHeader() {
 }
 
 templ topNav(data CommonData) {
+    {{ hxHeaders := fmt.Sprintf("{\"X-CSRF-Token\": \"%s\"}", data.CSRFToken) }}
     <nav>
         <div>
             if data.IsAuthenticated {
@@ -39,10 +49,7 @@ templ topNav(data CommonData) {
                 <a href="/guestbooks">All Guestbooks</a> |
                 <a href="/websites">My Websites</a> | 
                 <a href="/users/settings">Settings</a> | 
-                <form action="/users/logout" method="post">
-                    <input type="hidden" name="csrf_token" value={ data.CSRFToken }>
-                    <button>Logout</button>
-                </form>
+                <a href="#" hx-post="/users/logout" hx-headers={ hxHeaders }>Logout</a>
             } else {
                 <a href="/users/register">Create an Account</a> | 
                 <a href="/users/login">Login</a>
@@ -54,8 +61,7 @@ templ topNav(data CommonData) {
 
 templ commonFooter() {
     <footer>
-        <p>Generated with Templ</p>
-        <p>A <a href="https://32bit.cafe">32-bit cafe</a> Project</p>
+        <p>A <a href="https://32bit.cafe">32bit.cafe</a> Project</p>
     </footer>
 }
 
@@ -66,6 +72,7 @@ templ base(title string, data CommonData) {
             <title>{ title } - webweav.ing</title>
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1">
+            <link href="/static/css/classless.min.css" rel="stylesheet">
             <link href="/static/css/style.css" rel="stylesheet">
             <script src="/static/js/htmx.min.js"></script>
         </head>

@@ -1,7 +1,7 @@
 <nav><div><h2>
 </h2><ul><li><a href=\"
 \">Dashboard</a></li><li><a href=\"
-\">View Website</a></li></ul><h3>Guestbook</h3><ul><li><a href=\"
+\" target=\"_blank\">View Website</a></li></ul><h3>Guestbook</h3><ul><li><a href=\"
 \" target=\"_blank\">View Guestbook</a></li></ul><ul><li><a href=\"
 \">Manage messages</a></li><li><a href=\"
 \">Review message queue</a></li><li><a href=\"

@@ -31,3 +31,4 @@ tls/
 test.db.old
 .gitignore
 .nvim/session
+*templ.txt

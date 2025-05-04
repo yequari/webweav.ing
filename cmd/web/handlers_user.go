@@ -39,7 +39,8 @@ func (app *application) postUserRegister(w http.ResponseWriter, r *http.Request)
 		return
 	}
 	shortId := app.createShortId()
-	err = app.users.Insert(shortId, form.Name, form.Email, form.Password)
+	settings := DefaultUserSettings()
+	err = app.users.Insert(shortId, form.Name, form.Email, form.Password, settings)
 	if err != nil {
 		if errors.Is(err, models.ErrDuplicateEmail) {
 			form.AddFieldError("email", "Email address is already in use")
@@ -128,4 +129,35 @@ func (app *application) getUser(w http.ResponseWriter, r *http.Request) {
 	}
 	data := app.newCommonData(r)
 	views.UserProfile(user.Username, data, user).Render(r.Context(), w)
+}
+
+func (app *application) getUserSettings(w http.ResponseWriter, r *http.Request) {
+	data := app.newCommonData(r)
+	views.UserSettingsView(data, app.timezones).Render(r.Context(), w)
+}
+
+func (app *application) putUserSettings(w http.ResponseWriter, r *http.Request) {
+	userId := app.getCurrentUser(r).ID
+	var form forms.UserSettingsForm
+	err := app.decodePostForm(r, &form)
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		app.serverError(w, r, err)
+		return
+	}
+	form.CheckField(validator.PermittedValue(form.LocalTimezone, app.timezones...), "timezone", "Invalid value")
+	if !form.Valid() {
+		// rerender template with errors
+		app.clientError(w, http.StatusUnprocessableEntity)
+	}
+	err = app.users.SetLocalTimezone(userId, form.LocalTimezone)
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
+	app.sessionManager.Put(r.Context(), "flash", "Settings changed successfully")
+	data := app.newCommonData(r)
+	w.Header().Add("HX-Refresh", "true")
+	views.UserSettingsView(data, app.timezones).Render(r.Context(), w)
+
 }

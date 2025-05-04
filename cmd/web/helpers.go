@@ -112,3 +112,9 @@ func (app *application) newCommonData(r *http.Request) views.CommonData {
 		IsHtmx:          r.Header.Get("Hx-Request") == "true",
 	}
 }
+
+func DefaultUserSettings() models.UserSettings {
+	return models.UserSettings{
+		LocalTimezone: time.Now().UTC().Location(),
+	}
+}

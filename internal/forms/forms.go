@@ -29,3 +29,8 @@ type WebsiteCreateForm struct {
 	AuthorName          string `schema:"authorname"`
 	validator.Validator `schema:"-"`
 }
+
+type UserSettingsForm struct {
+	LocalTimezone       string `schema:"timezones"`
+	validator.Validator `schema:"-"`
+}

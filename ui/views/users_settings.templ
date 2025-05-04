@@ -1,0 +1,24 @@
+package views
+
+templ UserSettingsView(data CommonData, timezones []string) {
+	{{ user := data.CurrentUser }}
+	@base("User Settings", data) {
+		<div>
+			<h1>User Settings</h1>
+			<form hx-put="/users/settings">
+				<input type="hidden" name="csrf_token" value={ data.CSRFToken }/>
+				<h3>Timezone</h3>
+				<select name="timezones" id="timezone-select">
+					for _, tz := range timezones {
+						if tz == user.Settings.LocalTimezone.String() {
+							<option value={ tz } selected="true">{ tz }</option>
+						} else {
+							<option value={ tz }>{ tz }</option>
+						}
+					}
+				</select>
+				<input type="submit" value="Submit"/>
+			</form>
+		</div>
+	}
+}

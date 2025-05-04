@@ -10,6 +10,14 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+const (
+	u_timezone = 1
+)
+
+type UserSettings struct {
+	LocalTimezone *time.Location
+}
+
 type User struct {
 	ID             int64
 	ShortId        uint64
@@ -19,26 +27,38 @@ type User struct {
 	IsBanned       bool
 	HashedPassword []byte
 	Created        time.Time
+	Settings       UserSettings
 }
 
 type UserModel struct {
 	DB *sql.DB
 }
 
-func (m *UserModel) Insert(shortId uint64, username string, email string, password string) error {
+func (m *UserModel) Insert(shortId uint64, username string, email string, password string, settings UserSettings) error {
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), 12)
 	if err != nil {
 		return err
 	}
 	stmt := `INSERT INTO users (ShortId, Username, Email, IsBanned, HashedPassword, Created)
     VALUES (?, ?, ?, FALSE, ?, ?)`
-	_, err = m.DB.Exec(stmt, shortId, username, email, hashedPassword, time.Now().UTC())
+	result, err := m.DB.Exec(stmt, shortId, username, email, hashedPassword, time.Now().UTC())
 	if err != nil {
 		if sqliteError, ok := err.(sqlite3.Error); ok {
 			if sqliteError.ExtendedCode == 2067 && strings.Contains(sqliteError.Error(), "Email") {
 				return ErrDuplicateEmail
 			}
 		}
+		return err
+	}
+	id, err := result.LastInsertId()
+	if err != nil {
+		return err
+	}
+	settingsStmt := `INSERT INTO user_settings 
+		(UserId, SettingId, AllowedSettingValueId, UnconstrainedValue)
+		VALUES (?, ?, ?, ?)`
+	_, err = m.DB.Exec(settingsStmt, id, u_timezone, nil, settings.LocalTimezone.String())
+	if err != nil {
 		return err
 	}
 	return nil
@@ -55,6 +75,11 @@ func (m *UserModel) Get(id uint64) (User, error) {
 		}
 		return User{}, err
 	}
+	settings, err := m.GetSettings(u.ID)
+	if err != nil {
+		return u, err
+	}
+	u.Settings = settings
 	return u, nil
 }
 
@@ -69,6 +94,11 @@ func (m *UserModel) GetById(id int64) (User, error) {
 		}
 		return User{}, err
 	}
+	settings, err := m.GetSettings(u.ID)
+	if err != nil {
+		return u, err
+	}
+	u.Settings = settings
 	return u, nil
 }
 
@@ -124,4 +154,41 @@ func (m *UserModel) Exists(id int64) (bool, error) {
 	stmt := `SELECT EXISTS(SELECT true FROM users WHERE Id = ? AND DELETED IS NULL)`
 	err := m.DB.QueryRow(stmt, id).Scan(&exists)
 	return exists, err
+}
+
+func (m *UserModel) GetSettings(userId int64) (UserSettings, error) {
+	stmt := `SELECT u.SettingId, a.ItemValue, u.UnconstrainedValue FROM user_settings AS u
+			LEFT JOIN allowed_setting_values AS a ON u.SettingId = a.SettingId
+			WHERE UserId = ?`
+	var settings UserSettings
+	rows, err := m.DB.Query(stmt, userId)
+	if err != nil {
+		return settings, err
+	}
+	for rows.Next() {
+		var id int
+		var itemValue sql.NullString
+		var unconstrainedValue sql.NullString
+		err = rows.Scan(&id, &itemValue, &unconstrainedValue)
+		if err != nil {
+			return settings, err
+		}
+		switch id {
+		case u_timezone:
+			settings.LocalTimezone, err = time.LoadLocation(unconstrainedValue.String)
+			if err != nil {
+				panic(err)
+			}
+		}
+	}
+	return settings, err
+}
+
+func (m *UserModel) SetLocalTimezone(userId int64, timezone string) error {
+	stmt := `UPDATE user_settings SET UnconstrainedValue = ? WHERE UserId = ?`
+	_, err := m.DB.Exec(stmt, timezone, userId)
+	if err != nil {
+		return err
+	}
+	return nil
 }

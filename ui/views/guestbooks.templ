@@ -48,7 +48,7 @@ templ GuestbookDashboardCommentView(data CommonData, w models.Website, c models.
                 | <a href={ templ.URL(externalUrl(c.AuthorSite))} target="_blank">{ c.AuthorSite }</a>
             }
             <p>
-                { c.Created.Format("01-02-2006 03:04PM") }
+                { c.Created.In(data.CurrentUser.Settings.LocalTimezone).Format("01-02-2006 03:04PM") }
             </p>
         </div>
         <p>

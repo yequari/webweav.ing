@@ -4,151 +4,151 @@ import "fmt"
 import "git.32bit.cafe/32bitcafe/guestbook/internal/models"
 import "git.32bit.cafe/32bitcafe/guestbook/internal/forms"
 
-func wUrl (w models.Website) string {
-    return fmt.Sprintf("/websites/%s", shortIdToSlug(w.ShortId))
+func wUrl(w models.Website) string {
+	return fmt.Sprintf("/websites/%s", shortIdToSlug(w.ShortId))
 }
 
 templ wSidebar(website models.Website) {
-    {{ dashUrl := wUrl(website) + "/dashboard" }}
-    {{ gbUrl := wUrl(website) + "/guestbook" }}
-    <nav>
-        <div>
-            <h2>{ website.Name}</h2>
-            <ul>
-                <li><a href={ templ.URL(dashUrl) }>Dashboard</a></li>
-                <li><a href={ templ.URL(externalUrl(website.SiteUrl)) } target="_blank">View Website</a></li>
-            </ul>
-            <h3>Guestbook</h3>
-            <ul>
-                <li><a href={ templ.URL(gbUrl) } target="_blank">View Guestbook</a></li>
-            </ul>
-            <ul>
-                <li><a href={ templ.URL(dashUrl + "/guestbook/comments") }>Manage messages</a></li>
-                <li><a href={ templ.URL(dashUrl + "/guestbook/comments/queue") }>Review message queue</a></li>
-                <li><a href={ templ.URL(dashUrl + "/guestbook/blocklist") }>Block users</a></li>
-                <li><a href={ templ.URL(dashUrl + "/guestbook/comments/trash") }>Trash</a></li>
-            </ul>
-            <ul>
-                <li><a href={ templ.URL(dashUrl + "/guestbook/themes") }>Themes</a></li>
-                <li><a href={ templ.URL(dashUrl + "/guestbook/customize") }>Custom CSS</a></li>
-            </ul>
-        </div>
-        <div>
-            <h3>Feeds</h3>
-            <p>Coming Soon</p>
-        </div>
-        <div>
-            <h3>Account</h3>
-            <ul>
-                <li><a href="/users/settings">Settings</a></li>
-                <li><a href="/users/privacy">Privacy</a></li>
-                <li><a href="/help">Help</a></li>
-            </ul>
-        </div>
-    </nav>
+	{{ dashUrl := wUrl(website) + "/dashboard" }}
+	{{ gbUrl := wUrl(website) + "/guestbook" }}
+	<nav>
+		<div>
+			<h2>{ website.Name }</h2>
+			<ul>
+				<li><a href={ templ.URL(dashUrl) }>Dashboard</a></li>
+				<li><a href={ templ.URL(externalUrl(website.SiteUrl)) } target="_blank">View Website</a></li>
+			</ul>
+			<h3>Guestbook</h3>
+			<ul>
+				<li><a href={ templ.URL(gbUrl) } target="_blank">View Guestbook</a></li>
+			</ul>
+			<ul>
+				<li><a href={ templ.URL(dashUrl + "/guestbook/comments") }>Manage messages</a></li>
+				<li><a href={ templ.URL(dashUrl + "/guestbook/comments/queue") }>Review message queue</a></li>
+				<li><a href={ templ.URL(dashUrl + "/guestbook/blocklist") }>Block users</a></li>
+				<li><a href={ templ.URL(dashUrl + "/guestbook/comments/trash") }>Trash</a></li>
+			</ul>
+			<ul>
+				<li><a href={ templ.URL(dashUrl + "/guestbook/themes") }>Themes</a></li>
+				<li><a href={ templ.URL(dashUrl + "/guestbook/customize") }>Custom CSS</a></li>
+			</ul>
+		</div>
+		<div>
+			<h3>Feeds</h3>
+			<p>Coming Soon</p>
+		</div>
+		<div>
+			<h3>Account</h3>
+			<ul>
+				<li><a href="/users/settings">Settings</a></li>
+				<li><a href="/users/privacy">Privacy</a></li>
+				<li><a href="/help">Help</a></li>
+			</ul>
+		</div>
+	</nav>
 }
 
-templ displayWebsites (websites []models.Website) {
-    if len(websites) == 0 {
-        <p>No Websites yet. <a href="">Register a website.</a></p>
-    } else {
-        <ul id="websites" hx-get="/websites" hx-trigger="newWebsite from:body" hx-swap="outerHTML">
-            for _, w := range websites {
-                <li>
-                    <a href={ templ.URL(wUrl(w) + "/dashboard")}>{ w.Name }</a>
-                </li>
-            }
-        </ul>
-    }
+templ displayWebsites(websites []models.Website) {
+	if len(websites) == 0 {
+		<p>No Websites yet. <a href="">Register a website.</a></p>
+	} else {
+		<ul id="websites" hx-get="/websites" hx-trigger="newWebsite from:body" hx-swap="outerHTML">
+			for _, w := range websites {
+				<li>
+					<a href={ templ.URL(wUrl(w) + "/dashboard") }>{ w.Name }</a>
+				</li>
+			}
+		</ul>
+	}
 }
 
 templ websiteCreateForm(csrfToken string, form forms.WebsiteCreateForm) {
-    <input type="hidden" name="csrf_token" value={csrfToken}>
-    <div>
-        {{ err, exists := form.FieldErrors["sitename"]}}
-        <label for="sitename">Site Name: </label>
-        if exists {
-            <label class="error">{ err }</label>
-        }
-        <input type="text" name="sitename" id="sitename" required />
-    </div>
-    <div>
-        {{ err, exists = form.FieldErrors["siteurl"] }}
-        <label for="siteurl">Site URL: </label>
-        if exists {
-            <label class="error">{ err }</label>
-        }
-        <input type="text" name="siteurl" id="siteurl" required />
-    </div>
-    <div>
-        {{ err, exists = form.FieldErrors["authorname"] }}
-        <label for="authorname">Site Author: </label>
-        if exists {
-            <label class="error">{ err }</label>
-        }
-        <input type="text" name="authorname" id="authorname" required />
-    </div>
-    <div>
-        <button type="submit">Submit</button>
-    </div>
+	<input type="hidden" name="csrf_token" value={ csrfToken }/>
+	<div>
+		{{ err, exists := form.FieldErrors["sitename"] }}
+		<label for="sitename">Site Name: </label>
+		if exists {
+			<label class="error">{ err }</label>
+		}
+		<input type="text" name="sitename" id="sitename" required/>
+	</div>
+	<div>
+		{{ err, exists = form.FieldErrors["siteurl"] }}
+		<label for="siteurl">Site URL: </label>
+		if exists {
+			<label class="error">{ err }</label>
+		}
+		<input type="text" name="siteurl" id="siteurl" required/>
+	</div>
+	<div>
+		{{ err, exists = form.FieldErrors["authorname"] }}
+		<label for="authorname">Site Author: </label>
+		if exists {
+			<label class="error">{ err }</label>
+		}
+		<input type="text" name="authorname" id="authorname" required/>
+	</div>
+	<div>
+		<button type="submit">Submit</button>
+	</div>
 }
 
 templ WebsiteCreateButton() {
-    <button hx-get="/websites/create" hx-target="closest div">Add Website</button>
+	<button hx-get="/websites/create" hx-target="closest div">Add Website</button>
 }
 
 templ WebsiteList(title string, data CommonData, websites []models.Website) {
-    if data.IsHtmx {
-        @displayWebsites(websites)
-    } else {
-        @base(title, data) {
-            <h1>My Websites</h1>
-            <div>
-                @WebsiteCreateButton()
-            </div>
-            <div>
-                @displayWebsites(websites)
-            </div>
-        }
-    }
+	if data.IsHtmx {
+		@displayWebsites(websites)
+	} else {
+		@base(title, data) {
+			<h1>My Websites</h1>
+			<p>
+				@WebsiteCreateButton()
+			</p>
+			<div>
+				@displayWebsites(websites)
+			</div>
+		}
+	}
 }
 
 templ WebsiteDashboard(title string, data CommonData, website models.Website) {
-    @base(title, data) {
-        <div id="dashboard">
-            @wSidebar(website) 
-            <div>
-                <h1>{ website.Name }</h1>
-                <p>
-                    Stats and stuff will go here.
-                </p>
-            </div>
-        </div>
-    }
+	@base(title, data) {
+		<div id="dashboard">
+			@wSidebar(website)
+			<div>
+				<h1>{ website.Name }</h1>
+				<p>
+					Stats and stuff will go here.
+				</p>
+			</div>
+		</div>
+	}
 }
 
 templ WebsiteDashboardComingSoon(title string, data CommonData, website models.Website) {
-    @base(title, data) {
-        <div id="dashboard">
-            @wSidebar(website) 
-            <div>
-                <h1>{ website.Name }</h1>
-                <p>
-                    Coming Soon
-                </p>
-            </div>
-        </div>
-    }
+	@base(title, data) {
+		<div id="dashboard">
+			@wSidebar(website)
+			<div>
+				<h1>{ website.Name }</h1>
+				<p>
+					Coming Soon
+				</p>
+			</div>
+		</div>
+	}
 }
 
 templ WebsiteCreate(title string, data CommonData, form forms.WebsiteCreateForm) {
-    if data.IsHtmx {
-        <form hx-post="/websites/create" hx-target="closest div">
-            @websiteCreateForm(data.CSRFToken, form)
-        </form>
-    } else {
-        <form action="/websites/create" method="post">
-            @websiteCreateForm(data.CSRFToken, form)
-        </form>
-    }
+	if data.IsHtmx {
+		<form hx-post="/websites/create" hx-target="closest div">
+			@websiteCreateForm(data.CSRFToken, form)
+		</form>
+	} else {
+		<form action="/websites/create" method="post">
+			@websiteCreateForm(data.CSRFToken, form)
+		</form>
+	}
 }

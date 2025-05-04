@@ -79,5 +79,11 @@ templ UserProfile (title string, data CommonData, user models.User) {
     }
 }
 
-templ UserSettings () {
+templ UserSettings (title string, data CommonData, user models.User) {
+    @base(title, data) {
+        <form hx-put="/users/settings">
+            <input type="text">
+            <button type="submit">Submit</button>
+        </form>
+    }
 }

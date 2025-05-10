@@ -38,7 +38,7 @@ CREATE TABLE user_settings (
     Id integer primary key autoincrement,
     UserId integer NOT NULL,
     SettingId integer NOT NULL,
-    AllowedSettingValueId integer NOT NULL,
+    AllowedSettingValueId integer,
     UnconstrainedValue varchar(256),
     FOREIGN KEY (UserId) REFERENCES users(Id)
         ON DELETE RESTRICT
@@ -55,7 +55,7 @@ CREATE TABLE guestbook_settings (
     Id integer primary key autoincrement,
     GuestbookId integer NOT NULL,
     SettingId integer NOT NULL,
-    AllowedSettingValueId integer NOT NULL,
+    AllowedSettingValueId integer,
     UnconstrainedValue varchar(256),
     FOREIGN KEY (GuestbookId) REFERENCES guestbooks(Id)
         ON DELETE RESTRICT

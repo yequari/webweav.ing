@@ -147,7 +147,7 @@ func (app *application) putUserSettings(w http.ResponseWriter, r *http.Request) 
 	}
 	form.CheckField(validator.PermittedValue(form.LocalTimezone, app.timezones...), "timezone", "Invalid value")
 	if !form.Valid() {
-		// rerender template with errors
+		// TODO: rerender template with errors
 		app.clientError(w, http.StatusUnprocessableEntity)
 	}
 	err = app.users.SetLocalTimezone(userId, form.LocalTimezone)

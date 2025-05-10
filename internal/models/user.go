@@ -54,13 +54,7 @@ func (m *UserModel) Insert(shortId uint64, username string, email string, passwo
 	if err != nil {
 		return err
 	}
-	settingsStmt := `INSERT INTO user_settings 
-		(UserId, SettingId, AllowedSettingValueId, UnconstrainedValue)
-		VALUES (?, ?, ?, ?)`
-	_, err = m.DB.Exec(settingsStmt, id, u_timezone, nil, settings.LocalTimezone.String())
-	if err != nil {
-		return err
-	}
+	err = m.initializeUserSettings(id, settings)
 	return nil
 }
 
@@ -184,9 +178,25 @@ func (m *UserModel) GetSettings(userId int64) (UserSettings, error) {
 	return settings, err
 }
 
+func (m *UserModel) initializeUserSettings(userId int64, settings UserSettings) error {
+	stmt := `INSERT INTO user_settings (UserId, SettingId, AllowedSettingValueId, UnconstrainedValue) VALUES (?, ?, ?, ?)`
+	_, err := m.DB.Exec(stmt, userId, u_timezone, nil, settings.LocalTimezone.String())
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (m *UserModel) SetLocalTimezone(userId int64, timezone string) error {
+	valid, err := validateSetting(m.DB, u_timezone, timezone)
+	if err != nil {
+		return err
+	}
+	if !valid {
+		return ErrInvalidSettingValue
+	}
 	stmt := `UPDATE user_settings SET UnconstrainedValue = ? WHERE UserId = ?`
-	_, err := m.DB.Exec(stmt, timezone, userId)
+	_, err = m.DB.Exec(stmt, timezone, userId)
 	if err != nil {
 		return err
 	}

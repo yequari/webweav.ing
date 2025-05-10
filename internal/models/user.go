@@ -31,7 +31,8 @@ type User struct {
 }
 
 type UserModel struct {
-	DB *sql.DB
+	DB       *sql.DB
+	Settings map[string]Setting
 }
 
 func (m *UserModel) Insert(shortId uint64, username string, email string, password string, settings UserSettings) error {
@@ -182,6 +183,34 @@ func (m *UserModel) initializeUserSettings(userId int64, settings UserSettings) 
 	stmt := `INSERT INTO user_settings (UserId, SettingId, AllowedSettingValueId, UnconstrainedValue) VALUES (?, ?, ?, ?)`
 	_, err := m.DB.Exec(stmt, userId, u_timezone, nil, settings.LocalTimezone.String())
 	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (m *UserModel) UpdateUserSettings(userId int64, settings UserSettings) error {
+	err := m.UpdateSetting(userId, m.Settings["local_timezone"], settings.LocalTimezone.String())
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (m *UserModel) UpdateSetting(userId int64, setting Setting, value string) error {
+	stmt := `UPDATE user_settings SET
+				AllowedSettingValueId=(SELECT Id FROM allowed_setting_values WHERE SettingId = user_settings.SettingId AND ItemValue = ?),
+				UnconstrainedValue=(SELECT ? FROM settings WHERE settings.Id = user_settings.SettingId AND settings.Constrained=0)
+			WHERE userId = ?
+			AND SettingId = (SELECT Id from Settings WHERE Description=?);`
+	result, err := m.DB.Exec(stmt, value, value, userId)
+	if err != nil {
+		return err
+	}
+	rows, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rows != 1 {
 		return err
 	}
 	return nil

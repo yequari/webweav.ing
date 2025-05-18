@@ -52,7 +52,7 @@ func (m *UserModel) InitializeSettingsMap() error {
 		var s Setting
 		var mn sql.NullString
 		var mx sql.NullString
-		err := result.Scan(&s.id, &s.description, &s.constrained, &s.dataType, &s.dataTypeDesc, &s.settingGroup, &s.settingGroupDesc, &mn, &mx)
+		err := result.Scan(&s.id, &s.description, &s.constrained, &s.dataType.id, &s.dataType.description, &s.settingGroup.id, &s.settingGroup.description, &mn, &mx)
 		if mn.Valid {
 			s.minValue = mn.String
 		}

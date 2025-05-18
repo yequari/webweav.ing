@@ -1,70 +1,55 @@
 package models
 
 import (
-	"database/sql"
-	"maps"
 	"strconv"
 	"time"
 )
 
-type SettingModel struct {
-	DB *sql.DB
+type SettingGroup struct {
+	id          int
+	description string
 }
 
-type SettingConfig struct {
+func (g *SettingGroup) Id() int {
+	return g.id
 }
 
-type SettingGroup int
+func (g *SettingGroup) Description() string {
+	return g.description
+}
 
 const (
-	SettingGroupUser      SettingGroup = 1
-	SettingGroupGuestbook SettingGroup = 2
+	SETTING_GROUP_USER      = "user"
+	SETTING_GROUP_GUESTBOOK = "guestbook"
 )
 
-type SettingDataType int
+type SettingDataType struct {
+	id          int
+	description string
+}
+
+func (d *SettingDataType) Id() int {
+	return d.id
+}
+
+func (d *SettingDataType) Description() string {
+	return d.description
+}
 
 const (
-	SettingTypeInt      SettingDataType = 1
-	SettingTypeDate     SettingDataType = 2
-	SettingTypeAlphanum SettingDataType = 3
+	SETTING_TYPE_INTEGER = "integer"
+	SETTING_TYPE_STRING  = "alphanumeric"
+	SETTING_TYPE_DATE    = "datetime"
 )
-
-type SettingValue struct {
-	Id                 int
-	SettingId          int
-	AllowedSettingId   int
-	UnconstrainedValue string
-}
-
-type AllowedSettingValue struct {
-	id        int
-	itemValue string
-	caption   string
-}
-
-func (s *AllowedSettingValue) Id() int {
-	return s.id
-}
-
-func (s *AllowedSettingValue) ItemValue() string {
-	return s.itemValue
-}
-
-func (s *AllowedSettingValue) Caption() string {
-	return s.caption
-}
 
 type Setting struct {
-	id               int
-	description      string
-	constrained      bool
-	dataType         SettingDataType
-	dataTypeDesc     string
-	settingGroup     SettingGroup
-	settingGroupDesc string
-	minValue         string // TODO: Maybe should be int?
-	maxValue         string
-	allowedValues    map[int]AllowedSettingValue
+	id           int
+	description  string
+	constrained  bool
+	dataType     SettingDataType
+	settingGroup SettingGroup
+	minValue     string
+	maxValue     string
 }
 
 func (s *Setting) Id() int {
@@ -95,28 +80,14 @@ func (s *Setting) MaxValue() string {
 	return s.maxValue
 }
 
-func (s *Setting) AllowedValues() map[int]AllowedSettingValue {
-	result := make(map[int]AllowedSettingValue, 50)
-	maps.Copy(result, s.allowedValues)
-	return result
-}
-
-func (s *Setting) ValidateUnconstrained(value string) bool {
-	switch s.dataType {
-	case SettingTypeInt:
+func (s *Setting) Validate(value string) bool {
+	switch s.dataType.description {
+	case SETTING_TYPE_INTEGER:
 		return s.validateInt(value)
-	case SettingTypeAlphanum:
+	case SETTING_TYPE_STRING:
 		return s.validateAlphanum(value)
-	case SettingTypeDate:
+	case SETTING_TYPE_DATE:
 		return s.validateDatetime(value)
-	}
-	return false
-}
-
-func (s *Setting) ValidateConstrained(value *AllowedSettingValue) bool {
-	_, exists := s.allowedValues[value.id]
-	if s.constrained && exists {
-		return true
 	}
 	return false
 }
@@ -179,45 +150,5 @@ func (s *Setting) validateDatetime(value string) bool {
 }
 
 func (s *Setting) validateAlphanum(value string) bool {
-	return true
-}
-
-func (s Setting) Validate(value string) bool {
-	switch s.dataType {
-	case SettingTypeInt:
-		return s.validateInt(value)
-	case SettingTypeAlphanum:
-		return s.validateAlphanum(value)
-	case SettingTypeDate:
-		return s.validateDatetime(value)
-	}
-	return false
-}
-
-func validateSetting(db *sql.DB, settingId int, value string) (bool, error) {
-	stmt := `SELECT s.Id, Description, Constrained, DataType, SettingGroup, MinValue, MaxValue, a.Id 
-	FROM settings AS s LEFT JOIN allowed_setting_values AS a ON s.Id = a.SettingId AND a.ItemValue = ?
-	WHERE s.Id = ?`
-	result := db.QueryRow(stmt, value, settingId)
-
-	var s Setting
-	var minval sql.NullString
-	var maxval sql.NullString
-	var allowedId sql.NullInt64
-	err := result.Scan(&s.id, &s.description, &s.constrained, &s.dataType, &s.settingGroup, &minval, &maxval, &allowedId)
-	if err != nil {
-		return false, err
-	}
-	if s.constrained && allowedId.Valid {
-		return true, nil
-	}
-	switch s.dataType {
-	case SettingTypeInt:
-		return s.validateInt(value), nil
-	case SettingTypeAlphanum:
-		return s.validateAlphanum(value), nil
-	case SettingTypeDate:
-		return s.validateDatetime(value), nil
-	}
-	return false, nil
+	return len(value) >= 0
 }

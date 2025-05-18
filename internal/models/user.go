@@ -10,13 +10,13 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-const (
-	u_timezone = 1
-)
-
 type UserSettings struct {
 	LocalTimezone *time.Location
 }
+
+const (
+	USER_TIMEZONE = "local_timezone"
+)
 
 type User struct {
 	ID             int64
@@ -33,6 +33,38 @@ type User struct {
 type UserModel struct {
 	DB       *sql.DB
 	Settings map[string]Setting
+}
+
+func (m *UserModel) InitializeSettingsMap() error {
+	if m.Settings == nil {
+		m.Settings = make(map[string]Setting)
+	}
+	stmt := `SELECT settings.Id, settings.Description, Constrained, d.Id, d.Description, g.Id, g.Description, MinValue, MaxValue
+        FROM settings
+        LEFT JOIN setting_data_types d ON settings.DataType = d.Id
+        LEFT JOIN setting_groups g ON settings.SettingGroup = g.Id
+        WHERE SettingGroup = (SELECT Id FROM setting_groups WHERE Description = 'user' LIMIT 1)`
+	result, err := m.DB.Query(stmt)
+	if err != nil {
+		return err
+	}
+	for result.Next() {
+		var s Setting
+		var mn sql.NullString
+		var mx sql.NullString
+		err := result.Scan(&s.id, &s.description, &s.constrained, &s.dataType, &s.dataTypeDesc, &s.settingGroup, &s.settingGroupDesc, &mn, &mx)
+		if mn.Valid {
+			s.minValue = mn.String
+		}
+		if mx.Valid {
+			s.maxValue = mx.String
+		}
+		if err != nil {
+			return err
+		}
+		m.Settings[s.description] = s
+	}
+	return nil
 }
 
 func (m *UserModel) Insert(shortId uint64, username string, email string, password string, settings UserSettings) error {
@@ -169,7 +201,7 @@ func (m *UserModel) GetSettings(userId int64) (UserSettings, error) {
 			return settings, err
 		}
 		switch id {
-		case u_timezone:
+		case m.Settings[USER_TIMEZONE].id:
 			settings.LocalTimezone, err = time.LoadLocation(unconstrainedValue.String)
 			if err != nil {
 				panic(err)
@@ -180,8 +212,9 @@ func (m *UserModel) GetSettings(userId int64) (UserSettings, error) {
 }
 
 func (m *UserModel) initializeUserSettings(userId int64, settings UserSettings) error {
-	stmt := `INSERT INTO user_settings (UserId, SettingId, AllowedSettingValueId, UnconstrainedValue) VALUES (?, ?, ?, ?)`
-	_, err := m.DB.Exec(stmt, userId, u_timezone, nil, settings.LocalTimezone.String())
+	stmt := `INSERT INTO user_settings (UserId, SettingId, AllowedSettingValueId, UnconstrainedValue) 
+		VALUES (?, ?, ?, ?)`
+	_, err := m.DB.Exec(stmt, userId, m.Settings[USER_TIMEZONE].id, nil, settings.LocalTimezone.String())
 	if err != nil {
 		return err
 	}
@@ -189,7 +222,7 @@ func (m *UserModel) initializeUserSettings(userId int64, settings UserSettings) 
 }
 
 func (m *UserModel) UpdateUserSettings(userId int64, settings UserSettings) error {
-	err := m.UpdateSetting(userId, m.Settings["local_timezone"], settings.LocalTimezone.String())
+	err := m.UpdateSetting(userId, m.Settings[USER_TIMEZONE], settings.LocalTimezone.String())
 	if err != nil {
 		return err
 	}
@@ -198,11 +231,13 @@ func (m *UserModel) UpdateUserSettings(userId int64, settings UserSettings) erro
 
 func (m *UserModel) UpdateSetting(userId int64, setting Setting, value string) error {
 	stmt := `UPDATE user_settings SET
-				AllowedSettingValueId=(SELECT Id FROM allowed_setting_values WHERE SettingId = user_settings.SettingId AND ItemValue = ?),
+				AllowedSettingValueId=IFNULL(
+					(SELECT Id FROM allowed_setting_values WHERE SettingId = user_settings.SettingId AND ItemValue = ?), AllowedSettingValueId
+				),
 				UnconstrainedValue=(SELECT ? FROM settings WHERE settings.Id = user_settings.SettingId AND settings.Constrained=0)
 			WHERE userId = ?
 			AND SettingId = (SELECT Id from Settings WHERE Description=?);`
-	result, err := m.DB.Exec(stmt, value, value, userId)
+	result, err := m.DB.Exec(stmt, value, value, userId, setting.description)
 	if err != nil {
 		return err
 	}
@@ -211,21 +246,18 @@ func (m *UserModel) UpdateSetting(userId int64, setting Setting, value string) e
 		return err
 	}
 	if rows != 1 {
-		return err
+		return ErrInvalidSettingValue
 	}
 	return nil
 }
 
 func (m *UserModel) SetLocalTimezone(userId int64, timezone string) error {
-	valid, err := validateSetting(m.DB, u_timezone, timezone)
-	if err != nil {
-		return err
-	}
+	setting := m.Settings[USER_TIMEZONE]
+	valid := setting.Validate(timezone)
 	if !valid {
 		return ErrInvalidSettingValue
 	}
-	stmt := `UPDATE user_settings SET UnconstrainedValue = ? WHERE UserId = ?`
-	_, err = m.DB.Exec(stmt, timezone, userId)
+	err := m.UpdateSetting(userId, setting, timezone)
 	if err != nil {
 		return err
 	}

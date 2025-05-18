@@ -59,11 +59,17 @@ func main() {
 		sessionManager:    sessionManager,
 		websites:          &models.WebsiteModel{DB: db},
 		guestbooks:        &models.GuestbookModel{DB: db},
-		users:             &models.UserModel{DB: db},
+		users:             &models.UserModel{DB: db, Settings: make(map[string]models.Setting)},
 		guestbookComments: &models.GuestbookCommentModel{DB: db},
 		formDecoder:       formDecoder,
 		debug:             *debug,
 		timezones:         getAvailableTimezones(),
+	}
+
+	err = app.users.InitializeSettingsMap()
+	if err != nil {
+		logger.Error(err.Error())
+		os.Exit(1)
 	}
 
 	tlsConfig := &tls.Config{

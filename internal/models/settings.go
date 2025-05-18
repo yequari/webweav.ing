@@ -7,6 +7,13 @@ import (
 	"time"
 )
 
+type SettingModel struct {
+	DB *sql.DB
+}
+
+type SettingConfig struct {
+}
+
 type SettingGroup int
 
 const (
@@ -48,14 +55,16 @@ func (s *AllowedSettingValue) Caption() string {
 }
 
 type Setting struct {
-	id            int
-	description   string
-	constrained   bool
-	dataType      SettingDataType
-	settingGroup  SettingGroup
-	minValue      string // TODO: Maybe should be int?
-	maxValue      string
-	allowedValues map[int]AllowedSettingValue
+	id               int
+	description      string
+	constrained      bool
+	dataType         SettingDataType
+	dataTypeDesc     string
+	settingGroup     SettingGroup
+	settingGroupDesc string
+	minValue         string // TODO: Maybe should be int?
+	maxValue         string
+	allowedValues    map[int]AllowedSettingValue
 }
 
 func (s *Setting) Id() int {
@@ -171,6 +180,18 @@ func (s *Setting) validateDatetime(value string) bool {
 
 func (s *Setting) validateAlphanum(value string) bool {
 	return true
+}
+
+func (s Setting) Validate(value string) bool {
+	switch s.dataType {
+	case SettingTypeInt:
+		return s.validateInt(value)
+	case SettingTypeAlphanum:
+		return s.validateAlphanum(value)
+	case SettingTypeDate:
+		return s.validateDatetime(value)
+	}
+	return false
 }
 
 func validateSetting(db *sql.DB, settingId int, value string) (bool, error) {

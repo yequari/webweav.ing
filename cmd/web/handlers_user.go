@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"net/http"
+	"time"
 
 	"git.32bit.cafe/32bitcafe/guestbook/internal/forms"
 	"git.32bit.cafe/32bitcafe/guestbook/internal/models"
@@ -137,7 +138,7 @@ func (app *application) getUserSettings(w http.ResponseWriter, r *http.Request) 
 }
 
 func (app *application) putUserSettings(w http.ResponseWriter, r *http.Request) {
-	userId := app.getCurrentUser(r).ID
+	user := app.getCurrentUser(r)
 	var form forms.UserSettingsForm
 	err := app.decodePostForm(r, &form)
 	if err != nil {
@@ -150,7 +151,12 @@ func (app *application) putUserSettings(w http.ResponseWriter, r *http.Request) 
 		// TODO: rerender template with errors
 		app.clientError(w, http.StatusUnprocessableEntity)
 	}
-	err = app.users.SetLocalTimezone(userId, form.LocalTimezone)
+	user.Settings.LocalTimezone, err = time.LoadLocation(form.LocalTimezone)
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
+	err = app.users.UpdateUserSettings(user.ID, user.Settings)
 	if err != nil {
 		app.serverError(w, r, err)
 		return

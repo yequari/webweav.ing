@@ -15,7 +15,7 @@ type UserSettings struct {
 }
 
 const (
-	USER_TIMEZONE = "local_timezone"
+	SettingUserTimezone = "local_timezone"
 )
 
 type User struct {
@@ -88,6 +88,9 @@ func (m *UserModel) Insert(shortId uint64, username string, email string, passwo
 		return err
 	}
 	err = m.initializeUserSettings(id, settings)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -201,7 +204,7 @@ func (m *UserModel) GetSettings(userId int64) (UserSettings, error) {
 			return settings, err
 		}
 		switch id {
-		case m.Settings[USER_TIMEZONE].id:
+		case m.Settings[SettingUserTimezone].id:
 			settings.LocalTimezone, err = time.LoadLocation(unconstrainedValue.String)
 			if err != nil {
 				panic(err)
@@ -214,7 +217,7 @@ func (m *UserModel) GetSettings(userId int64) (UserSettings, error) {
 func (m *UserModel) initializeUserSettings(userId int64, settings UserSettings) error {
 	stmt := `INSERT INTO user_settings (UserId, SettingId, AllowedSettingValueId, UnconstrainedValue) 
 		VALUES (?, ?, ?, ?)`
-	_, err := m.DB.Exec(stmt, userId, m.Settings[USER_TIMEZONE].id, nil, settings.LocalTimezone.String())
+	_, err := m.DB.Exec(stmt, userId, m.Settings[SettingUserTimezone].id, nil, settings.LocalTimezone.String())
 	if err != nil {
 		return err
 	}
@@ -222,7 +225,7 @@ func (m *UserModel) initializeUserSettings(userId int64, settings UserSettings) 
 }
 
 func (m *UserModel) UpdateUserSettings(userId int64, settings UserSettings) error {
-	err := m.UpdateSetting(userId, m.Settings[USER_TIMEZONE], settings.LocalTimezone.String())
+	err := m.UpdateSetting(userId, m.Settings[SettingUserTimezone], settings.LocalTimezone.String())
 	if err != nil {
 		return err
 	}
@@ -230,6 +233,10 @@ func (m *UserModel) UpdateUserSettings(userId int64, settings UserSettings) erro
 }
 
 func (m *UserModel) UpdateSetting(userId int64, setting Setting, value string) error {
+	valid := setting.Validate(value)
+	if !valid {
+		return ErrInvalidSettingValue
+	}
 	stmt := `UPDATE user_settings SET
 				AllowedSettingValueId=IFNULL(
 					(SELECT Id FROM allowed_setting_values WHERE SettingId = user_settings.SettingId AND ItemValue = ?), AllowedSettingValueId
@@ -247,19 +254,6 @@ func (m *UserModel) UpdateSetting(userId int64, setting Setting, value string) e
 	}
 	if rows != 1 {
 		return ErrInvalidSettingValue
-	}
-	return nil
-}
-
-func (m *UserModel) SetLocalTimezone(userId int64, timezone string) error {
-	setting := m.Settings[USER_TIMEZONE]
-	valid := setting.Validate(timezone)
-	if !valid {
-		return ErrInvalidSettingValue
-	}
-	err := m.UpdateSetting(userId, setting, timezone)
-	if err != nil {
-		return err
 	}
 	return nil
 }

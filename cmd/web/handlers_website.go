@@ -46,7 +46,10 @@ func (app *application) postWebsiteCreate(w http.ResponseWriter, r *http.Request
 	}
 	// TODO: how to handle website creation success but guestbook creation failure?
 	guestbookShortID := app.createShortId()
-	_, err = app.guestbooks.Insert(guestbookShortID, userId, websiteId)
+	guestbookSettings := models.GuestbookSettings{
+		IsCommentingEnabled: true,
+	}
+	_, err = app.guestbooks.Insert(guestbookShortID, userId, websiteId, guestbookSettings)
 	if err != nil {
 		app.serverError(w, r, err)
 		return

@@ -32,6 +32,20 @@ func (app *application) getGuestbook(w http.ResponseWriter, r *http.Request) {
 	views.GuestbookView("Guestbook", data, website, website.Guestbook, comments, forms.CommentCreateForm{}).Render(r.Context(), w)
 }
 
+func (app *application) getGuestbookSettings(w http.ResponseWriter, r *http.Request) {
+	slug := r.PathValue("id")
+	website, err := app.websites.Get(slugToShortId(slug))
+	if err != nil {
+		if errors.Is(err, models.ErrNoRecord) {
+			http.NotFound(w, r)
+		} else {
+			app.serverError(w, r, err)
+		}
+	}
+	data := app.newCommonData(r)
+	views.GuestbookSettingsView(data, website).Render(r.Context(), w)
+}
+
 func (app *application) getGuestbookComments(w http.ResponseWriter, r *http.Request) {
 	slug := r.PathValue("id")
 	website, err := app.websites.Get(slugToShortId(slug))

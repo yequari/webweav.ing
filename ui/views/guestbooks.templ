@@ -5,166 +5,218 @@ import "git.32bit.cafe/32bitcafe/guestbook/internal/models"
 import "git.32bit.cafe/32bitcafe/guestbook/internal/forms"
 
 templ GuestbookDashboardCommentsView(title string, data CommonData, website models.Website, guestbook models.Guestbook, comments []models.GuestbookComment) {
-    @base(title, data) {
-        <div id="dashboard">
-            @wSidebar(website)
-            <div>
-                <h1>Comments on { website.SiteUrl }</h1>
-                <hr>
-                if len(comments) == 0 {
-                    <p>No comments yet!</p>
-                }
-                for  _, c := range comments {
-                    @GuestbookDashboardCommentView(data, website, c)
-                }
-            </div>
-        </div>
-    }
+	@base(title, data) {
+		<div id="dashboard">
+			@wSidebar(website)
+			<div>
+				<h1>Comments on { website.SiteUrl }</h1>
+				<hr/>
+				if len(comments) == 0 {
+					<p>No comments yet!</p>
+				}
+				for  _, c := range comments {
+					@GuestbookDashboardCommentView(data, website, c)
+				}
+			</div>
+		</div>
+	}
 }
 
 templ GuestbookDashboardCommentView(data CommonData, w models.Website, c models.GuestbookComment) {
-    {{ commentUrl := fmt.Sprintf("%s/dashboard/guestbook/comments/%s", wUrl(w), shortIdToSlug(c.ShortId)) }}
-    {{ hxHeaders := fmt.Sprintf("{\"X-CSRF-Token\": \"%s\"}", data.CSRFToken) }}
-    <div class="comment">
-        <div>
-            if c.Deleted.IsZero() {
-                <button class="danger" hx-delete={ commentUrl } hx-target="closest div.comment" hx-headers={ hxHeaders }>Delete</button>
-                <button class="outline" hx-put={ commentUrl } hx-target="closest div.comment" hx-headers={ hxHeaders }>
-                    if !c.IsPublished {
-                        Publish
-                    } else {
-                        Hide
-                    }
-                </button> 
-            }
-        </div>
-        <div>
-            <strong>{ c.AuthorName }</strong>
-            if len(c.AuthorEmail) > 0 {
-                {{ email := "mailto:" + c.AuthorEmail}}
-                | <a href={ templ.URL(email) } target="_blank">{ c.AuthorEmail }</a>
-            }
-            if len(c.AuthorSite) > 0 {
-                | <a href={ templ.URL(externalUrl(c.AuthorSite))} target="_blank">{ c.AuthorSite }</a>
-            }
-            <p>
-                { c.Created.In(data.CurrentUser.Settings.LocalTimezone).Format("01-02-2006 03:04PM") }
-            </p>
-        </div>
-        <p>
-            { c.CommentText }
-        </p>
-        <hr>
-    </div>
+	{{ commentUrl := fmt.Sprintf("%s/dashboard/guestbook/comments/%s", wUrl(w), shortIdToSlug(c.ShortId)) }}
+	{{ hxHeaders := fmt.Sprintf("{\"X-CSRF-Token\": \"%s\"}", data.CSRFToken) }}
+	<div class="comment">
+		<div>
+			if c.Deleted.IsZero() {
+				<button class="danger" hx-delete={ commentUrl } hx-target="closest div.comment" hx-headers={ hxHeaders }>Delete</button>
+				<button class="outline" hx-put={ commentUrl } hx-target="closest div.comment" hx-headers={ hxHeaders }>
+					if !c.IsPublished {
+						Publish
+					} else {
+						Hide
+					}
+				</button>
+			}
+		</div>
+		<div>
+			<strong>{ c.AuthorName }</strong>
+			if len(c.AuthorEmail) > 0 {
+				{{ email := "mailto:" + c.AuthorEmail }}
+				| <a href={ templ.URL(email) } target="_blank">{ c.AuthorEmail }</a>
+			}
+			if len(c.AuthorSite) > 0 {
+				| <a href={ templ.URL(externalUrl(c.AuthorSite)) } target="_blank">{ c.AuthorSite }</a>
+			}
+			<p>
+				{ c.Created.In(data.CurrentUser.Settings.LocalTimezone).Format("01-02-2006 03:04PM") }
+			</p>
+		</div>
+		<p>
+			{ c.CommentText }
+		</p>
+		<hr/>
+	</div>
 }
 
 templ commentForm(form forms.CommentCreateForm) {
-    <div>
-        <label for="authorname">Name: </label>
-        {{ error, exists := form.FieldErrors["authorName"] }}
-        if exists {
-        <label class="error">{ error }</label>
-        }
-        <input type="text" name="authorname" id="authorname">
-    </div>
-    <div>
-        <label for="authoremail">Email: </label>
-        {{ error, exists = form.FieldErrors["authorEmail"] }}
-        if exists {
-        <label class="error">{ error }</label>
-        }
-        <input type="text" name="authoremail" id="authoremail">
-    </div>
-    <div>
-        <label for="authorsite">Site Url: </label>
-        {{ error, exists = form.FieldErrors["authorSite"] }}
-        if exists {
-        <label class="error">{ error }</label>
-        }
-        <input type="text" name="authorsite" id="authorsite">
-    </div>
-    <div>
-        <label for="content">Comment: </label>
-        {{ error, exists = form.FieldErrors["content"] }}
-        if exists {
-        <label class="error">{ error }</label>
-        }
-        <textarea name="content" id="content"></textarea>
-    </div>
-    <div>
-        <input type="submit" value="Submit">
-    </div>
+	<div>
+		<label for="authorname">Name: </label>
+		{{ error, exists := form.FieldErrors["authorName"] }}
+		if exists {
+			<label class="error">{ error }</label>
+		}
+		<input type="text" name="authorname" id="authorname"/>
+	</div>
+	<div>
+		<label for="authoremail">Email: </label>
+		{{ error, exists = form.FieldErrors["authorEmail"] }}
+		if exists {
+			<label class="error">{ error }</label>
+		}
+		<input type="text" name="authoremail" id="authoremail"/>
+	</div>
+	<div>
+		<label for="authorsite">Site Url: </label>
+		{{ error, exists = form.FieldErrors["authorSite"] }}
+		if exists {
+			<label class="error">{ error }</label>
+		}
+		<input type="text" name="authorsite" id="authorsite"/>
+	</div>
+	<div>
+		<label for="content">Comment: </label>
+		{{ error, exists = form.FieldErrors["content"] }}
+		if exists {
+			<label class="error">{ error }</label>
+		}
+		<textarea name="content" id="content"></textarea>
+	</div>
+	<div>
+		<input type="submit" value="Submit"/>
+	</div>
 }
 
 templ GuestbookView(title string, data CommonData, website models.Website, guestbook models.Guestbook, comments []models.GuestbookComment, form forms.CommentCreateForm) {
-    {{ postUrl := fmt.Sprintf("/websites/%s/guestbook/comments/create", shortIdToSlug(website.ShortId)) }}
-    if data.IsHtmx {
-        @commentForm(form)
-    } else {
-        <html>
-            <head>
-            <title>{ title }</title>
-            <link href="/static/css/classless.min.css" rel="stylesheet">
-            </head>
-            <body>
-                <main>
-                    <div>
-                        <h1>Guestbook for { website.Name }</h1>
-                        <form action={ templ.URL(postUrl) } method="post">
-                            <input type="hidden" name="csrf_token" value={data.CSRFToken}>
-                            @commentForm(form)
-                        </form>
-                    </div>
-                    <div id="comments">
-                        if len(comments) == 0 {
-                            <p>No comments yet!</p>
-                        }
-                        for _, c := range comments {
-                            <div>
-                                <h3>{ c.AuthorName }</h3>
-                                { c.Created.Format("01-02-2006 03:04PM") }
-                                <p>
-                                    { c.CommentText }
-                                </p>
-                            </div>
-                        }
-                    </div>
-                    </main>
-                </body>
-            </html>
-        }
-    }
+	{{ postUrl := fmt.Sprintf("/websites/%s/guestbook/comments/create", shortIdToSlug(website.ShortId)) }}
+	if data.IsHtmx {
+		@commentForm(form)
+	} else {
+		<html>
+			<head>
+				<title>{ title }</title>
+				<link href="/static/css/classless.min.css" rel="stylesheet"/>
+			</head>
+			<body>
+				<main>
+					<div>
+						<h1>Guestbook for { website.Name }</h1>
+						<form action={ templ.URL(postUrl) } method="post">
+							<input type="hidden" name="csrf_token" value={ data.CSRFToken }/>
+							@commentForm(form)
+						</form>
+					</div>
+					<div id="comments">
+						if len(comments) == 0 {
+							<p>No comments yet!</p>
+						}
+						for _, c := range comments {
+							<div>
+								<h3>{ c.AuthorName }</h3>
+								{ c.Created.Format("01-02-2006 03:04PM") }
+								<p>
+									{ c.CommentText }
+								</p>
+							</div>
+						}
+					</div>
+				</main>
+			</body>
+		</html>
+	}
+}
 
-    templ CreateGuestbookComment(title string, data CommonData, website models.Website, guestbook models.Guestbook, form forms.CommentCreateForm) {
-        {{ postUrl := fmt.Sprintf("/websites/%s/guestbook/comments/create", shortIdToSlug(website.ShortId)) }}
-        if data.IsHtmx {
-            <form hx-post={ postUrl } hx-target="closest div">
-            @commentForm(form)
-        </form>
-    } else {
-        @base(title, data) {
-            <form action={ templ.URL(postUrl) } method="post">
-                @commentForm(form)
-            </form>
-        }
-    }
+templ CreateGuestbookComment(title string, data CommonData, website models.Website, guestbook models.Guestbook, form forms.CommentCreateForm) {
+	{{ postUrl := fmt.Sprintf("/websites/%s/guestbook/comments/create", shortIdToSlug(website.ShortId)) }}
+	if data.IsHtmx {
+		<form hx-post={ postUrl } hx-target="closest div">
+			@commentForm(form)
+		</form>
+	} else {
+		@base(title, data) {
+			<form action={ templ.URL(postUrl) } method="post">
+				@commentForm(form)
+			</form>
+		}
+	}
+}
+
+templ GuestbookSettingsView(data CommonData, website models.Website) {
+	{{ putUrl := fmt.Sprintf("/websites/%s/dashboard/guestbook/settings", shortIdToSlug(website.ShortId)) }}
+	@base("Guestbook Settings", data) {
+		<div id="dashboard">
+			@wSidebar(website)
+			<div>
+				<h1>Guestbook Settings</h1>
+				<form hx-put={ putUrl }>
+					<input type="hidden" name="csrf_token" value={ data.CSRFToken }/>
+					<div>
+						<label>Guestbook Visibility</label>
+						<label for="gb_visible_true">
+							<input type="radio" name="gb_visible" id="gb_visible_true"/>
+							Public
+						</label>
+						<label for="gb_visible_false">
+							<input type="radio" name="gb_visible" id="gb_visible_false"/>
+							Private
+						</label>
+					</div>
+					<div>
+						<label>Guestbook Commenting</label>
+						<select name="gb_commenting" id="gb-commenting">
+							<option value="true">Enabled</option>
+							<option value="1h">Disabled for 1 Hour</option>
+							<option value="4h">Disabled for 4 Hours</option>
+							<option value="8h">Disabled for 8 Hours</option>
+							<option value="1d">Disabled for 1 Day</option>
+							<option value="3d">Disabled for 3 Days</option>
+							<option value="7d">Disabled for 7 Days</option>
+							<option value="false">Disabled Indefinitely</option>
+						</select>
+						<label>Commenting re-enabled at <datetime value="">sometime in the future</datetime></label>
+					</div>
+					<div>
+						<label>Enable Widgets</label>
+						<label for="gb_remote_true">
+							<input type="radio" name="gb_remote" id="gb_remote_true"/>
+							Yes
+						</label>
+						<label for="gb_commenting_false">
+							<input type="radio" name="gb_remote" id="gb_remote_false"/>
+							No
+						</label>
+					</div>
+					<input type="submit" value="Submit"/>
+				</form>
+			</div>
+		</div>
+	}
 }
 
 templ AllGuestbooksView(data CommonData, websites []models.Website) {
-    @base("All Guestbooks", data) {
-        <div>
-            <h1>All Guestbooks</h1>
-            <p>
-                This page exists only for testing the service.
-            </p>
-            <ul>
-                for _, w := range websites {
-                    <li>
-                        {{  gbUrl := fmt.Sprintf("/websites/%s/guestbook", shortIdToSlug(w.ShortId))}}
-                        <a href={ templ.URL(gbUrl) } target="_blank">{ w.Name }</a>
-                    </li>
-                }
-            </ul>
-        </div>
-    }
+	@base("All Guestbooks", data) {
+		<div>
+			<h1>All Guestbooks</h1>
+			<p>
+				This page exists only for testing the service.
+			</p>
+			<ul>
+				for _, w := range websites {
+					<li>
+						{{ gbUrl := fmt.Sprintf("/websites/%s/guestbook", shortIdToSlug(w.ShortId)) }}
+						<a href={ templ.URL(gbUrl) } target="_blank">{ w.Name }</a>
+					</li>
+				}
+			</ul>
+		</div>
+	}
 }

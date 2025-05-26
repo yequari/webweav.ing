@@ -17,3 +17,7 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 func (app *application) notImplemented(w http.ResponseWriter, r *http.Request) {
 	views.ComingSoon("Coming Soon", app.newCommonData(r)).Render(r.Context(), w)
 }
+
+func ping(w http.ResponseWriter, r *http.Request) {
+	w.Write([]byte("OK"))
+}

@@ -24,6 +24,15 @@ type GuestbookCommentModel struct {
 	DB *sql.DB
 }
 
+type GuestbookCommentModelInterface interface {
+	Insert(shortId uint64, guestbookId, parentId int64, authorName, authorEmail, authorSite, commentText, pageUrl string, isPublished bool) (int64, error)
+	Get(shortId uint64) (GuestbookComment, error)
+	GetAll(guestbookId int64) ([]GuestbookComment, error)
+	GetDeleted(guestbookId int64) ([]GuestbookComment, error)
+	GetUnpublished(guestbookId int64) ([]GuestbookComment, error)
+	UpdateComment(comment *GuestbookComment) error
+}
+
 func (m *GuestbookCommentModel) Insert(shortId uint64, guestbookId, parentId int64, authorName,
 	authorEmail, authorSite, commentText, pageUrl string, isPublished bool) (int64, error) {
 	stmt := `INSERT INTO guestbook_comments (ShortId, GuestbookId, ParentId, AuthorName,

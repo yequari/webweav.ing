@@ -90,6 +90,14 @@ func (m *WebsiteModel) InitializeSettingsMap() error {
 	return nil
 }
 
+type WebsiteModelInterface interface {
+	Insert(shortId uint64, userId int64, siteName, siteUrl, authorName string) (int64, error)
+	Get(shortId uint64) (Website, error)
+	GetById(id int64) (Website, error)
+	GetAllUser(userId int64) ([]Website, error)
+	GetAll() ([]Website, error)
+}
+
 func (m *WebsiteModel) Insert(shortId uint64, userId int64, siteName, siteUrl, authorName string) (int64, error) {
 	stmt := `INSERT INTO websites (ShortId, Name, SiteUrl, AuthorName, UserId, Created)
 			VALUES (?, ?, ?, ?, ?, ?)`

@@ -35,6 +35,19 @@ type UserModel struct {
 	Settings map[string]Setting
 }
 
+type UserModelInterface interface {
+	InitializeSettingsMap() error
+	Insert(shortId uint64, username string, email string, password string, settings UserSettings) error
+	Get(shortId uint64) (User, error)
+	GetById(id int64) (User, error)
+	GetAll() ([]User, error)
+	Authenticate(email, password string) (int64, error)
+	Exists(id int64) (bool, error)
+	GetSettings(userId int64) (UserSettings, error)
+	UpdateUserSettings(userId int64, settings UserSettings) error
+	UpdateSetting(userId int64, setting Setting, value string) error
+}
+
 func (m *UserModel) InitializeSettingsMap() error {
 	if m.Settings == nil {
 		m.Settings = make(map[string]Setting)

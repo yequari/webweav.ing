@@ -34,3 +34,10 @@ type UserSettingsForm struct {
 	LocalTimezone       string `schema:"timezones"`
 	validator.Validator `schema:"-"`
 }
+
+type GuestbookSettingsForm struct {
+	Visibility          string `schema:"gb_visible"`
+	CommentingEnabled   string `schema:"gb_commenting"`
+	WidgetsEnabled      string `schema:"gb_remote"`
+	validator.Validator `schema:"-"`
+}

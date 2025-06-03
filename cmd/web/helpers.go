@@ -118,3 +118,13 @@ func DefaultUserSettings() models.UserSettings {
 		LocalTimezone: time.Now().UTC().Location(),
 	}
 }
+
+func (app *application) durationToTime(duration string) (time.Time, error) {
+	var result time.Time
+	offset, err := time.ParseDuration(duration)
+	if err != nil {
+		return result, nil
+	}
+	result = time.Now().UTC().Add(offset)
+	return result, nil
+}

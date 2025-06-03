@@ -188,7 +188,7 @@ func (m *UserModel) Exists(id int64) (bool, error) {
 
 func (m *UserModel) GetSettings(userId int64) (UserSettings, error) {
 	stmt := `SELECT u.SettingId, a.ItemValue, u.UnconstrainedValue FROM user_settings AS u
-			LEFT JOIN allowed_setting_values AS a ON u.SettingId = a.SettingId
+			LEFT JOIN allowed_setting_values AS a ON u.AllowedSettingValueId = a.Id
 			WHERE UserId = ?`
 	var settings UserSettings
 	rows, err := m.DB.Query(stmt, userId)

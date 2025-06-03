@@ -2,6 +2,7 @@ package models
 
 import (
 	"database/sql"
+	"errors"
 	"strconv"
 	"time"
 )
@@ -13,6 +14,8 @@ type GuestbookSettings struct {
 	FilteredWords         []string
 	AllowRemoteHostAccess bool
 }
+
+var ValidDisableDurations = []string{"true", "false", "1h", "4h", "8h", "24h", "72h", "168h"}
 
 const (
 	SettingGbCommentingEnabled = "commenting_enabled"
@@ -31,6 +34,11 @@ type Guestbook struct {
 	Deleted   time.Time
 	IsActive  bool
 	Settings  GuestbookSettings
+}
+
+func (g Guestbook) CanComment() bool {
+	now := time.Now().UTC()
+	return g.Settings.IsCommentingEnabled && g.Settings.ReenableCommenting.Before(now)
 }
 
 type GuestbookModel struct {
@@ -96,11 +104,19 @@ func (m *GuestbookModel) Get(shortId uint64) (Guestbook, error) {
 	var t sql.NullTime
 	err := row.Scan(&g.ID, &g.ShortId, &g.UserId, &g.WebsiteId, &g.Created, &t, &g.IsActive)
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return Guestbook{}, ErrNoRecord
+		}
 		return Guestbook{}, err
 	}
 	if t.Valid {
 		g.Deleted = t.Time
 	}
+	settings, err := m.GetSettings(g.ID)
+	if err != nil {
+		return g, err
+	}
+	g.Settings = settings
 	return g, nil
 }
 
@@ -126,6 +142,58 @@ func (m *GuestbookModel) GetAll(userId int64) ([]Guestbook, error) {
 	return guestbooks, nil
 }
 
+func (m *GuestbookModel) GetSettings(guestbookId int64) (GuestbookSettings, error) {
+	stmt := `SELECT g.SettingId, a.ItemValue, g.UnconstrainedValue FROM guestbook_settings AS g
+			LEFT JOIN allowed_setting_values AS a ON g.AllowedSettingValueId = a.Id
+			WHERE GuestbookId = ?`
+	var settings GuestbookSettings
+	rows, err := m.DB.Query(stmt, guestbookId)
+	if err != nil {
+		return settings, err
+	}
+	for rows.Next() {
+		var id int
+		var itemValue sql.NullString
+		var unconstrainedValue sql.NullString
+		err = rows.Scan(&id, &itemValue, &unconstrainedValue)
+		if err != nil {
+			return settings, err
+		}
+		switch id {
+		case m.Settings[SettingGbCommentingEnabled].id:
+			settings.IsCommentingEnabled, err = strconv.ParseBool(itemValue.String)
+			if err != nil {
+				return settings, err
+			}
+			break
+		case m.Settings[SettingGbReenableComments].id:
+			settings.ReenableCommenting, err = time.Parse(time.RFC3339, unconstrainedValue.String)
+			if err != nil {
+				return settings, err
+			}
+			break
+		case m.Settings[SettingGbVisible].id:
+			settings.IsVisible, err = strconv.ParseBool(itemValue.String)
+			if err != nil {
+				return settings, err
+			}
+			break
+		case m.Settings[SettingGbAllowRemote].id:
+			settings.AllowRemoteHostAccess, err = strconv.ParseBool(itemValue.String)
+			if err != nil {
+				return settings, err
+			}
+			break
+		}
+	}
+	// if comment disable setting has expired, enable commenting
+	if time.Now().UTC().After(settings.ReenableCommenting) {
+		settings.IsCommentingEnabled = true
+		m.UpdateSetting(guestbookId, m.Settings[SettingGbCommentingEnabled], "true")
+	}
+	return settings, nil
+}
+
 func (m *GuestbookModel) initializeGuestbookSettings(guestbookId int64, settings GuestbookSettings) error {
 	stmt := `INSERT INTO guestbook_settings (GuestbookId, SettingId, AllowedSettingValueId, UnconstrainedValue) VALUES 
 	(?, ?, ?, ?),
@@ -145,11 +213,40 @@ func (m *GuestbookModel) initializeGuestbookSettings(guestbookId int64, settings
 }
 
 func (m *GuestbookModel) UpdateGuestbookSettings(guestbookId int64, settings GuestbookSettings) error {
-	err := m.UpdateSetting(guestbookId, m.Settings[SettingGbCommentingEnabled], strconv.FormatBool(settings.IsCommentingEnabled))
+	err := m.UpdateSetting(guestbookId, m.Settings[SettingGbVisible], strconv.FormatBool(settings.IsVisible))
 	if err != nil {
 		return err
 	}
-	err = m.UpdateSetting(guestbookId, m.Settings[SettingGbReenableComments], settings.ReenableCommenting.String())
+	err = m.UpdateSetting(guestbookId, m.Settings[SettingGbAllowRemote], strconv.FormatBool(settings.AllowRemoteHostAccess))
+	if err != nil {
+		return err
+	}
+	err = m.UpdateSetting(guestbookId, m.Settings[SettingGbCommentingEnabled], strconv.FormatBool(settings.IsCommentingEnabled))
+	if err != nil {
+		return err
+	}
+	err = m.UpdateSetting(guestbookId, m.Settings[SettingGbReenableComments], settings.ReenableCommenting.Format(time.RFC3339))
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (m *GuestbookModel) InsertSetting(guestbookId int64, setting Setting, value string) error {
+	stmt := `
+INSERT INTO guestbook_settings (GuestbookId, SettingId, AllowedSettingValueId, UnconstrainedValue)
+SELECT  ?, 
+        settings.Id,
+        (SELECT Id FROM allowed_setting_values WHERE SettingId = settings.id AND ItemValue = ?),
+        CASE WHEN NOT EXISTS (SELECT 1 FROM settings AS s where s.Id = settings.Id AND s.Constrained = 1) THEN ? ELSE NULL END
+FROM settings
+WHERE settings.id = ?
+	`
+	result, err := m.DB.Exec(stmt, guestbookId, value, value, setting.id)
+	if err != nil {
+		return err
+	}
+	_, err = result.LastInsertId()
 	if err != nil {
 		return err
 	}

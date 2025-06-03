@@ -37,13 +37,13 @@ func (m *WebsiteModel) Insert(shortId uint64, userId int64, siteName, siteUrl, a
 
 func (m *WebsiteModel) Get(shortId uint64) (Website, error) {
 	stmt := `SELECT w.Id, w.ShortId, w.Name, w.SiteUrl, w.AuthorName, w.UserId, w.Created,
-	g.Id, g.ShortId, g.Created, g.IsActive
+	g.Id, g.ShortId
 	FROM websites AS w INNER JOIN guestbooks AS g ON w.Id = g.WebsiteId
 	WHERE w.ShortId = ? AND w.DELETED IS NULL`
 	row := m.DB.QueryRow(stmt, shortId)
 	var w Website
 	err := row.Scan(&w.ID, &w.ShortId, &w.Name, &w.SiteUrl, &w.AuthorName, &w.UserId, &w.Created,
-		&w.Guestbook.ID, &w.Guestbook.ShortId, &w.Guestbook.Created, &w.Guestbook.IsActive)
+		&w.Guestbook.ID, &w.Guestbook.ShortId)
 	if err != nil {
 		return Website{}, err
 	}

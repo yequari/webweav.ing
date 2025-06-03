@@ -121,7 +121,7 @@ func (s *Setting) validateInt(value string) bool {
 }
 
 func (s *Setting) validateDatetime(value string) bool {
-	v, err := time.Parse(time.DateTime, value)
+	v, err := time.Parse(time.RFC3339, value)
 	if err != nil {
 		return false
 	}
@@ -129,7 +129,7 @@ func (s *Setting) validateDatetime(value string) bool {
 	var max time.Time
 
 	if len(s.minValue) > 0 {
-		min, err = time.Parse(time.DateTime, s.minValue)
+		min, err = time.Parse(time.RFC3339, s.minValue)
 		if err != nil {
 			return false
 		}
@@ -138,7 +138,7 @@ func (s *Setting) validateDatetime(value string) bool {
 		}
 	}
 	if len(s.maxValue) > 0 {
-		max, err = time.Parse(time.DateTime, s.maxValue)
+		max, err = time.Parse(time.RFC3339, s.maxValue)
 		if err != nil {
 			return false
 		}

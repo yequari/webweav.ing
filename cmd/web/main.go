@@ -71,6 +71,11 @@ func main() {
 		logger.Error(err.Error())
 		os.Exit(1)
 	}
+	err = app.guestbooks.InitializeSettingsMap()
+	if err != nil {
+		logger.Error(err.Error())
+		os.Exit(1)
+	}
 
 	tlsConfig := &tls.Config{
 		CurvePreferences: []tls.CurveID{tls.X25519, tls.CurveP256},

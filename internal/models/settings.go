@@ -40,6 +40,7 @@ const (
 	SETTING_TYPE_INTEGER = "integer"
 	SETTING_TYPE_STRING  = "alphanumeric"
 	SETTING_TYPE_DATE    = "datetime"
+	SETTING_TYPE_BOOL    = "boolean"
 )
 
 type Setting struct {
@@ -88,6 +89,8 @@ func (s *Setting) Validate(value string) bool {
 		return s.validateAlphanum(value)
 	case SETTING_TYPE_DATE:
 		return s.validateDatetime(value)
+	case SETTING_TYPE_BOOL:
+		return s.validateBool(value)
 	}
 	return false
 }
@@ -151,4 +154,12 @@ func (s *Setting) validateDatetime(value string) bool {
 
 func (s *Setting) validateAlphanum(value string) bool {
 	return len(value) >= 0
+}
+
+func (s *Setting) validateBool(value string) bool {
+	_, err := strconv.ParseBool(value)
+	if err != nil {
+		return false
+	}
+	return true
 }

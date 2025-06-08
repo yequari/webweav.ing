@@ -24,15 +24,6 @@ func (app *application) getGuestbook(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
-	website.Guestbook, err = app.guestbooks.Get(website.Guestbook.ShortId)
-	if err != nil {
-		if errors.Is(err, models.ErrNoRecord) {
-			http.NotFound(w, r)
-		} else {
-			app.serverError(w, r, err)
-		}
-		return
-	}
 	if !website.Guestbook.Settings.IsVisible {
 		u := app.getCurrentUser(r)
 		if u == nil {
@@ -56,14 +47,6 @@ func (app *application) getGuestbook(w http.ResponseWriter, r *http.Request) {
 func (app *application) getGuestbookSettings(w http.ResponseWriter, r *http.Request) {
 	slug := r.PathValue("id")
 	website, err := app.websites.Get(slugToShortId(slug))
-	if err != nil {
-		if errors.Is(err, models.ErrNoRecord) {
-			http.NotFound(w, r)
-		} else {
-			app.serverError(w, r, err)
-		}
-	}
-	website.Guestbook, err = app.guestbooks.Get(website.Guestbook.ShortId)
 	if err != nil {
 		if errors.Is(err, models.ErrNoRecord) {
 			http.NotFound(w, r)
@@ -121,7 +104,7 @@ func (app *application) putGuestbookSettings(w http.ResponseWriter, r *http.Requ
 	if err != nil {
 		app.serverError(w, r, err)
 	}
-	err = app.guestbooks.UpdateGuestbookSettings(website.Guestbook.ID, website.Guestbook.Settings)
+	err = app.websites.UpdateGuestbookSettings(website.Guestbook.ID, website.Guestbook.Settings)
 	if err != nil {
 		app.serverError(w, r, err)
 		return
@@ -144,14 +127,6 @@ func (app *application) getGuestbookComments(w http.ResponseWriter, r *http.Requ
 		}
 		return
 	}
-	website.Guestbook, err = app.guestbooks.Get(website.Guestbook.ShortId)
-	if err != nil {
-		if errors.Is(err, models.ErrNoRecord) {
-			http.NotFound(w, r)
-		} else {
-			app.serverError(w, r, err)
-		}
-	}
 	comments, err := app.guestbookComments.GetAll(website.Guestbook.ID)
 	if err != nil {
 		app.serverError(w, r, err)
@@ -173,15 +148,6 @@ func (app *application) getGuestbookCommentCreate(w http.ResponseWriter, r *http
 		}
 		return
 	}
-	website.Guestbook, err = app.guestbooks.Get(website.Guestbook.ShortId)
-	if err != nil {
-		if errors.Is(err, models.ErrNoRecord) {
-			http.NotFound(w, r)
-		} else {
-			app.serverError(w, r, err)
-		}
-	}
-
 	data := app.newCommonData(r)
 	form := forms.CommentCreateForm{}
 	views.CreateGuestbookComment("New Comment", data, website, website.Guestbook, form).Render(r.Context(), w)
@@ -197,14 +163,6 @@ func (app *application) postGuestbookCommentCreate(w http.ResponseWriter, r *htt
 			app.serverError(w, r, err)
 		}
 		return
-	}
-	website.Guestbook, err = app.guestbooks.Get(website.Guestbook.ShortId)
-	if err != nil {
-		if errors.Is(err, models.ErrNoRecord) {
-			http.NotFound(w, r)
-		} else {
-			app.serverError(w, r, err)
-		}
 	}
 
 	if !website.Guestbook.CanComment() {
@@ -228,6 +186,7 @@ func (app *application) postGuestbookCommentCreate(w http.ResponseWriter, r *htt
 	form.CheckField(validator.NotBlank(form.Content), "content", "This field cannot be blank")
 
 	if !form.Valid() {
+		// TODO: use htmx to avoid getting comments again
 		comments, err := app.guestbookComments.GetAll(website.Guestbook.ID)
 		if err != nil {
 			app.serverError(w, r, err)
@@ -259,14 +218,6 @@ func (app *application) getCommentQueue(w http.ResponseWriter, r *http.Request) 
 		}
 		return
 	}
-	website.Guestbook, err = app.guestbooks.Get(website.Guestbook.ShortId)
-	if err != nil {
-		if errors.Is(err, models.ErrNoRecord) {
-			http.NotFound(w, r)
-		} else {
-			app.serverError(w, r, err)
-		}
-	}
 
 	comments, err := app.guestbookComments.GetUnpublished(website.Guestbook.ID)
 	if err != nil {
@@ -292,14 +243,6 @@ func (app *application) getCommentTrash(w http.ResponseWriter, r *http.Request) 
 			app.serverError(w, r, err)
 		}
 		return
-	}
-	website.Guestbook, err = app.guestbooks.Get(website.Guestbook.ShortId)
-	if err != nil {
-		if errors.Is(err, models.ErrNoRecord) {
-			http.NotFound(w, r)
-		} else {
-			app.serverError(w, r, err)
-		}
 	}
 
 	comments, err := app.guestbookComments.GetDeleted(website.Guestbook.ID)
@@ -331,14 +274,6 @@ func (app *application) putHideGuestbookComment(w http.ResponseWriter, r *http.R
 	}
 	if user.ID != website.UserId {
 		app.clientError(w, http.StatusUnauthorized)
-	}
-	website.Guestbook, err = app.guestbooks.Get(website.Guestbook.ShortId)
-	if err != nil {
-		if errors.Is(err, models.ErrNoRecord) {
-			http.NotFound(w, r)
-		} else {
-			app.serverError(w, r, err)
-		}
 	}
 	cSlug := r.PathValue("commentId")
 	comment, err := app.guestbookComments.Get(slugToShortId(cSlug))
@@ -373,14 +308,6 @@ func (app *application) deleteGuestbookComment(w http.ResponseWriter, r *http.Re
 	}
 	if user.ID != website.UserId {
 		app.clientError(w, http.StatusUnauthorized)
-	}
-	website.Guestbook, err = app.guestbooks.Get(website.Guestbook.ShortId)
-	if err != nil {
-		if errors.Is(err, models.ErrNoRecord) {
-			http.NotFound(w, r)
-		} else {
-			app.serverError(w, r, err)
-		}
 	}
 	cSlug := r.PathValue("commentId")
 	comment, err := app.guestbookComments.Get(slugToShortId(cSlug))

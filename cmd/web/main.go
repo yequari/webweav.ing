@@ -22,7 +22,6 @@ type application struct {
 	sequence          uint16
 	logger            *slog.Logger
 	websites          *models.WebsiteModel
-	guestbooks        *models.GuestbookModel
 	users             *models.UserModel
 	guestbookComments *models.GuestbookCommentModel
 	sessionManager    *scs.SessionManager
@@ -58,7 +57,6 @@ func main() {
 		logger:            logger,
 		sessionManager:    sessionManager,
 		websites:          &models.WebsiteModel{DB: db},
-		guestbooks:        &models.GuestbookModel{DB: db},
 		users:             &models.UserModel{DB: db, Settings: make(map[string]models.Setting)},
 		guestbookComments: &models.GuestbookCommentModel{DB: db},
 		formDecoder:       formDecoder,
@@ -71,7 +69,7 @@ func main() {
 		logger.Error(err.Error())
 		os.Exit(1)
 	}
-	err = app.guestbooks.InitializeSettingsMap()
+	err = app.websites.InitializeSettingsMap()
 	if err != nil {
 		logger.Error(err.Error())
 		os.Exit(1)

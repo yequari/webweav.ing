@@ -39,28 +39,13 @@ func (app *application) postWebsiteCreate(w http.ResponseWriter, r *http.Request
 		views.WebsiteCreate("Add a Website", data, form).Render(r.Context(), w)
 	}
 	websiteShortID := app.createShortId()
-	websiteId, err := app.websites.Insert(websiteShortID, userId, form.Name, form.SiteUrl, form.AuthorName)
-	if err != nil {
-		app.serverError(w, r, err)
-		return
-	}
-	// TODO: how to handle website creation success but guestbook creation failure?
-	guestbookShortID := app.createShortId()
-	guestbookSettings := models.GuestbookSettings{
-		IsCommentingEnabled: true,
-	}
-	_, err = app.guestbooks.Insert(guestbookShortID, userId, websiteId, guestbookSettings)
+	_, err = app.websites.Insert(websiteShortID, userId, form.Name, form.SiteUrl, form.AuthorName)
 	if err != nil {
 		app.serverError(w, r, err)
 		return
 	}
 	app.sessionManager.Put(r.Context(), "flash", "Website successfully registered!")
-	if r.Header.Get("HX-Request") == "true" {
-		w.Header().Add("HX-Trigger", "newWebsite")
-		views.WebsiteCreateButton().Render(r.Context(), w)
-		return
-	}
-	http.Redirect(w, r, fmt.Sprintf("/websites/%s", shortIdToSlug(websiteShortID)), http.StatusSeeOther)
+	http.Redirect(w, r, fmt.Sprintf("/websites/%s/dashboard", shortIdToSlug(websiteShortID)), http.StatusSeeOther)
 }
 
 func (app *application) getWebsiteDashboard(w http.ResponseWriter, r *http.Request) {
@@ -91,7 +76,8 @@ func (app *application) getWebsiteList(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if r.Header.Get("HX-Request") == "true" {
-		w.Header().Add("HX-Trigger", "newWebsite")
+		views.HxWebsiteList(websites)
+		return
 	}
 	data := app.newCommonData(r)
 	views.WebsiteList("My Websites", data, websites).Render(r.Context(), w)

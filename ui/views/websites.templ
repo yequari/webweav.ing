@@ -98,18 +98,14 @@ templ WebsiteCreateButton() {
 }
 
 templ WebsiteList(title string, data CommonData, websites []models.Website) {
-	if data.IsHtmx {
-		@displayWebsites(websites)
-	} else {
-		@base(title, data) {
-			<h1>My Websites</h1>
-			<p>
-				@WebsiteCreateButton()
-			</p>
-			<div>
-				@displayWebsites(websites)
-			</div>
-		}
+	@base(title, data) {
+		<h1>My Websites</h1>
+		<div>
+			@WebsiteCreateButton()
+		</div>
+		<div>
+			@displayWebsites(websites)
+		</div>
 	}
 }
 
@@ -142,13 +138,7 @@ templ WebsiteDashboardComingSoon(title string, data CommonData, website models.W
 }
 
 templ WebsiteCreate(title string, data CommonData, form forms.WebsiteCreateForm) {
-	if data.IsHtmx {
-		<form hx-post="/websites/create" hx-target="closest div">
-			@websiteCreateForm(data.CSRFToken, form)
-		</form>
-	} else {
-		<form action="/websites/create" method="post">
-			@websiteCreateForm(data.CSRFToken, form)
-		</form>
-	}
+	<form hx-post="/websites/create" hx-target="closest div">
+		@websiteCreateForm(data.CSRFToken, form)
+	</form>
 }

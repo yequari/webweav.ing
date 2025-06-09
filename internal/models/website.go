@@ -93,9 +93,11 @@ func (m *WebsiteModel) InitializeSettingsMap() error {
 type WebsiteModelInterface interface {
 	Insert(shortId uint64, userId int64, siteName, siteUrl, authorName string) (int64, error)
 	Get(shortId uint64) (Website, error)
-	GetById(id int64) (Website, error)
 	GetAllUser(userId int64) ([]Website, error)
 	GetAll() ([]Website, error)
+	InitializeSettingsMap() error
+	UpdateGuestbookSettings(guestbookId int64, settings GuestbookSettings) error
+	UpdateSetting(guestbookId int64, setting Setting, value string) error
 }
 
 func (m *WebsiteModel) Insert(shortId uint64, userId int64, siteName, siteUrl, authorName string) (int64, error) {

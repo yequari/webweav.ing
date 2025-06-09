@@ -43,7 +43,6 @@ type UserModelInterface interface {
 	GetAll() ([]User, error)
 	Authenticate(email, password string) (int64, error)
 	Exists(id int64) (bool, error)
-	GetSettings(userId int64) (UserSettings, error)
 	UpdateUserSettings(userId int64, settings UserSettings) error
 	UpdateSetting(userId int64, setting Setting, value string) error
 }

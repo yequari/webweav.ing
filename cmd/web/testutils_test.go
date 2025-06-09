@@ -30,7 +30,6 @@ func newTestApplication(t *testing.T) *application {
 		logger:            slog.New(slog.NewTextHandler(io.Discard, nil)),
 		sessionManager:    sessionManager,
 		websites:          &mocks.WebsiteModel{},
-		guestbooks:        &mocks.GuestbookModel{},
 		users:             &mocks.UserModel{},
 		guestbookComments: &mocks.GuestbookCommentModel{},
 		formDecoder:       formDecoder,

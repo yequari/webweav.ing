@@ -21,9 +21,9 @@ import (
 type application struct {
 	sequence          uint16
 	logger            *slog.Logger
-	websites          *models.WebsiteModel
-	users             *models.UserModel
-	guestbookComments *models.GuestbookCommentModel
+	websites          models.WebsiteModelInterface
+	users             models.UserModelInterface
+	guestbookComments models.GuestbookCommentModelInterface
 	sessionManager    *scs.SessionManager
 	formDecoder       *schema.Decoder
 	debug             bool

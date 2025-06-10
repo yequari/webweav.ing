@@ -17,7 +17,7 @@ func (app *application) routes() http.Handler {
 	standard := alice.New(app.recoverPanic, app.logRequest, commonHeaders)
 
 	mux.Handle("/{$}", dynamic.ThenFunc(app.home))
-	mux.Handle("POST /websites/{id}/guestbook/comments/create", standard.ThenFunc(app.postGuestbookCommentCreate))
+	mux.Handle("POST /websites/{id}/guestbook/comments/create", dynamic.ThenFunc(app.postGuestbookCommentCreate))
 	mux.Handle("GET /websites/{id}/guestbook", dynamic.ThenFunc(app.getGuestbook))
 	mux.Handle("GET /users/register", dynamic.ThenFunc(app.getUserRegister))
 	mux.Handle("POST /users/register", dynamic.ThenFunc(app.postUserRegister))

@@ -19,7 +19,7 @@ type CommentCreateForm struct {
 	AuthorName          string `schema:"authorname"`
 	AuthorEmail         string `schema:"authoremail"`
 	AuthorSite          string `schema:"authorsite"`
-	Content             string `schema:"content,required"`
+	Content             string `schema:"content"`
 	validator.Validator `schema:"-"`
 }
 

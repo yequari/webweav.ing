@@ -179,9 +179,7 @@ func (app *application) postGuestbookCommentCreate(w http.ResponseWriter, r *htt
 
 	form.CheckField(validator.NotBlank(form.AuthorName), "authorName", "This field cannot be blank")
 	form.CheckField(validator.MaxChars(form.AuthorName, 256), "authorName", "This field cannot be more than 256 characters long")
-	form.CheckField(validator.NotBlank(form.AuthorEmail), "authorEmail", "This field cannot be blank")
 	form.CheckField(validator.MaxChars(form.AuthorEmail, 256), "authorEmail", "This field cannot be more than 256 characters long")
-	form.CheckField(validator.NotBlank(form.AuthorSite), "authorSite", "This field cannot be blank")
 	form.CheckField(validator.MaxChars(form.AuthorSite, 256), "authorSite", "This field cannot be more than 256 characters long")
 	form.CheckField(validator.NotBlank(form.Content), "content", "This field cannot be blank")
 
@@ -193,7 +191,8 @@ func (app *application) postGuestbookCommentCreate(w http.ResponseWriter, r *htt
 			return
 		}
 		data := app.newCommonData(r)
-		views.GuestbookView("Guestbook", data, website, website.Guestbook, comments, forms.CommentCreateForm{}).Render(r.Context(), w)
+		w.WriteHeader(http.StatusUnprocessableEntity)
+		views.GuestbookView("Guestbook", data, website, website.Guestbook, comments, form).Render(r.Context(), w)
 		return
 	}
 
@@ -203,7 +202,7 @@ func (app *application) postGuestbookCommentCreate(w http.ResponseWriter, r *htt
 		app.serverError(w, r, err)
 		return
 	}
-	// app.sessionManager.Put(r.Context(), "flash", "Comment successfully posted!")
+	app.sessionManager.Put(r.Context(), "flash", "Comment successfully posted!")
 	http.Redirect(w, r, fmt.Sprintf("/websites/%s/guestbook", slug), http.StatusSeeOther)
 }
 

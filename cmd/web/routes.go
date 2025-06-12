@@ -15,10 +15,11 @@ func (app *application) routes() http.Handler {
 
 	dynamic := alice.New(app.sessionManager.LoadAndSave, noSurf, app.authenticate)
 	standard := alice.New(app.recoverPanic, app.logRequest, commonHeaders)
+	withCors := standard.Append(app.enableCors)
 
 	mux.Handle("/{$}", dynamic.ThenFunc(app.home))
 	mux.Handle("GET /websites/{id}/guestbook", dynamic.ThenFunc(app.getGuestbook))
-	mux.Handle("GET /websites/{id}/guestbook/comments", standard.ThenFunc(app.getGuestbookCommentsSerialized))
+	mux.Handle("GET /websites/{id}/guestbook/comments", withCors.ThenFunc(app.getGuestbookCommentsSerialized))
 	mux.Handle("GET /websites/{id}/guestbook/comments/create", dynamic.ThenFunc(app.getGuestbookCommentCreate))
 	mux.Handle("POST /websites/{id}/guestbook/comments/create", dynamic.ThenFunc(app.postGuestbookCommentCreate))
 	mux.Handle("GET /users/register", dynamic.ThenFunc(app.getUserRegister))

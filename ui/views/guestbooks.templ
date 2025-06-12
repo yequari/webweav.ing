@@ -61,7 +61,7 @@ templ GuestbookDashboardCommentView(data CommonData, w models.Website, c models.
 
 templ commentForm(form forms.CommentCreateForm) {
 	<div>
-		<label for="authorname">Name: </label>
+		<label for="authorname">Name</label>
 		{{ error, exists := form.FieldErrors["authorName"] }}
 		if exists {
 			<label class="error">{ error }</label>
@@ -69,7 +69,7 @@ templ commentForm(form forms.CommentCreateForm) {
 		<input type="text" name="authorname" id="authorname"/>
 	</div>
 	<div>
-		<label for="authoremail">Email: </label>
+		<label for="authoremail">Email (Optional) </label>
 		{{ error, exists = form.FieldErrors["authorEmail"] }}
 		if exists {
 			<label class="error">{ error }</label>
@@ -77,7 +77,7 @@ templ commentForm(form forms.CommentCreateForm) {
 		<input type="text" name="authoremail" id="authoremail"/>
 	</div>
 	<div>
-		<label for="authorsite">Site Url: </label>
+		<label for="authorsite">Site Url (Optional) </label>
 		{{ error, exists = form.FieldErrors["authorSite"] }}
 		if exists {
 			<label class="error">{ error }</label>
@@ -85,7 +85,7 @@ templ commentForm(form forms.CommentCreateForm) {
 		<input type="text" name="authorsite" id="authorsite"/>
 	</div>
 	<div>
-		<label for="content">Comment: </label>
+		<label for="content">Comment</label>
 		{{ error, exists = form.FieldErrors["content"] }}
 		if exists {
 			<label class="error">{ error }</label>
@@ -106,11 +106,13 @@ templ GuestbookView(title string, data CommonData, website models.Website, guest
 			<head>
 				<title>{ title }</title>
 				<link href="/static/css/classless.min.css" rel="stylesheet"/>
+                <script src="/static/js/main.js" defer />
 			</head>
 			<body>
 				<main>
 					<div>
 						<h1>Guestbook for { website.Name }</h1>
+						{ data.Flash }
 						<form action={ templ.URL(postUrl) } method="post">
 							<input type="hidden" name="csrf_token" value={ data.CSRFToken }/>
 							@commentForm(form)
@@ -123,7 +125,7 @@ templ GuestbookView(title string, data CommonData, website models.Website, guest
 						for _, c := range comments {
 							<div>
 								<h3>{ c.AuthorName }</h3>
-								{ c.Created.Format("01-02-2006 03:04PM") }
+								<time datetime={ c.Created.Format(time.RFC3339) }>{ c.Created.Format("01-02-2006 03:04PM") }</time>
 								<p>
 									{ c.CommentText }
 								</p>
@@ -133,21 +135,6 @@ templ GuestbookView(title string, data CommonData, website models.Website, guest
 				</main>
 			</body>
 		</html>
-	}
-}
-
-templ CreateGuestbookComment(title string, data CommonData, website models.Website, guestbook models.Guestbook, form forms.CommentCreateForm) {
-	{{ postUrl := fmt.Sprintf("/websites/%s/guestbook/comments/create", shortIdToSlug(website.ShortId)) }}
-	if data.IsHtmx {
-		<form hx-post={ postUrl } hx-target="closest div">
-			@commentForm(form)
-		</form>
-	} else {
-		@base(title, data) {
-			<form action={ templ.URL(postUrl) } method="post">
-				@commentForm(form)
-			</form>
-		}
 	}
 }
 
@@ -209,6 +196,22 @@ templ GuestbookSettingsView(data CommonData, website models.Website) {
 			</div>
 		</div>
 	}
+}
+
+templ EmbeddableGuestbookCommentForm(data CommonData, w models.Website, f forms.CommentCreateForm) {
+	{{ postUrl := fmt.Sprintf("/websites/%s/guestbook/comments/create?headless=true", shortIdToSlug(w.ShortId)) }}
+	<html>
+		<head>
+			<link href="/static/css/classless.min.css" rel="stylesheet"/>
+		</head>
+		<body>
+			{ data.Flash }
+			<form action={ templ.URL(postUrl) } method="post">
+				<input type="hidden" name="csrf_token" value={ data.CSRFToken }/>
+				@commentForm(f)
+			</form>
+		</body>
+	</html>
 }
 
 templ AllGuestbooksView(data CommonData, websites []models.Website) {

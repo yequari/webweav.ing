@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -136,6 +137,29 @@ func (app *application) getGuestbookComments(w http.ResponseWriter, r *http.Requ
 	views.GuestbookDashboardCommentsView("Comments", data, website, website.Guestbook, comments).Render(r.Context(), w)
 }
 
+func (app *application) getGuestbookCommentsSerialized(w http.ResponseWriter, r *http.Request) {
+	slug := r.PathValue("id")
+	website, err := app.websites.Get(slugToShortId(slug))
+	if err != nil {
+		if errors.Is(err, models.ErrNoRecord) {
+			http.NotFound(w, r)
+		} else {
+			app.serverError(w, r, err)
+		}
+		return
+	}
+	if !website.Guestbook.Settings.IsVisible || !website.Guestbook.Settings.AllowRemoteHostAccess {
+		app.clientError(w, http.StatusForbidden)
+	}
+	comments, err := app.guestbookComments.GetAll(website.Guestbook.ID)
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
+	b, err := json.Marshal(comments)
+	w.Write(b)
+}
+
 func (app *application) getGuestbookCommentCreate(w http.ResponseWriter, r *http.Request) {
 	// TODO: This will be the embeddable form
 	slug := r.PathValue("id")
@@ -148,13 +172,21 @@ func (app *application) getGuestbookCommentCreate(w http.ResponseWriter, r *http
 		}
 		return
 	}
+	s := website.Guestbook.Settings
+	if !s.IsVisible || !s.AllowRemoteHostAccess || !website.Guestbook.CanComment() {
+		app.clientError(w, http.StatusForbidden)
+	}
 	data := app.newCommonData(r)
 	form := forms.CommentCreateForm{}
-	views.CreateGuestbookComment("New Comment", data, website, website.Guestbook, form).Render(r.Context(), w)
+	views.EmbeddableGuestbookCommentForm(data, website, form).Render(r.Context(), w)
 }
 
 func (app *application) postGuestbookCommentCreate(w http.ResponseWriter, r *http.Request) {
 	slug := r.PathValue("id")
+	headless, err := strconv.ParseBool(r.URL.Query().Get("headless"))
+	if err != nil {
+		headless = false
+	}
 	website, err := app.websites.Get(slugToShortId(slug))
 	if err != nil {
 		if errors.Is(err, models.ErrNoRecord) {
@@ -184,14 +216,17 @@ func (app *application) postGuestbookCommentCreate(w http.ResponseWriter, r *htt
 	form.CheckField(validator.NotBlank(form.Content), "content", "This field cannot be blank")
 
 	if !form.Valid() {
+		data := app.newCommonData(r)
+		w.WriteHeader(http.StatusUnprocessableEntity)
+		if headless {
+			views.EmbeddableGuestbookCommentForm(data, website, form).Render(r.Context(), w)
+		}
 		// TODO: use htmx to avoid getting comments again
 		comments, err := app.guestbookComments.GetAll(website.Guestbook.ID)
 		if err != nil {
 			app.serverError(w, r, err)
 			return
 		}
-		data := app.newCommonData(r)
-		w.WriteHeader(http.StatusUnprocessableEntity)
 		views.GuestbookView("Guestbook", data, website, website.Guestbook, comments, form).Render(r.Context(), w)
 		return
 	}
@@ -203,6 +238,9 @@ func (app *application) postGuestbookCommentCreate(w http.ResponseWriter, r *htt
 		return
 	}
 	app.sessionManager.Put(r.Context(), "flash", "Comment successfully posted!")
+	if headless {
+		http.Redirect(w, r, fmt.Sprintf("/websites/%s/guestbook/comments/create", slug), http.StatusSeeOther)
+	}
 	http.Redirect(w, r, fmt.Sprintf("/websites/%s/guestbook", slug), http.StatusSeeOther)
 }
 

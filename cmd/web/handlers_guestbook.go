@@ -151,11 +151,12 @@ func (app *application) getGuestbookCommentsSerialized(w http.ResponseWriter, r 
 	if !website.Guestbook.Settings.IsVisible || !website.Guestbook.Settings.AllowRemoteHostAccess {
 		app.clientError(w, http.StatusForbidden)
 	}
-	comments, err := app.guestbookComments.GetAll(website.Guestbook.ID)
+	comments, err := app.guestbookComments.GetAllSerialized(website.Guestbook.ID)
 	if err != nil {
 		app.serverError(w, r, err)
 		return
 	}
+
 	b, err := json.Marshal(comments)
 	w.Write(b)
 }
@@ -242,6 +243,54 @@ func (app *application) postGuestbookCommentCreate(w http.ResponseWriter, r *htt
 		http.Redirect(w, r, fmt.Sprintf("/websites/%s/guestbook/comments/create", slug), http.StatusSeeOther)
 	}
 	http.Redirect(w, r, fmt.Sprintf("/websites/%s/guestbook", slug), http.StatusSeeOther)
+}
+
+func (app *application) postGuestbookCommentCreateRemote(w http.ResponseWriter, r *http.Request) {
+	slug := r.PathValue("id")
+	website, err := app.websites.Get(slugToShortId(slug))
+	if err != nil {
+		if errors.Is(err, models.ErrNoRecord) {
+			http.NotFound(w, r)
+		} else {
+			app.serverError(w, r, err)
+		}
+		return
+	}
+
+	if !website.Guestbook.CanComment() {
+		app.clientError(w, http.StatusForbidden)
+		return
+	}
+
+	var form forms.CommentCreateForm
+	err = app.decodePostForm(r, &form)
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+
+	form.CheckField(validator.NotBlank(form.AuthorName), "authorName", "This field cannot be blank")
+	form.CheckField(validator.MaxChars(form.AuthorName, 256), "authorName", "This field cannot be more than 256 characters long")
+	form.CheckField(validator.MaxChars(form.AuthorEmail, 256), "authorEmail", "This field cannot be more than 256 characters long")
+	form.CheckField(validator.MaxChars(form.AuthorSite, 256), "authorSite", "This field cannot be more than 256 characters long")
+	form.CheckField(validator.NotBlank(form.Content), "content", "This field cannot be blank")
+	// TODO: Add optional field filled with window.location.href
+	// If it is populated, use as redirect URL
+	// Else redirect to homepage as stored in the website struct
+	redirectUrl := r.Header.Get("Referer")
+
+	if !form.Valid() {
+		views.GuestbookCommentCreateRemoteErrorView(redirectUrl, "Invalid Input").Render(r.Context(), w)
+		return
+	}
+
+	shortId := app.createShortId()
+	_, err = app.guestbookComments.Insert(shortId, website.Guestbook.ID, 0, form.AuthorName, form.AuthorEmail, form.AuthorSite, form.Content, "", true)
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
+	views.GuestbookCommentCreateRemoteSuccessView(redirectUrl).Render(r.Context(), w)
 }
 
 func (app *application) getCommentQueue(w http.ResponseWriter, r *http.Request) {

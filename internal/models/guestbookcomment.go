@@ -20,6 +20,12 @@ type GuestbookComment struct {
 	IsPublished bool
 }
 
+type GuestbookCommentSerialized struct {
+	AuthorName  string
+	CommentText string
+	Created     string
+}
+
 type GuestbookCommentModel struct {
 	DB *sql.DB
 }
@@ -28,6 +34,7 @@ type GuestbookCommentModelInterface interface {
 	Insert(shortId uint64, guestbookId, parentId int64, authorName, authorEmail, authorSite, commentText, pageUrl string, isPublished bool) (int64, error)
 	Get(shortId uint64) (GuestbookComment, error)
 	GetAll(guestbookId int64) ([]GuestbookComment, error)
+	GetAllSerialized(guestbookId int64) ([]GuestbookCommentSerialized, error)
 	GetDeleted(guestbookId int64) ([]GuestbookComment, error)
 	GetUnpublished(guestbookId int64) ([]GuestbookComment, error)
 	UpdateComment(comment *GuestbookComment) error
@@ -82,6 +89,30 @@ func (m *GuestbookCommentModel) GetAll(guestbookId int64) ([]GuestbookComment, e
 		var c GuestbookComment
 		err = rows.Scan(&c.ID, &c.ShortId, &c.GuestbookId, &c.ParentId, &c.AuthorName, &c.AuthorEmail, &c.AuthorSite,
 			&c.CommentText, &c.PageUrl, &c.Created, &c.IsPublished)
+		if err != nil {
+			return nil, err
+		}
+		comments = append(comments, c)
+	}
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+	return comments, nil
+}
+
+func (m *GuestbookCommentModel) GetAllSerialized(guestbookId int64) ([]GuestbookCommentSerialized, error) {
+	stmt := `SELECT AuthorName, CommentText, Created
+	    FROM guestbook_comments 
+	    WHERE GuestbookId = ? AND IsPublished = TRUE AND DELETED IS NULL
+	    ORDER BY Created DESC`
+	rows, err := m.DB.Query(stmt, guestbookId)
+	if err != nil {
+		return nil, err
+	}
+	var comments []GuestbookCommentSerialized
+	for rows.Next() {
+		var c GuestbookCommentSerialized
+		err = rows.Scan(&c.AuthorName, &c.CommentText, &c.Created)
 		if err != nil {
 			return nil, err
 		}

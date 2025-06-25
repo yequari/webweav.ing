@@ -6,87 +6,85 @@ import "fmt"
 import "strings"
 
 type CommonData struct {
-    CurrentYear int
-    Flash string
-    IsAuthenticated bool
-    CSRFToken string
-    CurrentUser *models.User
-    IsHtmx bool
+	CurrentYear     int
+	Flash           string
+	IsAuthenticated bool
+	CSRFToken       string
+	CurrentUser     *models.User
+	IsHtmx          bool
 }
 
 func shortIdToSlug(shortId uint64) string {
-    return strconv.FormatUint(shortId, 36)
+	return strconv.FormatUint(shortId, 36)
 }
 
 func slugToShortId(slug string) uint64 {
-    id, _ := strconv.ParseUint(slug, 36, 64)
-    return id
+	id, _ := strconv.ParseUint(slug, 36, 64)
+	return id
 }
 
 func externalUrl(url string) string {
-    if !strings.HasPrefix(url, "http") {
-        return "http://" + url
-    }
-    return url
+	if !strings.HasPrefix(url, "http") {
+		return "http://" + url
+	}
+	return url
 }
 
 templ commonHeader() {
-    <header>
-        <h1><a href="/">webweav.ing</a></h1>
-    </header>
+	<header>
+		<h1><a href="/">webweav.ing</a></h1>
+	</header>
 }
 
 templ topNav(data CommonData) {
-    {{ hxHeaders := fmt.Sprintf("{\"X-CSRF-Token\": \"%s\"}", data.CSRFToken) }}
-    <nav>
-        <div>
-            if data.IsAuthenticated {
-                Welcome, { data.CurrentUser.Username }
-            }
-        </div>
-        <div>
-            if data.IsAuthenticated {
-                <a href="/guestbooks">All Guestbooks</a> |
-                <a href="/websites">My Websites</a> | 
-                <a href="/users/settings">Settings</a> | 
-                <a href="#" hx-post="/users/logout" hx-headers={ hxHeaders }>Logout</a>
-            } else {
-                <a href="/users/register">Create an Account</a> | 
-                <a href="/users/login">Login</a>
-            }
-        </div>
-    </nav>
+	{{ hxHeaders := fmt.Sprintf("{\"X-CSRF-Token\": \"%s\"}", data.CSRFToken) }}
+	<nav>
+		<div>
+			if data.IsAuthenticated {
+				Welcome, { data.CurrentUser.Username }
+			}
+		</div>
+		<div>
+			if data.IsAuthenticated {
+				<a href="/guestbooks">All Guestbooks</a> |
+				<a href="/websites">My Websites</a> | 
+				<a href="/users/settings">Settings</a> | 
+				<a href="#" hx-post="/users/logout" hx-headers={ hxHeaders }>Logout</a>
+			} else {
+				<a href="/users/register">Create an Account</a> | 
+				<a href="/users/login">Login</a>
+			}
+		</div>
+	</nav>
 }
 
-
 templ commonFooter() {
-    <footer>
-        <p>A <a href="https://32bit.cafe">32bit.cafe</a> Project</p>
-    </footer>
+	<footer>
+		<p>A <a href="https://32bit.cafe">32bit.cafe</a> Project</p>
+	</footer>
 }
 
 templ base(title string, data CommonData) {
-    <!DOCTYPE html>
-    <html lang="en">
-        <head>
-            <title>{ title } - webweav.ing</title>
-            <meta charset="UTF-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1">
-            <link href="/static/css/classless.min.css" rel="stylesheet">
-            <link href="/static/css/style.css" rel="stylesheet">
-            <script src="/static/js/htmx.min.js"></script>
-        </head>
-        <body>
-            @commonHeader()
-            @topNav(data)
-            <main>
-                if data.Flash != "" {
-                    <div class="flash">{ data.Flash }</div>
-                }
-                { children... }
-            </main>
-            @commonFooter()
-        </body>
-    </html>
+	<!DOCTYPE html>
+	<html lang="en">
+		<head>
+			<title>{ title } - webweav.ing</title>
+			<meta charset="UTF-8"/>
+			<meta name="viewport" content="width=device-width, initial-scale=1"/>
+			<link href="/static/css/classless.min.css" rel="stylesheet"/>
+			<link href="/static/css/style.css" rel="stylesheet"/>
+			<script src="/static/js/htmx.min.js"></script>
+		</head>
+		<body>
+			@commonHeader()
+			@topNav(data)
+			<main>
+				if data.Flash != "" {
+					<div class="flash">{ data.Flash }</div>
+				}
+				{ children... }
+			</main>
+			@commonFooter()
+		</body>
+	</html>
 }
-

@@ -20,6 +20,7 @@ func (app *application) routes() http.Handler {
 	mux.Handle("/{$}", dynamic.ThenFunc(app.home))
 	mux.Handle("GET /websites/{id}/guestbook", dynamic.ThenFunc(app.getGuestbook))
 	mux.Handle("GET /websites/{id}/guestbook/comments", withCors.ThenFunc(app.getGuestbookCommentsSerialized))
+	mux.Handle("POST /websites/{id}/guestbook/comments/create/remote", standard.ThenFunc(app.postGuestbookCommentCreateRemote))
 	mux.Handle("GET /websites/{id}/guestbook/comments/create", dynamic.ThenFunc(app.getGuestbookCommentCreate))
 	mux.Handle("POST /websites/{id}/guestbook/comments/create", dynamic.ThenFunc(app.postGuestbookCommentCreate))
 	mux.Handle("GET /users/register", dynamic.ThenFunc(app.getUserRegister))

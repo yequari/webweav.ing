@@ -106,7 +106,7 @@ templ GuestbookView(title string, data CommonData, website models.Website, guest
 			<head>
 				<title>{ title }</title>
 				<link href="/static/css/classless.min.css" rel="stylesheet"/>
-                <script src="/static/js/main.js" defer />
+				<script src="/static/js/main.js" defer></script>
 			</head>
 			<body>
 				<main>
@@ -124,7 +124,13 @@ templ GuestbookView(title string, data CommonData, website models.Website, guest
 						}
 						for _, c := range comments {
 							<div>
-								<h3>{ c.AuthorName }</h3>
+								<h3>
+									if c.AuthorSite != "" {
+										<a href={ templ.URL(externalUrl(c.AuthorSite)) } target="_blank">{ c.AuthorName }</a>
+									} else {
+										{ c.AuthorName }
+									}
+								</h3>
 								<time datetime={ c.Created.Format(time.RFC3339) }>{ c.Created.Format("01-02-2006 03:04PM") }</time>
 								<p>
 									{ c.CommentText }
@@ -231,4 +237,36 @@ templ AllGuestbooksView(data CommonData, websites []models.Website) {
 			</ul>
 		</div>
 	}
+}
+
+templ GuestbookCommentCreateRemoteErrorView(url, err string) {
+	<html>
+		<head>
+			<meta http-equiv="refresh" content={ fmt.Sprintf("3; url='%s'", templ.URL(externalUrl(url))) }/>
+		</head>
+		<body>
+			<p>
+				An error occurred while posting comment. { err }. Redirecting.
+			</p>
+			<p>
+				<a href={ templ.URL(url) }>Redirect</a>
+			</p>
+		</body>
+	</html>
+}
+
+templ GuestbookCommentCreateRemoteSuccessView(url string) {
+	<html>
+		<head>
+			<meta http-equiv="refresh" content={ fmt.Sprintf("3; url='%s'", templ.URL(externalUrl(url))) }/>
+		</head>
+		<body>
+			<p>
+				Comment successfully posted. Redirecting.
+			</p>
+			<p>
+				<a href={ templ.URL(url) }>Redirect</a>
+			</p>
+		</body>
+	</html>
 }

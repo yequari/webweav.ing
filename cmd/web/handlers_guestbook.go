@@ -257,6 +257,11 @@ func (app *application) postGuestbookCommentCreateRemote(w http.ResponseWriter, 
 		return
 	}
 
+	if normalizeUrl(r.Header.Get("Origin")) != normalizeUrl(website.SiteUrl) {
+		app.clientError(w, http.StatusForbidden)
+		return
+	}
+
 	if !website.Guestbook.CanComment() {
 		app.clientError(w, http.StatusForbidden)
 		return

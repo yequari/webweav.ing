@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"runtime/debug"
 	"strconv"
+	"strings"
 	"time"
 
 	"git.32bit.cafe/32bitcafe/guestbook/internal/models"
@@ -126,4 +127,13 @@ func (app *application) durationToTime(duration string) (time.Time, error) {
 	}
 	result = time.Now().UTC().Add(offset)
 	return result, nil
+}
+
+func normalizeUrl(url string) string {
+	r, f := strings.CutPrefix(url, "http://")
+	if f {
+		return r
+	}
+	r, _ = strings.CutPrefix(url, "https://")
+	return r
 }

@@ -116,15 +116,6 @@ templ WebsiteDashboard(title string, data CommonData, website models.Website) {
 			<div>
 				<h1>{ website.Name }</h1>
 				<h2>Embed your Guestbook</h2>
-				<h3>Comment form</h3>
-				<p>
-					Use this form to allow readers of your website to comment on your guestbook!
-				</p>
-				<div>
-					//<button>Copy to Clipboard</button>
-					@embeddableForm(data.RootUrl, website)
-				</div>
-				<h3>Embed your comments</h3>
 				<p>
 					Upload <a href="/static/js/guestbook.js" download>this JavaScript WebComponent</a> to your site and include it in your <code>{ `<head>` }</code> tag.
 				</p>
@@ -139,16 +130,26 @@ templ WebsiteDashboard(title string, data CommonData, website models.Website) {
 						</code>
 					</pre>
 					<p>
-						Then add the custom element where you want the comments to show up
+						Then add the custom elements where you want your form and comments to show up
 					</p>
-					{{ getUrl := fmt.Sprintf("https://%s/websites/%s/guestbook/comments", data.RootUrl, shortIdToSlug(website.ShortId)) }}
+					{{ gbUrl := fmt.Sprintf("https://%s/websites/%s/guestbook", data.RootUrl, shortIdToSlug(website.ShortId)) }}
 					//<button>Copy to Clipboard</button>
 					<pre>
 						<code>
-							{ fmt.Sprintf(`<comment-list src="%s"></comment-list>`, getUrl) }
+							{ fmt.Sprintf(`<guestbook-form guestbook="%s"></guestbook-form>
+<guestbook-comments guestbook="%s"></guestbook-comments>`, gbUrl, gbUrl) }
 						</code>
 					</pre>
-					@embedJavaScriptSnippet(data.RootUrl, website)
+				</div>
+				<p>
+					If your web host does not allow CORS requests, use an iframe instead
+				</p>
+				<div>
+					<pre>
+						<code>
+							{ fmt.Sprintf(`<iframe src="%s" title="Guestbook"></iframe>`, gbUrl) }
+						</code>
+					</pre>
 				</div>
 			</div>
 		</div>

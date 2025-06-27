@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"net/url"
 	"strconv"
 	"time"
 
@@ -279,10 +280,18 @@ func (app *application) postGuestbookCommentCreateRemote(w http.ResponseWriter, 
 	form.CheckField(validator.MaxChars(form.AuthorEmail, 256), "authorEmail", "This field cannot be more than 256 characters long")
 	form.CheckField(validator.MaxChars(form.AuthorSite, 256), "authorSite", "This field cannot be more than 256 characters long")
 	form.CheckField(validator.NotBlank(form.Content), "content", "This field cannot be blank")
-	// TODO: Add optional field filled with window.location.href
-	// If it is populated, use as redirect URL
-	// Else redirect to homepage as stored in the website struct
-	redirectUrl := r.Header.Get("Referer")
+
+	// if redirect path is filled out, redirect to that path on the website host
+	// otherwise redirect to the guestbook by default
+	redirectUrl := fmt.Sprintf("/websites/%s/guestbook", shortIdToSlug(website.ShortId))
+	if form.Redirect != "" {
+		u := url.URL{
+			Scheme: "http",
+			Host:   website.SiteUrl,
+			Path:   form.Redirect,
+		}
+		redirectUrl = u.String()
+	}
 
 	if !form.Valid() {
 		views.GuestbookCommentCreateRemoteErrorView(redirectUrl, "Invalid Input").Render(r.Context(), w)

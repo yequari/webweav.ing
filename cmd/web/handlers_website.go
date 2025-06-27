@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"net/url"
 
 	"git.32bit.cafe/32bitcafe/guestbook/internal/forms"
 	"git.32bit.cafe/32bitcafe/guestbook/internal/models"
@@ -33,13 +34,15 @@ func (app *application) postWebsiteCreate(w http.ResponseWriter, r *http.Request
 	form.CheckField(validator.NotBlank(form.SiteUrl), "siteurl", "This field cannot be blank")
 	form.CheckField(validator.MaxChars(form.SiteUrl, 512), "siteurl", "This field cannot exceed 512 characters")
 
-	if !form.Valid() {
+	u, err := url.Parse(form.SiteUrl)
+
+	if !form.Valid() || err != nil {
 		data := app.newCommonData(r)
 		w.WriteHeader(http.StatusUnprocessableEntity)
 		views.WebsiteCreate("Add a Website", data, form).Render(r.Context(), w)
 	}
 	websiteShortID := app.createShortId()
-	_, err = app.websites.Insert(websiteShortID, userId, form.Name, form.SiteUrl, form.AuthorName)
+	_, err = app.websites.Insert(websiteShortID, userId, form.Name, u.Host, form.AuthorName)
 	if err != nil {
 		app.serverError(w, r, err)
 		return

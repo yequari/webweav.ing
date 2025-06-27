@@ -20,6 +20,7 @@ type CommentCreateForm struct {
 	AuthorEmail         string `schema:"authoremail"`
 	AuthorSite          string `schema:"authorsite"`
 	Content             string `schema:"content"`
+	Redirect            string `schema:"redirect"`
 	validator.Validator `schema:"-"`
 }
 

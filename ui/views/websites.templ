@@ -115,9 +115,41 @@ templ WebsiteDashboard(title string, data CommonData, website models.Website) {
 			@wSidebar(website)
 			<div>
 				<h1>{ website.Name }</h1>
+				<h2>Embed your Guestbook</h2>
+				<h3>Comment form</h3>
 				<p>
-					Stats and stuff will go here.
+					Use this form to allow readers of your website to comment on your guestbook!
 				</p>
+				<div>
+					//<button>Copy to Clipboard</button>
+					@embeddableForm(data.RootUrl, website)
+				</div>
+				<h3>Embed your comments</h3>
+				<p>
+					Upload <a href="/static/js/guestbook.js" download>this JavaScript WebComponent</a> to your site and include it in your <code>{ `<head>` }</code> tag.
+				</p>
+				<div>
+					//<button>Copy to Clipboard</button>
+					<pre>
+						<code id="guestbookSnippet">
+							{ 
+`<head>
+    <script type="module" src="js/guestbook.js"></script>
+</head>` }
+						</code>
+					</pre>
+					<p>
+						Then add the custom element where you want the comments to show up
+					</p>
+					{{ getUrl := fmt.Sprintf("https://%s/websites/%s/guestbook/comments", data.RootUrl, shortIdToSlug(website.ShortId)) }}
+					//<button>Copy to Clipboard</button>
+					<pre>
+						<code>
+							{ fmt.Sprintf(`<comment-list src="%s"></comment-list>`, getUrl) }
+						</code>
+					</pre>
+					@embedJavaScriptSnippet(data.RootUrl, website)
+				</div>
 			</div>
 		</div>
 	}
@@ -141,4 +173,39 @@ templ WebsiteCreate(title string, data CommonData, form forms.WebsiteCreateForm)
 	<form hx-post="/websites/create" hx-target="closest div">
 		@websiteCreateForm(data.CSRFToken, form)
 	</form>
+}
+
+templ embeddableForm(root string, website models.Website) {
+	{{ postUrl := fmt.Sprintf("https://%s/websites/%s/guestbook/comments/create/remote", root, shortIdToSlug(website.ShortId)) }}
+	{{formStr :=
+	`<form action="%s" method="post">
+        <div>
+            <label for="authorname">Name</label>
+            <input type="text" name="authorname" id="authorname"/>
+        </div>
+        <div>
+            <label for="authoremail">Email (Optional) </label>
+            <input type="text" name="authoremail" id="authoremail"/>
+        </div>
+        <div>
+            <label for="authorsite">Site Url (Optional) </label>
+            <input type="text" name="authorsite" id="authorsite"/>
+        </div>
+        <div>
+            <label for="content">Comment</label>
+            <textarea name="content" id="content"></textarea>
+        </div>
+        <div>
+            <input type="submit" value="Submit"/>
+        </div>
+</form>`
+	}}
+	<pre>
+		<code>
+			{ fmt.Sprintf(formStr, postUrl) }
+		</code>
+	</pre>
+}
+
+templ embedJavaScriptSnippet(root string, website models.Website) {
 }

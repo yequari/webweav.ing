@@ -28,12 +28,14 @@ type application struct {
 	formDecoder       *schema.Decoder
 	debug             bool
 	timezones         []string
+	rootUrl           string
 }
 
 func main() {
 	addr := flag.String("addr", ":3000", "HTTP network address")
 	dsn := flag.String("dsn", "guestbook.db", "data source name")
 	debug := flag.Bool("debug", false, "enable debug mode")
+	root := flag.String("root", "localhost:3000", "root URL of application")
 	flag.Parse()
 
 	logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug}))
@@ -62,6 +64,7 @@ func main() {
 		formDecoder:       formDecoder,
 		debug:             *debug,
 		timezones:         getAvailableTimezones(),
+		rootUrl:           *root,
 	}
 
 	err = app.users.InitializeSettingsMap()

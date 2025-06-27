@@ -110,6 +110,7 @@ func (app *application) newCommonData(r *http.Request) views.CommonData {
 		CSRFToken:       nosurf.Token(r),
 		CurrentUser:     app.getCurrentUser(r),
 		IsHtmx:          r.Header.Get("Hx-Request") == "true",
+		RootUrl:         app.rootUrl,
 	}
 }
 

@@ -58,10 +58,17 @@ div#dashboard {
 div#dashboard nav {
   flex: 1 1 25%;
   margin-top: 2rem;
+  min-width: 0;
 }
 
 div#dashboard > div {
   flex: 10 1 40%;
+  min-width: 0;
+}
+
+div > pre {
+    max-width: 100%;
+    overflow: auto;
 }
 
 main nav ul {

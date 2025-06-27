@@ -20,6 +20,7 @@ type CommonData struct {
 	CSRFToken       string
 	CurrentUser     *models.User
 	IsHtmx          bool
+	RootUrl         string
 }
 
 func shortIdToSlug(shortId uint64) string {

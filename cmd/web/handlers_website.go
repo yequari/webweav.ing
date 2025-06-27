@@ -33,16 +33,20 @@ func (app *application) postWebsiteCreate(w http.ResponseWriter, r *http.Request
 	form.CheckField(validator.MaxChars(form.Name, 256), "sitename", "This field cannot exceed 256 characters")
 	form.CheckField(validator.NotBlank(form.SiteUrl), "siteurl", "This field cannot be blank")
 	form.CheckField(validator.MaxChars(form.SiteUrl, 512), "siteurl", "This field cannot exceed 512 characters")
+	form.CheckField(validator.Matches(form.SiteUrl, validator.WebRX), "siteurl", "This field must be a valid URL (including http:// or https://)")
 
 	u, err := url.Parse(form.SiteUrl)
-
-	if !form.Valid() || err != nil {
+	if err != nil {
+		form.CheckField(false, "siteurl", "This field must be a valid URL")
+	}
+	if !form.Valid() {
 		data := app.newCommonData(r)
 		w.WriteHeader(http.StatusUnprocessableEntity)
 		views.WebsiteCreate("Add a Website", data, form).Render(r.Context(), w)
+		return
 	}
 	websiteShortID := app.createShortId()
-	_, err = app.websites.Insert(websiteShortID, userId, form.Name, u.Host, form.AuthorName)
+	_, err = app.websites.Insert(websiteShortID, userId, form.Name, u.String(), form.AuthorName)
 	if err != nil {
 		app.serverError(w, r, err)
 		return
@@ -76,10 +80,6 @@ func (app *application) getWebsiteList(w http.ResponseWriter, r *http.Request) {
 	websites, err := app.websites.GetAllUser(userId)
 	if err != nil {
 		app.serverError(w, r, err)
-		return
-	}
-	if r.Header.Get("HX-Request") == "true" {
-		views.HxWebsiteList(websites)
 		return
 	}
 	data := app.newCommonData(r)

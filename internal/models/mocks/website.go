@@ -1,6 +1,7 @@
 package mocks
 
 import (
+	"net/url"
 	"time"
 
 	"git.32bit.cafe/32bitcafe/guestbook/internal/models"
@@ -22,10 +23,14 @@ var mockGuestbook = models.Guestbook{
 }
 
 var mockWebsite = models.Website{
-	ID:         1,
-	ShortId:    1,
-	Name:       "Example",
-	SiteUrl:    "example.com",
+	ID:      1,
+	ShortId: 1,
+	Name:    "Example",
+	// SiteUrl:    "example.com",
+	Url: &url.URL{
+		Scheme: "http",
+		Host:   "example.com",
+	},
 	AuthorName: "John Test",
 	UserId:     1,
 	Created:    time.Now(),

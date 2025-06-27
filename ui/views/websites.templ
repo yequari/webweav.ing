@@ -16,7 +16,7 @@ templ wSidebar(website models.Website) {
 			<h2>{ website.Name }</h2>
 			<ul>
 				<li><a href={ templ.URL(dashUrl) }>Dashboard</a></li>
-				<li><a href={ templ.URL(externalUrl(website.SiteUrl)) } target="_blank">View Website</a></li>
+				<li><a href={ templ.URL(externalUrl(website.Url.String())) } target="_blank">View Website</a></li>
 			</ul>
 			<h3>Guestbook</h3>
 			<ul>
@@ -70,7 +70,7 @@ templ websiteCreateForm(csrfToken string, form forms.WebsiteCreateForm) {
 		if exists {
 			<label class="error">{ err }</label>
 		}
-		<input type="text" name="sitename" id="sitename" required/>
+		<input type="text" name="sitename" id="sitename" value={ form.Name } required/>
 	</div>
 	<div>
 		{{ err, exists = form.FieldErrors["siteurl"] }}
@@ -78,7 +78,7 @@ templ websiteCreateForm(csrfToken string, form forms.WebsiteCreateForm) {
 		if exists {
 			<label class="error">{ err }</label>
 		}
-		<input type="text" name="siteurl" id="siteurl" required/>
+		<input type="text" name="siteurl" id="siteurl" value={ form.SiteUrl } required/>
 	</div>
 	<div>
 		{{ err, exists = form.FieldErrors["authorname"] }}
@@ -86,22 +86,18 @@ templ websiteCreateForm(csrfToken string, form forms.WebsiteCreateForm) {
 		if exists {
 			<label class="error">{ err }</label>
 		}
-		<input type="text" name="authorname" id="authorname" required/>
+		<input type="text" name="authorname" id="authorname" value={ form.AuthorName } required/>
 	</div>
 	<div>
 		<button type="submit">Submit</button>
 	</div>
 }
 
-templ WebsiteCreateButton() {
-	<button hx-get="/websites/create" hx-target="closest div">Add Website</button>
-}
-
 templ WebsiteList(title string, data CommonData, websites []models.Website) {
 	@base(title, data) {
 		<h1>My Websites</h1>
 		<div>
-			@WebsiteCreateButton()
+			<a href="/websites/create">Add Website</a>
 		</div>
 		<div>
 			@displayWebsites(websites)
@@ -171,42 +167,9 @@ templ WebsiteDashboardComingSoon(title string, data CommonData, website models.W
 }
 
 templ WebsiteCreate(title string, data CommonData, form forms.WebsiteCreateForm) {
-	<form hx-post="/websites/create" hx-target="closest div">
-		@websiteCreateForm(data.CSRFToken, form)
-	</form>
-}
-
-templ embeddableForm(root string, website models.Website) {
-	{{ postUrl := fmt.Sprintf("https://%s/websites/%s/guestbook/comments/create/remote", root, shortIdToSlug(website.ShortId)) }}
-	{{formStr :=
-	`<form action="%s" method="post">
-        <div>
-            <label for="authorname">Name</label>
-            <input type="text" name="authorname" id="authorname"/>
-        </div>
-        <div>
-            <label for="authoremail">Email (Optional) </label>
-            <input type="text" name="authoremail" id="authoremail"/>
-        </div>
-        <div>
-            <label for="authorsite">Site Url (Optional) </label>
-            <input type="text" name="authorsite" id="authorsite"/>
-        </div>
-        <div>
-            <label for="content">Comment</label>
-            <textarea name="content" id="content"></textarea>
-        </div>
-        <div>
-            <input type="submit" value="Submit"/>
-        </div>
-</form>`
-	}}
-	<pre>
-		<code>
-			{ fmt.Sprintf(formStr, postUrl) }
-		</code>
-	</pre>
-}
-
-templ embedJavaScriptSnippet(root string, website models.Website) {
+	@base(title, data) {
+		<form action="/websites/create" method="post">
+			@websiteCreateForm(data.CSRFToken, form)
+		</form>
+	}
 }

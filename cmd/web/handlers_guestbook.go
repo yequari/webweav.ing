@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"net/url"
 	"strconv"
 	"time"
 
@@ -258,11 +257,10 @@ func (app *application) postGuestbookCommentCreateRemote(w http.ResponseWriter, 
 		return
 	}
 
-	if normalizeUrl(r.Header.Get("Origin")) != normalizeUrl(website.SiteUrl) {
+	if !matchOrigin(r.Header.Get("Origin"), website.Url) {
 		app.clientError(w, http.StatusForbidden)
 		return
 	}
-
 	if !website.Guestbook.CanComment() {
 		app.clientError(w, http.StatusForbidden)
 		return
@@ -285,12 +283,10 @@ func (app *application) postGuestbookCommentCreateRemote(w http.ResponseWriter, 
 	// otherwise redirect to the guestbook by default
 	redirectUrl := fmt.Sprintf("/websites/%s/guestbook", shortIdToSlug(website.ShortId))
 	if form.Redirect != "" {
-		u := url.URL{
-			Scheme: "http",
-			Host:   website.SiteUrl,
-			Path:   form.Redirect,
+		u, err := website.Url.Parse(form.Redirect)
+		if err == nil {
+			redirectUrl = u.String()
 		}
-		redirectUrl = u.String()
 	}
 
 	if !form.Valid() {

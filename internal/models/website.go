@@ -3,15 +3,17 @@ package models
 import (
 	"database/sql"
 	"errors"
+	"net/url"
 	"strconv"
 	"time"
 )
 
 type Website struct {
-	ID         int64
-	ShortId    uint64
-	Name       string
-	SiteUrl    string
+	ID      int64
+	ShortId uint64
+	Name    string
+	// SiteUrl    string
+	Url        *url.URL
 	AuthorName string
 	UserId     int64
 	Created    time.Time
@@ -179,7 +181,8 @@ func (m *WebsiteModel) Get(shortId uint64) (Website, error) {
 	}
 	row := tx.QueryRow(stmt, shortId)
 	var w Website
-	err = row.Scan(&w.ID, &w.ShortId, &w.Name, &w.SiteUrl, &w.AuthorName, &w.UserId, &w.Created)
+	var u string
+	err = row.Scan(&w.ID, &w.ShortId, &w.Name, &u, &w.AuthorName, &w.UserId, &w.Created)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			err = ErrNoRecord
@@ -187,6 +190,10 @@ func (m *WebsiteModel) Get(shortId uint64) (Website, error) {
 		if rollbackErr := tx.Rollback(); rollbackErr != nil {
 			return Website{}, err
 		}
+		return Website{}, err
+	}
+	w.Url, err = url.Parse(u)
+	if err != nil {
 		return Website{}, err
 	}
 
@@ -244,8 +251,13 @@ func (m *WebsiteModel) GetAllUser(userId int64) ([]Website, error) {
 	var websites []Website
 	for rows.Next() {
 		var w Website
-		err := rows.Scan(&w.ID, &w.ShortId, &w.Name, &w.SiteUrl, &w.AuthorName, &w.UserId, &w.Created,
+		var u string
+		err := rows.Scan(&w.ID, &w.ShortId, &w.Name, &u, &w.AuthorName, &w.UserId, &w.Created,
 			&w.Guestbook.ID, &w.Guestbook.ShortId, &w.Guestbook.Created, &w.Guestbook.IsActive)
+		if err != nil {
+			return nil, err
+		}
+		w.Url, err = url.Parse(u)
 		if err != nil {
 			return nil, err
 		}
@@ -268,8 +280,13 @@ func (m *WebsiteModel) GetAll() ([]Website, error) {
 	var websites []Website
 	for rows.Next() {
 		var w Website
-		err := rows.Scan(&w.ID, &w.ShortId, &w.Name, &w.SiteUrl, &w.AuthorName, &w.UserId, &w.Created,
+		var u string
+		err := rows.Scan(&w.ID, &w.ShortId, &w.Name, &u, &w.AuthorName, &w.UserId, &w.Created,
 			&w.Guestbook.ID, &w.Guestbook.ShortId, &w.Guestbook.Created, &w.Guestbook.IsActive)
+		if err != nil {
+			return nil, err
+		}
+		w.Url, err = url.Parse(u)
 		if err != nil {
 			return nil, err
 		}

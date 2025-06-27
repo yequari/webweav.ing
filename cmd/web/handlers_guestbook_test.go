@@ -144,3 +144,88 @@ func TestPostGuestbookCommentCreate(t *testing.T) {
 		})
 	}
 }
+
+func TestPostGuestbookCommentCreateRemote(t *testing.T) {
+	app := newTestApplication(t)
+	ts := newTestServer(t, app.routes())
+	defer ts.Close()
+
+	_, _, body := ts.get(t, fmt.Sprintf("/websites/%s/guestbook", shortIdToSlug(1)))
+	validCSRFToken := extractCSRFToken(t, body)
+
+	const (
+		validAuthorName  = "John Test"
+		validAuthorEmail = "test@example.com"
+		validAuthorSite  = "example.com"
+		validContent     = "This is a comment"
+	)
+
+	tests := []struct {
+		name        string
+		authorName  string
+		authorEmail string
+		authorSite  string
+		content     string
+		csrfToken   string
+		wantCode    int
+	}{
+		{
+			name:        "Valid input",
+			authorName:  validAuthorName,
+			authorEmail: validAuthorEmail,
+			authorSite:  validAuthorSite,
+			content:     validContent,
+			csrfToken:   validCSRFToken,
+			wantCode:    http.StatusSeeOther,
+		},
+		{
+			name:        "Blank name",
+			authorName:  "",
+			authorEmail: validAuthorEmail,
+			authorSite:  validAuthorSite,
+			content:     validContent,
+			csrfToken:   validCSRFToken,
+			wantCode:    http.StatusUnprocessableEntity,
+		},
+		{
+			name:        "Blank email",
+			authorName:  validAuthorName,
+			authorEmail: "",
+			authorSite:  validAuthorSite,
+			content:     validContent,
+			csrfToken:   validCSRFToken,
+			wantCode:    http.StatusSeeOther,
+		},
+		{
+			name:        "Blank site",
+			authorName:  validAuthorName,
+			authorEmail: validAuthorEmail,
+			authorSite:  "",
+			content:     validContent,
+			csrfToken:   validCSRFToken,
+			wantCode:    http.StatusSeeOther,
+		},
+		{
+			name:        "Blank content",
+			authorName:  validAuthorName,
+			authorEmail: validAuthorEmail,
+			authorSite:  validAuthorSite,
+			content:     "",
+			csrfToken:   validCSRFToken,
+			wantCode:    http.StatusUnprocessableEntity,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			form := url.Values{}
+			form.Add("authorname", tt.authorName)
+			form.Add("authoremail", tt.authorEmail)
+			form.Add("authorsite", tt.authorSite)
+			form.Add("content", tt.content)
+			form.Add("csrf_token", tt.csrfToken)
+			code, _, body := ts.postForm(t, fmt.Sprintf("/websites/%s/guestbook/comments/create/remote", shortIdToSlug(1)), form)
+			assert.Equal(t, code, tt.wantCode)
+			assert.Equal(t, body, body)
+		})
+	}
+}

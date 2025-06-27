@@ -10,7 +10,7 @@ templ GuestbookDashboardCommentsView(title string, data CommonData, website mode
 		<div id="dashboard">
 			@wSidebar(website)
 			<div>
-				<h1>Comments on { website.SiteUrl }</h1>
+				<h1>Comments on { website.Name }</h1>
 				<hr/>
 				if len(comments) == 0 {
 					<p>No comments yet!</p>

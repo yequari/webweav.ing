@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"math"
 	"net/http"
+	"net/url"
 	"runtime/debug"
 	"strconv"
-	"strings"
 	"time"
 
 	"git.32bit.cafe/32bitcafe/guestbook/internal/models"
@@ -130,11 +130,13 @@ func (app *application) durationToTime(duration string) (time.Time, error) {
 	return result, nil
 }
 
-func normalizeUrl(url string) string {
-	r, f := strings.CutPrefix(url, "http://")
-	if f {
-		return r
+func matchOrigin(origin string, u *url.URL) bool {
+	o, err := url.Parse(origin)
+	if err != nil {
+		return false
 	}
-	r, _ = strings.CutPrefix(url, "https://")
-	return r
+	if o.Host != u.Host {
+		return false
+	}
+	return true
 }

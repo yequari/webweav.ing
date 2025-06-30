@@ -35,13 +35,23 @@ type UserModel struct {
 	Settings map[string]Setting
 }
 
+type UserIdToken struct {
+	Subject       string   `json:"sub"`
+	Email         string   `json:"email"`
+	EmailVerified bool     `json:"email_verified"`
+	Username      string   `json:"preferred_username"`
+	Groups        []string `json:"groups"`
+}
+
 type UserModelInterface interface {
 	InitializeSettingsMap() error
 	Insert(shortId uint64, username string, email string, password string, settings UserSettings) error
+	InsertWithoutPassword(shortId uint64, username string, email string, subject string, settings UserSettings) (int64, error)
 	Get(shortId uint64) (User, error)
 	GetById(id int64) (User, error)
 	GetAll() ([]User, error)
 	Authenticate(email, password string) (int64, error)
+	AuthenticateByOIDC(email, subject string) (int64, error)
 	Exists(id int64) (bool, error)
 	UpdateUserSettings(userId int64, settings UserSettings) error
 	UpdateSetting(userId int64, setting Setting, value string) error
@@ -124,6 +134,49 @@ func (m *UserModel) Insert(shortId uint64, username string, email string, passwo
 	}
 
 	return nil
+}
+
+func (m *UserModel) InsertWithoutPassword(shortId uint64, username string, email string, subject string, settings UserSettings) (int64, error) {
+	stmt := `INSERT INTO users (ShortId, Username, Email, IsBanned, OIDCSubject, Created)
+    VALUES (?, ?, ?, FALSE, ?, ?)`
+	tx, err := m.DB.Begin()
+	if err != nil {
+		return -1, err
+	}
+	result, err := tx.Exec(stmt, shortId, username, email, subject, time.Now().UTC())
+	if err != nil {
+		if rollbackErr := tx.Rollback(); rollbackErr != nil {
+			return -1, err
+		}
+		if sqliteError, ok := err.(sqlite3.Error); ok {
+			if sqliteError.ExtendedCode == 2067 && strings.Contains(sqliteError.Error(), "Email") {
+				return -1, ErrDuplicateEmail
+			}
+		}
+		return -1, err
+	}
+	id, err := result.LastInsertId()
+	if err != nil {
+		if rollbackErr := tx.Rollback(); rollbackErr != nil {
+			return -1, err
+		}
+		return -1, err
+	}
+	stmt = `INSERT INTO user_settings (UserId, SettingId, AllowedSettingValueId, UnconstrainedValue) 
+		VALUES (?, ?, ?, ?)`
+	_, err = tx.Exec(stmt, id, m.Settings[SettingUserTimezone].id, nil, settings.LocalTimezone.String())
+	if err != nil {
+		if rollbackErr := tx.Rollback(); rollbackErr != nil {
+			return -1, err
+		}
+		return -1, err
+	}
+	err = tx.Commit()
+	if err != nil {
+		return -1, err
+	}
+
+	return id, nil
 }
 
 func (m *UserModel) Get(shortId uint64) (User, error) {
@@ -236,6 +289,51 @@ func (m *UserModel) Authenticate(email, password string) (int64, error) {
 		}
 	}
 
+	return id, nil
+}
+
+func (m *UserModel) AuthenticateByOIDC(email string, subject string) (int64, error) {
+	var id int64
+	var s sql.NullString
+	tx, err := m.DB.Begin()
+	if err != nil {
+		return -1, err
+	}
+	stmt := `SELECT Id, OIDCSubject FROM users WHERE Email = ?`
+	err = tx.QueryRow(stmt, email, subject).Scan(&id, &s)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			if rollbackErr := tx.Rollback(); rollbackErr != nil {
+				return -1, err
+			}
+			return -1, ErrNoRecord
+		} else {
+			if rollbackErr := tx.Rollback(); rollbackErr != nil {
+				return -1, err
+			}
+			return -1, err
+		}
+	}
+
+	if !s.Valid {
+		stmt = `UPDATE users SET OIDCSubject = ? WHERE Id = ?`
+		_, err = tx.Exec(stmt, subject, id)
+		if err != nil {
+			if rollbackErr := tx.Rollback(); rollbackErr != nil {
+				return -1, err
+			}
+			return -1, err
+		}
+	} else if subject != s.String {
+		if rollbackErr := tx.Rollback(); rollbackErr != nil {
+			return -1, ErrInvalidCredentials
+		}
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		return -1, err
+	}
 	return id, nil
 }
 

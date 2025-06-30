@@ -32,3 +32,6 @@ test.db.old
 .gitignore
 .nvim/session
 *templ.txt
+
+# env files
+.env*

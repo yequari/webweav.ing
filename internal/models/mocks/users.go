@@ -38,6 +38,15 @@ func (m *UserModel) Insert(shortId uint64, username string, email string, passwo
 	}
 }
 
+func (m *UserModel) InsertWithoutPassword(shortId uint64, username string, email string, password string, settings models.UserSettings) (int64, error) {
+	switch email {
+	case "dupe@example.com":
+		return -1, models.ErrDuplicateEmail
+	default:
+		return 2, nil
+	}
+}
+
 func (m *UserModel) Get(shortId uint64) (models.User, error) {
 	switch shortId {
 	case 1:
@@ -62,6 +71,13 @@ func (m *UserModel) GetAll() ([]models.User, error) {
 
 func (m *UserModel) Authenticate(email, password string) (int64, error) {
 	if email == "test@example.com" && password == "password" {
+		return 1, nil
+	}
+	return 0, models.ErrInvalidCredentials
+}
+
+func (m *UserModel) AuthenticateByOIDC(email, subject string) (int64, error) {
+	if email == "test@example.com" {
 		return 1, nil
 	}
 	return 0, models.ErrInvalidCredentials

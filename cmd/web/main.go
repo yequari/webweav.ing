@@ -1,9 +1,12 @@
 package main
 
 import (
+	"context"
 	"crypto/tls"
 	"database/sql"
+	"errors"
 	"flag"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"os"
@@ -14,9 +17,20 @@ import (
 	"git.32bit.cafe/32bitcafe/guestbook/internal/models"
 	"github.com/alexedwards/scs/sqlite3store"
 	"github.com/alexedwards/scs/v2"
+	"github.com/coreos/go-oidc/v3/oidc"
 	"github.com/gorilla/schema"
+	"github.com/joho/godotenv"
 	_ "github.com/mattn/go-sqlite3"
+	"golang.org/x/oauth2"
 )
+
+type applicationOauthConfig struct {
+	ctx        context.Context
+	config     oauth2.Config
+	provider   *oidc.Provider
+	oidcConfig *oidc.Config
+	verifier   *oidc.IDTokenVerifier
+}
 
 type application struct {
 	sequence          uint16
@@ -26,6 +40,7 @@ type application struct {
 	guestbookComments models.GuestbookCommentModelInterface
 	sessionManager    *scs.SessionManager
 	formDecoder       *schema.Decoder
+	oauth             applicationOauthConfig
 	debug             bool
 	timezones         []string
 	rootUrl           string
@@ -35,10 +50,11 @@ func main() {
 	addr := flag.String("addr", ":3000", "HTTP network address")
 	dsn := flag.String("dsn", "guestbook.db", "data source name")
 	debug := flag.Bool("debug", false, "enable debug mode")
-	root := flag.String("root", "localhost:3000", "root URL of application")
+	root := flag.String("root", "https://localhost:3000", "root URL of application")
 	flag.Parse()
 
 	logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug}))
+	godotenv.Load(".env.dev")
 
 	db, err := openDB(*dsn)
 	if err != nil {
@@ -66,6 +82,13 @@ func main() {
 		timezones:         getAvailableTimezones(),
 		rootUrl:           *root,
 	}
+
+	o, err := setupOauth(app.rootUrl)
+	if err != nil {
+		logger.Error(err.Error())
+		os.Exit(1)
+	}
+	app.oauth = o
 
 	err = app.users.InitializeSettingsMap()
 	if err != nil {
@@ -112,6 +135,38 @@ func openDB(dsn string) (*sql.DB, error) {
 		return nil, err
 	}
 	return db, nil
+}
+
+func setupOauth(rootUrl string) (applicationOauthConfig, error) {
+	var c applicationOauthConfig
+	var (
+		oauth2Provider = os.Getenv("OAUTH2_PROVIDER")
+		clientID       = os.Getenv("OAUTH2_CLIENT_ID")
+		clientSecret   = os.Getenv("OAUTH2_CLIENT_SECRET")
+	)
+	if oauth2Provider == "" || clientID == "" || clientSecret == "" {
+		return applicationOauthConfig{}, errors.New("OAUTH2_PROVIDER, OAUTH2_CLIENT_ID, and OAUTH2_CLIENT_SECRET must be specified as environment variables.")
+	}
+
+	c.ctx = context.Background()
+	provider, err := oidc.NewProvider(c.ctx, oauth2Provider)
+	if err != nil {
+		return applicationOauthConfig{}, err
+	}
+	c.provider = provider
+	c.oidcConfig = &oidc.Config{
+		ClientID: clientID,
+	}
+	c.verifier = provider.Verifier(c.oidcConfig)
+	c.config = oauth2.Config{
+		ClientID:     clientID,
+		ClientSecret: clientSecret,
+		Endpoint:     provider.Endpoint(),
+		RedirectURL:  fmt.Sprintf("%s/users/login/oidc/callback", rootUrl),
+		Scopes:       []string{oidc.ScopeOpenID, "profile", "email"},
+	}
+	return c, nil
+
 }
 
 func getAvailableTimezones() []string {

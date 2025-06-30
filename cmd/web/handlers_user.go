@@ -9,6 +9,7 @@ import (
 	"git.32bit.cafe/32bitcafe/guestbook/internal/models"
 	"git.32bit.cafe/32bitcafe/guestbook/internal/validator"
 	"git.32bit.cafe/32bitcafe/guestbook/ui/views"
+	"github.com/coreos/go-oidc/v3/oidc"
 )
 
 func (app *application) getUserRegister(w http.ResponseWriter, r *http.Request) {
@@ -87,6 +88,88 @@ func (app *application) postUserLogin(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		app.serverError(w, r, err)
 		return
+	}
+	app.sessionManager.Put(r.Context(), "authenticatedUserId", id)
+	http.Redirect(w, r, "/", http.StatusSeeOther)
+}
+
+func (app *application) userLoginOIDC(w http.ResponseWriter, r *http.Request) {
+	state, err := randString(16)
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
+	nonce, err := randString(16)
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
+
+	setCallbackCookie(w, r, "state", state)
+	setCallbackCookie(w, r, "nonce", nonce)
+
+	http.Redirect(w, r, app.oauth.config.AuthCodeURL(state, oidc.Nonce(nonce)), http.StatusFound)
+}
+
+func (app *application) userLoginOIDCCallback(w http.ResponseWriter, r *http.Request) {
+	state, err := r.Cookie("state")
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	if r.URL.Query().Get("state") != state.Value {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+
+	oauth2Token, err := app.oauth.config.Exchange(r.Context(), r.URL.Query().Get("code"))
+	if err != nil {
+		app.logger.Error("Failed to exchange token")
+		app.serverError(w, r, err)
+		return
+	}
+	rawIDToken, ok := oauth2Token.Extra("id_token").(string)
+	if !ok {
+		app.serverError(w, r, errors.New("No id_token field in oauth2 token"))
+		return
+	}
+	idToken, err := app.oauth.verifier.Verify(r.Context(), rawIDToken)
+	if err != nil {
+		app.logger.Error("Failed to verify ID token")
+		app.serverError(w, r, err)
+		return
+	}
+
+	nonce, err := r.Cookie("nonce")
+	if err != nil {
+		app.logger.Error("nonce not found")
+		app.serverError(w, r, err)
+		return
+	}
+	if idToken.Nonce != nonce.Value {
+		app.serverError(w, r, errors.New("nonce did not match"))
+		return
+	}
+
+	oauth2Token.AccessToken = "*REDACTED*"
+
+	var t models.UserIdToken
+	if err := idToken.Claims(&t); err != nil {
+		app.serverError(w, r, err)
+		return
+	}
+
+	err = app.sessionManager.RenewToken(r.Context())
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
+	id, err := app.users.AuthenticateByOIDC(t.Email, t.Subject)
+	if err != nil {
+		id, err = app.users.InsertWithoutPassword(app.createShortId(), t.Username, t.Email, t.Subject, DefaultUserSettings())
+		if err != nil {
+			app.serverError(w, r, err)
+		}
 	}
 	app.sessionManager.Put(r.Context(), "authenticatedUserId", id)
 	http.Redirect(w, r, "/", http.StatusSeeOther)

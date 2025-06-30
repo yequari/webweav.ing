@@ -6,13 +6,15 @@ import "fmt"
 import "strings"
 
 type CommonData struct {
-	CurrentYear     int
-	Flash           string
-	IsAuthenticated bool
-	CSRFToken       string
-	CurrentUser     *models.User
-	IsHtmx          bool
-	RootUrl         string
+	CurrentYear      int
+	Flash            string
+	IsAuthenticated  bool
+	CSRFToken        string
+	CurrentUser      *models.User
+	IsHtmx           bool
+	RootUrl          string
+	LocalAuthEnabled bool
+	OIDCEnabled      bool
 }
 
 func shortIdToSlug(shortId uint64) string {
@@ -52,7 +54,9 @@ templ topNav(data CommonData) {
 				<a href="/users/settings">Settings</a> | 
 				<a href="#" hx-post="/users/logout" hx-headers={ hxHeaders }>Logout</a>
 			} else {
-				<a href="/users/register">Create an Account</a> | 
+				if data.LocalAuthEnabled {
+					<a href="/users/register">Create an Account</a> | 
+				}
 				<a href="/users/login">Login</a>
 			}
 		</div>

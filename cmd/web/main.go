@@ -9,7 +9,9 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"net/url"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 	"unicode"
@@ -32,6 +34,13 @@ type applicationOauthConfig struct {
 	verifier   *oidc.IDTokenVerifier
 }
 
+type applicationConfig struct {
+	oauthEnabled     bool
+	localAuthEnabled bool
+	oauth            applicationOauthConfig
+	rootUrl          string
+}
+
 type application struct {
 	sequence          uint16
 	logger            *slog.Logger
@@ -40,21 +49,24 @@ type application struct {
 	guestbookComments models.GuestbookCommentModelInterface
 	sessionManager    *scs.SessionManager
 	formDecoder       *schema.Decoder
-	oauth             applicationOauthConfig
+	config            applicationConfig
 	debug             bool
 	timezones         []string
-	rootUrl           string
 }
 
 func main() {
 	addr := flag.String("addr", ":3000", "HTTP network address")
 	dsn := flag.String("dsn", "guestbook.db", "data source name")
 	debug := flag.Bool("debug", false, "enable debug mode")
-	root := flag.String("root", "https://localhost:3000", "root URL of application")
 	flag.Parse()
 
 	logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug}))
 	godotenv.Load(".env.dev")
+	cfg, err := setupConfig(*addr)
+	if err != nil {
+		logger.Error(err.Error())
+		os.Exit(1)
+	}
 
 	db, err := openDB(*dsn)
 	if err != nil {
@@ -78,17 +90,10 @@ func main() {
 		users:             &models.UserModel{DB: db, Settings: make(map[string]models.Setting)},
 		guestbookComments: &models.GuestbookCommentModel{DB: db},
 		formDecoder:       formDecoder,
+		config:            cfg,
 		debug:             *debug,
 		timezones:         getAvailableTimezones(),
-		rootUrl:           *root,
 	}
-
-	o, err := setupOauth(app.rootUrl)
-	if err != nil {
-		logger.Error(err.Error())
-		os.Exit(1)
-	}
-	app.oauth = o
 
 	err = app.users.InitializeSettingsMap()
 	if err != nil {
@@ -137,36 +142,73 @@ func openDB(dsn string) (*sql.DB, error) {
 	return db, nil
 }
 
-func setupOauth(rootUrl string) (applicationOauthConfig, error) {
-	var c applicationOauthConfig
+func setupConfig(addr string) (applicationConfig, error) {
+	var c applicationConfig
+
 	var (
-		oauth2Provider = os.Getenv("OAUTH2_PROVIDER")
-		clientID       = os.Getenv("OAUTH2_CLIENT_ID")
-		clientSecret   = os.Getenv("OAUTH2_CLIENT_SECRET")
+		rootUrl           = os.Getenv("ROOT_URL")
+		oidcEnabled       = os.Getenv("ENABLE_OIDC")
+		localLoginEnabled = os.Getenv("ENABLE_LOCAL_LOGIN")
+		oauth2Provider    = os.Getenv("OAUTH2_PROVIDER")
+		clientID          = os.Getenv("OAUTH2_CLIENT_ID")
+		clientSecret      = os.Getenv("OAUTH2_CLIENT_SECRET")
 	)
-	if oauth2Provider == "" || clientID == "" || clientSecret == "" {
-		return applicationOauthConfig{}, errors.New("OAUTH2_PROVIDER, OAUTH2_CLIENT_ID, and OAUTH2_CLIENT_SECRET must be specified as environment variables.")
+	if rootUrl != "" {
+		c.rootUrl = rootUrl
+	} else {
+		u, err := url.Parse(fmt.Sprintf("https://localhost%s", addr))
+		if err != nil {
+			return c, err
+		}
+		c.rootUrl = u.String()
 	}
 
-	c.ctx = context.Background()
-	provider, err := oidc.NewProvider(c.ctx, oauth2Provider)
+	oauthEnabled, err := strconv.ParseBool(oidcEnabled)
 	if err != nil {
-		return applicationOauthConfig{}, err
+		c.oauthEnabled = false
 	}
-	c.provider = provider
-	c.oidcConfig = &oidc.Config{
+	c.oauthEnabled = oauthEnabled
+
+	localAuthEnabled, err := strconv.ParseBool(localLoginEnabled)
+	if err != nil {
+		c.localAuthEnabled = true
+	}
+	c.localAuthEnabled = localAuthEnabled
+
+	if !c.oauthEnabled && !c.localAuthEnabled {
+		return c, errors.New("Either ENABLE_OIDC or ENABLE_LOCAL_LOGIN must be set to true")
+	}
+
+	// if OIDC is disabled, no more configuration needs to be read
+	if !oauthEnabled {
+		return c, nil
+	}
+
+	var o applicationOauthConfig
+	if oauth2Provider == "" || clientID == "" || clientSecret == "" {
+		return c, errors.New("OAUTH2_PROVIDER, OAUTH2_CLIENT_ID, and OAUTH2_CLIENT_SECRET must be specified as environment variables.")
+	}
+
+	o.ctx = context.Background()
+	provider, err := oidc.NewProvider(o.ctx, oauth2Provider)
+	if err != nil {
+		return c, err
+	}
+	o.provider = provider
+	o.oidcConfig = &oidc.Config{
 		ClientID: clientID,
 	}
-	c.verifier = provider.Verifier(c.oidcConfig)
-	c.config = oauth2.Config{
+	o.verifier = provider.Verifier(o.oidcConfig)
+	o.config = oauth2.Config{
 		ClientID:     clientID,
 		ClientSecret: clientSecret,
 		Endpoint:     provider.Endpoint(),
-		RedirectURL:  fmt.Sprintf("%s/users/login/oidc/callback", rootUrl),
+		RedirectURL:  fmt.Sprintf("%s/users/login/oidc/callback", c.rootUrl),
 		Scopes:       []string{oidc.ScopeOpenID, "profile", "email"},
 	}
-	return c, nil
 
+	c.oauth = o
+	return c, nil
 }
 
 func getAvailableTimezones() []string {

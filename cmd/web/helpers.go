@@ -107,13 +107,15 @@ func (app *application) getCurrentUser(r *http.Request) *models.User {
 
 func (app *application) newCommonData(r *http.Request) views.CommonData {
 	return views.CommonData{
-		CurrentYear:     time.Now().Year(),
-		Flash:           app.sessionManager.PopString(r.Context(), "flash"),
-		IsAuthenticated: app.isAuthenticated(r),
-		CSRFToken:       nosurf.Token(r),
-		CurrentUser:     app.getCurrentUser(r),
-		IsHtmx:          r.Header.Get("Hx-Request") == "true",
-		RootUrl:         app.rootUrl,
+		CurrentYear:      time.Now().Year(),
+		Flash:            app.sessionManager.PopString(r.Context(), "flash"),
+		IsAuthenticated:  app.isAuthenticated(r),
+		CSRFToken:        nosurf.Token(r),
+		CurrentUser:      app.getCurrentUser(r),
+		IsHtmx:           r.Header.Get("Hx-Request") == "true",
+		RootUrl:          app.config.rootUrl,
+		LocalAuthEnabled: app.config.localAuthEnabled,
+		OIDCEnabled:      app.config.oauthEnabled,
 	}
 }
 

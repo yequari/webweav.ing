@@ -13,12 +13,18 @@ import (
 )
 
 func (app *application) getUserRegister(w http.ResponseWriter, r *http.Request) {
+	if !app.config.localAuthEnabled {
+		http.Redirect(w, r, "/users/login/oidc", http.StatusFound)
+	}
 	form := forms.UserRegistrationForm{}
 	data := app.newCommonData(r)
 	views.UserRegistration("User Registration", data, form).Render(r.Context(), w)
 }
 
 func (app *application) getUserLogin(w http.ResponseWriter, r *http.Request) {
+	if !app.config.localAuthEnabled {
+		http.Redirect(w, r, "/users/login/oidc", http.StatusFound)
+	}
 	views.UserLogin("Login", app.newCommonData(r), forms.UserLoginForm{}).Render(r.Context(), w)
 }
 
@@ -94,6 +100,9 @@ func (app *application) postUserLogin(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) userLoginOIDC(w http.ResponseWriter, r *http.Request) {
+	if !app.config.oauthEnabled {
+		http.Redirect(w, r, "/users/login", http.StatusFound)
+	}
 	state, err := randString(16)
 	if err != nil {
 		app.serverError(w, r, err)
@@ -108,7 +117,7 @@ func (app *application) userLoginOIDC(w http.ResponseWriter, r *http.Request) {
 	setCallbackCookie(w, r, "state", state)
 	setCallbackCookie(w, r, "nonce", nonce)
 
-	http.Redirect(w, r, app.oauth.config.AuthCodeURL(state, oidc.Nonce(nonce)), http.StatusFound)
+	http.Redirect(w, r, app.config.oauth.config.AuthCodeURL(state, oidc.Nonce(nonce)), http.StatusFound)
 }
 
 func (app *application) userLoginOIDCCallback(w http.ResponseWriter, r *http.Request) {
@@ -122,7 +131,7 @@ func (app *application) userLoginOIDCCallback(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	oauth2Token, err := app.oauth.config.Exchange(r.Context(), r.URL.Query().Get("code"))
+	oauth2Token, err := app.config.oauth.config.Exchange(r.Context(), r.URL.Query().Get("code"))
 	if err != nil {
 		app.logger.Error("Failed to exchange token")
 		app.serverError(w, r, err)
@@ -133,7 +142,7 @@ func (app *application) userLoginOIDCCallback(w http.ResponseWriter, r *http.Req
 		app.serverError(w, r, errors.New("No id_token field in oauth2 token"))
 		return
 	}
-	idToken, err := app.oauth.verifier.Verify(r.Context(), rawIDToken)
+	idToken, err := app.config.oauth.verifier.Verify(r.Context(), rawIDToken)
 	if err != nil {
 		app.logger.Error("Failed to verify ID token")
 		app.serverError(w, r, err)

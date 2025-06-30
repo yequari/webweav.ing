@@ -58,10 +58,15 @@ func main() {
 	addr := flag.String("addr", ":3000", "HTTP network address")
 	dsn := flag.String("dsn", "guestbook.db", "data source name")
 	debug := flag.Bool("debug", false, "enable debug mode")
+	env := flag.String("env", ".env", ".env file path")
 	flag.Parse()
 
 	logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug}))
-	godotenv.Load(".env.dev")
+	err := godotenv.Load(*env)
+	if err != nil {
+		logger.Error(err.Error())
+		os.Exit(1)
+	}
 	cfg, err := setupConfig(*addr)
 	if err != nil {
 		logger.Error(err.Error())

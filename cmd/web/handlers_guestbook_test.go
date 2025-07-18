@@ -1,9 +1,12 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
+	"strings"
 	"testing"
 
 	"git.32bit.cafe/32bitcafe/guestbook/internal/assert"
@@ -150,9 +153,6 @@ func TestPostGuestbookCommentCreateRemote(t *testing.T) {
 	ts := newTestServer(t, app.routes())
 	defer ts.Close()
 
-	_, _, body := ts.get(t, fmt.Sprintf("/websites/%s/guestbook", shortIdToSlug(1)))
-	validCSRFToken := extractCSRFToken(t, body)
-
 	const (
 		validAuthorName  = "John Test"
 		validAuthorEmail = "test@example.com"
@@ -166,8 +166,8 @@ func TestPostGuestbookCommentCreateRemote(t *testing.T) {
 		authorEmail string
 		authorSite  string
 		content     string
-		csrfToken   string
 		wantCode    int
+		wantBody    string
 	}{
 		{
 			name:        "Valid input",
@@ -175,8 +175,8 @@ func TestPostGuestbookCommentCreateRemote(t *testing.T) {
 			authorEmail: validAuthorEmail,
 			authorSite:  validAuthorSite,
 			content:     validContent,
-			csrfToken:   validCSRFToken,
-			wantCode:    http.StatusSeeOther,
+			wantCode:    http.StatusOK,
+			wantBody:    "Comment successfully posted",
 		},
 		{
 			name:        "Blank name",
@@ -184,8 +184,8 @@ func TestPostGuestbookCommentCreateRemote(t *testing.T) {
 			authorEmail: validAuthorEmail,
 			authorSite:  validAuthorSite,
 			content:     validContent,
-			csrfToken:   validCSRFToken,
-			wantCode:    http.StatusUnprocessableEntity,
+			wantCode:    http.StatusOK,
+			wantBody:    "An error occurred",
 		},
 		{
 			name:        "Blank email",
@@ -193,8 +193,8 @@ func TestPostGuestbookCommentCreateRemote(t *testing.T) {
 			authorEmail: "",
 			authorSite:  validAuthorSite,
 			content:     validContent,
-			csrfToken:   validCSRFToken,
-			wantCode:    http.StatusSeeOther,
+			wantCode:    http.StatusOK,
+			wantBody:    "Comment successfully posted",
 		},
 		{
 			name:        "Blank site",
@@ -202,8 +202,8 @@ func TestPostGuestbookCommentCreateRemote(t *testing.T) {
 			authorEmail: validAuthorEmail,
 			authorSite:  "",
 			content:     validContent,
-			csrfToken:   validCSRFToken,
-			wantCode:    http.StatusSeeOther,
+			wantCode:    http.StatusOK,
+			wantBody:    "Comment successfully posted",
 		},
 		{
 			name:        "Blank content",
@@ -211,21 +211,39 @@ func TestPostGuestbookCommentCreateRemote(t *testing.T) {
 			authorEmail: validAuthorEmail,
 			authorSite:  validAuthorSite,
 			content:     "",
-			csrfToken:   validCSRFToken,
-			wantCode:    http.StatusUnprocessableEntity,
+			wantCode:    http.StatusOK,
+			wantBody:    "An error occurred",
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+
 			form := url.Values{}
 			form.Add("authorname", tt.authorName)
 			form.Add("authoremail", tt.authorEmail)
 			form.Add("authorsite", tt.authorSite)
 			form.Add("content", tt.content)
-			form.Add("csrf_token", tt.csrfToken)
-			code, _, body := ts.postForm(t, fmt.Sprintf("/websites/%s/guestbook/comments/create/remote", shortIdToSlug(1)), form)
-			assert.Equal(t, code, tt.wantCode)
-			assert.Equal(t, body, body)
+			r, err := http.NewRequest("POST", ts.URL, strings.NewReader(form.Encode()))
+			if err != nil {
+				t.Fatal(err)
+			}
+			r.URL.Path = fmt.Sprintf("/websites/%s/guestbook/comments/create/remote", shortIdToSlug(1))
+			r.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+			r.Header.Set("Origin", "http://example.com")
+
+			resp, err := ts.Client().Do(r)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			defer resp.Body.Close()
+			body, err := io.ReadAll(resp.Body)
+			if err != nil {
+				t.Fatal(err)
+			}
+			body = bytes.TrimSpace(body)
+			assert.Equal(t, resp.StatusCode, tt.wantCode)
+			assert.StringContains(t, string(body), tt.wantBody)
 		})
 	}
 }

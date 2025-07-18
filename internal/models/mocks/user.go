@@ -1,6 +1,7 @@
 package mocks
 
 import (
+	"errors"
 	"time"
 
 	"git.32bit.cafe/32bitcafe/guestbook/internal/models"
@@ -76,13 +77,6 @@ func (m *UserModel) Authenticate(email, password string) (int64, error) {
 	return 0, models.ErrInvalidCredentials
 }
 
-func (m *UserModel) AuthenticateByOIDC(email, subject string) (int64, error) {
-	if email == "test@example.com" {
-		return 1, nil
-	}
-	return 0, models.ErrInvalidCredentials
-}
-
 func (m *UserModel) Exists(id int64) (bool, error) {
 	switch id {
 	case 1:
@@ -102,4 +96,25 @@ func (m *UserModel) UpdateUserSettings(userId int64, settings models.UserSetting
 
 func (m *UserModel) UpdateSetting(userId int64, setting models.Setting, value string) error {
 	return nil
+}
+
+func (m *UserModel) GetBySubject(subject string) (int64, error) {
+	if subject == "goodSubject" {
+		return 1, nil
+	}
+	return -1, models.ErrNoRecord
+}
+
+func (m *UserModel) GetByEmail(email string) (int64, error) {
+	if email == "test@example.com" {
+		return 1, nil
+	}
+	return -1, models.ErrNoRecord
+}
+
+func (m *UserModel) UpdateSubject(userId int64, subject string) error {
+	if userId == 1 {
+		return nil
+	}
+	return errors.New("invalid")
 }

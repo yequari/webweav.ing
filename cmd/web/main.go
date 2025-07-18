@@ -16,6 +16,7 @@ import (
 	"time"
 	"unicode"
 
+	"git.32bit.cafe/32bitcafe/guestbook/internal/auth"
 	"git.32bit.cafe/32bitcafe/guestbook/internal/models"
 	"github.com/alexedwards/scs/sqlite3store"
 	"github.com/alexedwards/scs/v2"
@@ -28,9 +29,9 @@ import (
 
 type applicationOauthConfig struct {
 	ctx        context.Context
-	config     oauth2.Config
-	provider   *oidc.Provider
 	oidcConfig *oidc.Config
+	config     auth.OAuth2ConfigInterface
+	provider   *oidc.Provider
 	verifier   *oidc.IDTokenVerifier
 }
 
@@ -204,7 +205,7 @@ func setupConfig(addr string) (applicationConfig, error) {
 		ClientID: clientID,
 	}
 	o.verifier = provider.Verifier(o.oidcConfig)
-	o.config = oauth2.Config{
+	o.config = &oauth2.Config{
 		ClientID:     clientID,
 		ClientSecret: clientSecret,
 		Endpoint:     provider.Endpoint(),

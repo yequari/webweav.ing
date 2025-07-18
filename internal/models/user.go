@@ -49,12 +49,14 @@ type UserModelInterface interface {
 	InsertWithoutPassword(shortId uint64, username string, email string, subject string, settings UserSettings) (int64, error)
 	Get(shortId uint64) (User, error)
 	GetById(id int64) (User, error)
+	GetByEmail(email string) (int64, error)
+	GetBySubject(subject string) (int64, error)
 	GetAll() ([]User, error)
 	Authenticate(email, password string) (int64, error)
-	AuthenticateByOIDC(email, subject string) (int64, error)
 	Exists(id int64) (bool, error)
 	UpdateUserSettings(userId int64, settings UserSettings) error
 	UpdateSetting(userId int64, setting Setting, value string) error
+	UpdateSubject(userId int64, subject string) error
 }
 
 func (m *UserModel) InitializeSettingsMap() error {
@@ -292,49 +294,42 @@ func (m *UserModel) Authenticate(email, password string) (int64, error) {
 	return id, nil
 }
 
-func (m *UserModel) AuthenticateByOIDC(email string, subject string) (int64, error) {
+func (m *UserModel) GetByEmail(email string) (int64, error) {
 	var id int64
-	var s sql.NullString
-	tx, err := m.DB.Begin()
-	if err != nil {
-		return -1, err
-	}
-	stmt := `SELECT Id, OIDCSubject FROM users WHERE Email = ?`
-	err = tx.QueryRow(stmt, email, subject).Scan(&id, &s)
+	stmt := `SELECT Id FROM users WHERE Email = ?`
+	err := m.DB.QueryRow(stmt, email).Scan(&id)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			if rollbackErr := tx.Rollback(); rollbackErr != nil {
-				return -1, err
-			}
 			return -1, ErrNoRecord
 		} else {
-			if rollbackErr := tx.Rollback(); rollbackErr != nil {
-				return -1, err
-			}
 			return -1, err
 		}
-	}
-
-	if !s.Valid {
-		stmt = `UPDATE users SET OIDCSubject = ? WHERE Id = ?`
-		_, err = tx.Exec(stmt, subject, id)
-		if err != nil {
-			if rollbackErr := tx.Rollback(); rollbackErr != nil {
-				return -1, err
-			}
-			return -1, err
-		}
-	} else if subject != s.String {
-		if rollbackErr := tx.Rollback(); rollbackErr != nil {
-			return -1, ErrInvalidCredentials
-		}
-	}
-
-	err = tx.Commit()
-	if err != nil {
-		return -1, err
 	}
 	return id, nil
+}
+
+func (m *UserModel) GetBySubject(subject string) (int64, error) {
+	var id int64
+	var s sql.NullString
+	stmt := `SELECT Id, OIDCSubject FROM users WHERE OIDCSubject = ?`
+	err := m.DB.QueryRow(stmt, subject).Scan(&id, &s)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return -1, ErrNoRecord
+		} else {
+			return -1, err
+		}
+	}
+	return id, nil
+}
+
+func (m *UserModel) UpdateSubject(userId int64, subject string) error {
+	stmt := `UPDATE users SET OIDCSubject = ? WHERE Id = ?`
+	_, err := m.DB.Exec(stmt, subject, userId)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (m *UserModel) Exists(id int64) (bool, error) {

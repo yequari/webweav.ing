@@ -173,13 +173,35 @@ func (app *application) userLoginOIDCCallback(w http.ResponseWriter, r *http.Req
 		app.serverError(w, r, err)
 		return
 	}
-	id, err := app.users.AuthenticateByOIDC(t.Email, t.Subject)
-	if err != nil {
+
+	// search for user by subject
+	id, err := app.users.GetBySubject(t.Subject)
+	if err != nil && errors.Is(err, models.ErrNoRecord) {
+		// if no user is found, check if they have signed up by email already
+		id, err = app.users.GetByEmail(t.Email)
+		if err == nil {
+			// if user is found by email, update subject to match them in the first step next time
+			err2 := app.users.UpdateSubject(id, t.Subject)
+			if err2 != nil {
+				app.serverError(w, r, err2)
+				return
+			}
+		}
+	} else if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
+	if err != nil && errors.Is(err, models.ErrNoRecord) {
+		// if no user is found by subject or email, create a new user
 		id, err = app.users.InsertWithoutPassword(app.createShortId(), t.Username, t.Email, t.Subject, DefaultUserSettings())
 		if err != nil {
 			app.serverError(w, r, err)
 		}
+	} else if err != nil {
+		app.serverError(w, r, err)
+		return
 	}
+
 	app.sessionManager.Put(r.Context(), "authenticatedUserId", id)
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }

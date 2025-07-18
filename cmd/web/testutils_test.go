@@ -2,6 +2,8 @@ package main
 
 import (
 	"bytes"
+	"crypto/rand"
+	"crypto/rsa"
 	"html"
 	"io"
 	"log/slog"
@@ -15,6 +17,8 @@ import (
 
 	"git.32bit.cafe/32bitcafe/guestbook/internal/models/mocks"
 	"github.com/alexedwards/scs/v2"
+	"github.com/coreos/go-oidc/v3/oidc"
+	"github.com/coreos/go-oidc/v3/oidc/oidctest"
 	"github.com/gorilla/schema"
 )
 
@@ -34,7 +38,33 @@ func newTestApplication(t *testing.T) *application {
 		guestbookComments: &mocks.GuestbookCommentModel{},
 		formDecoder:       formDecoder,
 		timezones:         getAvailableTimezones(),
+		config: applicationConfig{
+			localAuthEnabled: true,
+		},
 	}
+}
+
+func newTestKey(t *testing.T) *rsa.PrivateKey {
+	priv, err := rsa.GenerateKey(rand.Reader, 2048)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return priv
+}
+
+func newTestOIDCServer(t *testing.T, priv *rsa.PrivateKey) *testServer {
+	s := &oidctest.Server{
+		PublicKeys: []oidctest.PublicKey{
+			{
+				PublicKey: priv.Public(),
+				KeyID:     "test-key",
+				Algorithm: oidc.ES256,
+			},
+		},
+	}
+	ts := httptest.NewServer(s)
+	s.SetIssuer(ts.URL)
+	return &testServer{ts}
 }
 
 type testServer struct {

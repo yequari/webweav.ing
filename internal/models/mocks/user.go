@@ -101,8 +101,10 @@ func (m *UserModel) UpdateSetting(userId int64, setting models.Setting, value st
 func (m *UserModel) GetBySubject(subject string) (int64, error) {
 	if subject == "goodSubject" {
 		return 1, nil
+	} else if subject == "foo" {
+		return -1, models.ErrNoRecord
 	}
-	return -1, models.ErrNoRecord
+	return -1, errors.New("Unexpected Error")
 }
 
 func (m *UserModel) GetByEmail(email string) (int64, error) {

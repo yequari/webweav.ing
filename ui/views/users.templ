@@ -86,7 +86,6 @@ templ UserSettingsView(data CommonData, timezones []string) {
 	{{ user := data.CurrentUser }}
 	@base("User Settings", data) {
 		<div>
-			<h1>User Settings</h1>
 			<form hx-put="/users/settings">
 				<input type="hidden" name="csrf_token" value={ data.CSRFToken }/>
 				<label>Local Timezone</label>

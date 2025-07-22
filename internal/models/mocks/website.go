@@ -69,6 +69,10 @@ func (m *WebsiteModel) GetAll() ([]models.Website, error) {
 	return []models.Website{mockWebsite}, nil
 }
 
+func (m *WebsiteModel) Update(w models.Website) error {
+	return nil
+}
+
 func (m *WebsiteModel) InitializeSettingsMap() error {
 	return nil
 }

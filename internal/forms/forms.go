@@ -36,7 +36,10 @@ type UserSettingsForm struct {
 	validator.Validator `schema:"-"`
 }
 
-type GuestbookSettingsForm struct {
+type WebsiteSettingsForm struct {
+	SiteName            string `schema:"ws_name"`
+	SiteUrl             string `schema:"ws_url"`
+	AuthorName          string `schema:"ws_author"`
 	Visibility          string `schema:"gb_visible"`
 	CommentingEnabled   string `schema:"gb_commenting"`
 	WidgetsEnabled      string `schema:"gb_remote"`

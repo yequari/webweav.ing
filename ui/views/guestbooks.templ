@@ -111,7 +111,7 @@ templ GuestbookView(title string, data CommonData, website models.Website, guest
 			<body>
 				<main>
 					<div>
-						<h1>Guestbook for { website.Name }</h1>
+						<h1>{ website.Name } Guestbook</h1>
 						{ data.Flash }
 						<form action={ templ.URL(postUrl) } method="post">
 							<input type="hidden" name="csrf_token" value={ data.CSRFToken }/>
@@ -148,62 +148,6 @@ templ settingRadio(selected bool, name, id, value string) {
 	<input type="radio" name={ name } id={ id } value={ value } selected?={ selected }/>
 }
 
-templ GuestbookSettingsView(data CommonData, website models.Website) {
-	{{ putUrl := fmt.Sprintf("/websites/%s/dashboard/guestbook/settings", shortIdToSlug(website.ShortId)) }}
-	{{ gb := website.Guestbook }}
-	@base("Guestbook Settings", data) {
-		<div id="dashboard">
-			@wSidebar(website)
-			<div>
-				<h1>Guestbook Settings</h1>
-				<form hx-put={ putUrl }>
-					<input type="hidden" name="csrf_token" value={ data.CSRFToken }/>
-					<div>
-						<label>Guestbook Visibility</label>
-						<label for="gb_visible_true">
-							<input type="radio" name="gb_visible" id="gb_visible_true" value="true" checked?={ gb.Settings.IsVisible }/>
-							Public
-						</label>
-						<label for="gb_visible_false">
-							<input type="radio" name="gb_visible" id="gb_visible_false" value="false" checked?={ !gb.Settings.IsVisible }/>
-							Private
-						</label>
-					</div>
-					<div>
-						<label>Guestbook Commenting</label>
-						<select name="gb_commenting" id="gb-commenting">
-							<option value="true" selected?={ gb.Settings.IsCommentingEnabled }>Enabled</option>
-							<option value="1h">Disabled for 1 Hour</option>
-							<option value="4h">Disabled for 4 Hours</option>
-							<option value="8h">Disabled for 8 Hours</option>
-							<option value="24h">Disabled for 1 Day</option>
-							<option value="72h">Disabled for 3 Days</option>
-							<option value="168h">Disabled for 7 Days</option>
-							<option value="false" selected?={ !gb.Settings.IsCommentingEnabled }>Disabled</option>
-						</select>
-						if !website.Guestbook.CanComment() {
-							{{ localtime := gb.Settings.ReenableCommenting.In(data.CurrentUser.Settings.LocalTimezone) }}
-							<label>Commenting re-enabled on <time value={ localtime.Format(time.RFC3339) }>{ localtime.Format("2 January 2006") } at { localtime.Format("3:04PM MST") }</time></label>
-						}
-					</div>
-					<div>
-						<label>Enable Widgets</label>
-						<label for="gb_remote_true">
-							<input type="radio" name="gb_remote" id="gb_remote_true" value="true" checked?={ gb.Settings.AllowRemoteHostAccess }/>
-							Yes
-						</label>
-						<label for="gb_remote_false">
-							<input type="radio" name="gb_remote" id="gb_remote_false" value="false" checked?={ !gb.Settings.AllowRemoteHostAccess }/>
-							No
-						</label>
-					</div>
-					<input type="submit" value="Submit"/>
-				</form>
-			</div>
-		</div>
-	}
-}
-
 templ EmbeddableGuestbookCommentForm(data CommonData, w models.Website, f forms.CommentCreateForm) {
 	{{ postUrl := fmt.Sprintf("/websites/%s/guestbook/comments/create?headless=true", shortIdToSlug(w.ShortId)) }}
 	<html>
@@ -223,7 +167,6 @@ templ EmbeddableGuestbookCommentForm(data CommonData, w models.Website, f forms.
 templ AllGuestbooksView(data CommonData, websites []models.Website) {
 	@base("All Guestbooks", data) {
 		<div>
-			<h1>All Guestbooks</h1>
 			<p>
 				This page exists only for testing the service.
 			</p>

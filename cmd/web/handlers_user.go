@@ -218,19 +218,6 @@ func (app *application) postUserLogout(w http.ResponseWriter, r *http.Request) {
 	// http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
-// func (app *application) getUsersList(w http.ResponseWriter, r *http.Request) {
-//     // skip templ conversion for this view, which will not be available in the final app
-//     // something similar will be available in the admin panel
-//     users, err := app.users.GetAll()
-//     if err != nil {
-//         app.serverError(w, r, err)
-//         return
-//     }
-//     data := app.newTemplateData(r)
-//     data.Users = users
-//     app.render(w, r, http.StatusOK, "userlist.view.tmpl.html", data)
-// }
-
 func (app *application) getUser(w http.ResponseWriter, r *http.Request) {
 	slug := r.PathValue("id")
 	user, err := app.users.Get(slugToShortId(slug))

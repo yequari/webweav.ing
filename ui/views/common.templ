@@ -87,6 +87,7 @@ templ base(title string, data CommonData) {
 				if data.Flash != "" {
 					<div class="flash">{ data.Flash }</div>
 				}
+				<h1>{ title }</h1>
 				{ children... }
 			</main>
 			@commonFooter()

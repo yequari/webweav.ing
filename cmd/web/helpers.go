@@ -13,6 +13,7 @@ import (
 	"strconv"
 	"time"
 
+	"git.32bit.cafe/32bitcafe/guestbook/internal/forms"
 	"git.32bit.cafe/32bitcafe/guestbook/internal/models"
 	"git.32bit.cafe/32bitcafe/guestbook/ui/views"
 	"github.com/gorilla/schema"
@@ -125,7 +126,7 @@ func DefaultUserSettings() models.UserSettings {
 	}
 }
 
-func (app *application) durationToTime(duration string) (time.Time, error) {
+func durationToTime(duration string) (time.Time, error) {
 	var result time.Time
 	offset, err := time.ParseDuration(duration)
 	if err != nil {
@@ -163,4 +164,29 @@ func setCallbackCookie(w http.ResponseWriter, r *http.Request, name, value strin
 		HttpOnly: true,
 	}
 	http.SetCookie(w, c)
+}
+
+func convertFormToGuestbookSettings(form forms.WebsiteSettingsForm) (models.GuestbookSettings, error) {
+	var s models.GuestbookSettings
+	c, err := strconv.ParseBool(form.CommentingEnabled)
+	if err != nil {
+		s.IsCommentingEnabled = false
+		s.ReenableCommenting, err = durationToTime(form.CommentingEnabled)
+		if err != nil {
+			return s, err
+		}
+	} else {
+		s.IsCommentingEnabled = c
+	}
+
+	// can skip error checking for these two since we verify valid values above
+	s.IsVisible, err = strconv.ParseBool(form.Visibility)
+	if err != nil {
+		return s, err
+	}
+	s.AllowRemoteHostAccess, err = strconv.ParseBool(form.WidgetsEnabled)
+	if err != nil {
+		return s, err
+	}
+	return s, nil
 }

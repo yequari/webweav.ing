@@ -57,7 +57,7 @@ div#dashboard {
 
 div#dashboard nav {
   flex: 1 1 25%;
-  margin-top: 2rem;
+  /* margin-top: 2rem; */
   min-width: 0;
 }
 

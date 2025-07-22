@@ -97,6 +97,7 @@ type WebsiteModelInterface interface {
 	Get(shortId uint64) (Website, error)
 	GetAllUser(userId int64) ([]Website, error)
 	GetAll() ([]Website, error)
+	Update(w Website) error
 	InitializeSettingsMap() error
 	UpdateGuestbookSettings(guestbookId int64, settings GuestbookSettings) error
 	UpdateSetting(guestbookId int64, setting Setting, value string) error
@@ -296,6 +297,21 @@ func (m *WebsiteModel) GetAll() ([]Website, error) {
 		return nil, err
 	}
 	return websites, nil
+}
+
+func (m *WebsiteModel) Update(w Website) error {
+	stmt := `UPDATE websites SET Name = ?, SiteUrl = ?, AuthorName = ? WHERE ID = ?`
+	r, err := m.DB.Exec(stmt, w.Name, w.Url.String(), w.AuthorName, w.ID)
+	if err != nil {
+		return err
+	}
+	if rows, err := r.RowsAffected(); rows != 1 {
+		if err != nil {
+			return err
+		}
+		return errors.New("Failed to update website")
+	}
+	return nil
 }
 
 func (m *WebsiteModel) getGuestbookSettings(tx *sql.Tx, guestbookId int64) (GuestbookSettings, error) {

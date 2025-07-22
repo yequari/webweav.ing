@@ -71,7 +71,7 @@ func (app *application) getWebsiteDashboard(w http.ResponseWriter, r *http.Reque
 		app.clientError(w, http.StatusUnauthorized)
 	}
 	data := app.newCommonData(r)
-	views.WebsiteDashboard("Guestbook", data, website).Render(r.Context(), w)
+	views.WebsiteDashboard(fmt.Sprintf("%s - Dashboard", website.Name), data, website).Render(r.Context(), w)
 }
 
 func (app *application) getWebsiteList(w http.ResponseWriter, r *http.Request) {
@@ -102,4 +102,86 @@ func (app *application) getComingSoon(w http.ResponseWriter, r *http.Request) {
 		app.clientError(w, http.StatusForbidden)
 	}
 	views.WebsiteDashboardComingSoon("Coming Soon", app.newCommonData(r), website).Render(r.Context(), w)
+}
+
+func (app *application) getWebsiteSettings(w http.ResponseWriter, r *http.Request) {
+	slug := r.PathValue("id")
+	website, err := app.websites.Get(slugToShortId(slug))
+	if err != nil {
+		if errors.Is(err, models.ErrNoRecord) {
+			http.NotFound(w, r)
+		} else {
+			app.serverError(w, r, err)
+		}
+	}
+	var form forms.WebsiteSettingsForm
+	data := app.newCommonData(r)
+	views.WebsiteDashboardSettings(data, website, form).Render(r.Context(), w)
+}
+
+func (app *application) putWebsiteSettings(w http.ResponseWriter, r *http.Request) {
+	slug := r.PathValue("id")
+	website, err := app.websites.Get(slugToShortId(slug))
+	if err != nil {
+		if errors.Is(err, models.ErrNoRecord) {
+			http.NotFound(w, r)
+		} else {
+			app.serverError(w, r, err)
+		}
+	}
+
+	var form forms.WebsiteSettingsForm
+	err = app.decodePostForm(r, &form)
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		app.serverError(w, r, err)
+		return
+	}
+	form.CheckField(validator.NotBlank(form.AuthorName), "ws_author", "This field cannot be blank")
+	form.CheckField(validator.MaxChars(form.AuthorName, 256), "ws_author", "This field cannot exceed 256 characters")
+	form.CheckField(validator.NotBlank(form.SiteName), "ws_name", "This field cannot be blank")
+	form.CheckField(validator.MaxChars(form.SiteName, 256), "ws_name", "This field cannot exceed 256 characters")
+	form.CheckField(validator.NotBlank(form.SiteUrl), "ws_url", "This field cannot be blank")
+	form.CheckField(validator.MaxChars(form.SiteUrl, 512), "ws_url", "This field cannot exceed 512 characters")
+	form.CheckField(validator.Matches(form.SiteUrl, validator.WebRX), "ws_url", "This field must be a valid URL (including http:// or https://)")
+	form.CheckField(validator.PermittedValue(form.Visibility, "true", "false"), "gb_visible", "Invalid value")
+	form.CheckField(validator.PermittedValue(form.CommentingEnabled, models.ValidDisableDurations...), "gb_visible", "Invalid value")
+	form.CheckField(validator.PermittedValue(form.WidgetsEnabled, "true", "false"), "gb_remote", "Invalid value")
+	if !form.Valid() {
+		data := app.newCommonData(r)
+		views.SettingsForm(data, website, form, "").Render(r.Context(), w)
+		return
+	}
+
+	gbSettings, err := convertFormToGuestbookSettings(form)
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
+
+	err = app.websites.UpdateGuestbookSettings(website.Guestbook.ID, gbSettings)
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
+
+	u, err := url.Parse(form.SiteUrl)
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
+	website.Name = form.SiteName
+	website.AuthorName = form.AuthorName
+	website.Url = u
+
+	err = app.websites.Update(website)
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
+
+	app.sessionManager.Put(r.Context(), "flash", "Settings changed successfully")
+	data := app.newCommonData(r)
+	views.SettingsForm(data, website, forms.WebsiteSettingsForm{}, "Settings changed successfully").Render(r.Context(), w)
+
 }

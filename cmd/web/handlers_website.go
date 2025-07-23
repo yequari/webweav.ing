@@ -113,6 +113,7 @@ func (app *application) getWebsiteSettings(w http.ResponseWriter, r *http.Reques
 		} else {
 			app.serverError(w, r, err)
 		}
+		return
 	}
 	var form forms.WebsiteSettingsForm
 	data := app.newCommonData(r)
@@ -128,6 +129,7 @@ func (app *application) putWebsiteSettings(w http.ResponseWriter, r *http.Reques
 		} else {
 			app.serverError(w, r, err)
 		}
+		return
 	}
 
 	var form forms.WebsiteSettingsForm
@@ -184,4 +186,40 @@ func (app *application) putWebsiteSettings(w http.ResponseWriter, r *http.Reques
 	data := app.newCommonData(r)
 	views.SettingsForm(data, website, forms.WebsiteSettingsForm{}, "Settings changed successfully").Render(r.Context(), w)
 
+}
+
+func (app *application) deleteWebsite(w http.ResponseWriter, r *http.Request) {
+	slug := r.PathValue("id")
+	website, err := app.websites.Get(slugToShortId(slug))
+	if err != nil {
+		if errors.Is(err, models.ErrNoRecord) {
+			http.NotFound(w, r)
+		} else {
+			app.serverError(w, r, err)
+		}
+		return
+	}
+	var form forms.WebsiteDeleteForm
+	err = app.decodePostForm(r, &form)
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
+
+	form.CheckField(validator.Equals(website.Name, form.Delete), "delete", "Input must match site name exactly")
+	if !form.Valid() {
+		data := app.newCommonData(r)
+		views.DeleteForm(data, website, form).Render(r.Context(), w)
+		return
+	}
+
+	err = app.websites.Delete(website.ID)
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
+
+	app.sessionManager.Put(r.Context(), "flash", "Website Deleted")
+	w.Header().Add("HX-Redirect", "/websites")
+	w.WriteHeader(http.StatusOK)
 }

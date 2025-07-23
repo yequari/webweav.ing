@@ -31,6 +31,11 @@ type WebsiteCreateForm struct {
 	validator.Validator `schema:"-"`
 }
 
+type WebsiteDeleteForm struct {
+	Delete              string `schema:"delete"`
+	validator.Validator `schema:"-"`
+}
+
 type UserSettingsForm struct {
 	LocalTimezone       string `schema:"timezones"`
 	validator.Validator `schema:"-"`

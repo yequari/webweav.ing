@@ -232,7 +232,7 @@ templ guestbookSettingsForm(data CommonData, website models.Website, gb models.G
 }
 
 templ SettingsForm(data CommonData, website models.Website, form forms.WebsiteSettingsForm, msg string) {
-	{{ putUrl := fmt.Sprintf("/websites/%s/dashboard/settings", shortIdToSlug(website.ShortId)) }}
+	{{ putUrl := fmt.Sprintf("/websites/%s/settings", shortIdToSlug(website.ShortId)) }}
 	{{ gb := website.Guestbook }}
 	<form hx-put={ putUrl } hx-swap="outerHTML">
 		<p>
@@ -247,6 +247,22 @@ templ SettingsForm(data CommonData, website models.Website, form forms.WebsiteSe
 	</form>
 }
 
+templ DeleteForm(data CommonData, website models.Website, form forms.WebsiteDeleteForm) {
+	{{ putUrl := fmt.Sprintf("/websites/%s", shortIdToSlug(website.ShortId)) }}
+	<form hx-put={ putUrl } hx-swap="outerHTML">
+		<input type="hidden" name="csrf_token" value={ data.CSRFToken }/>
+		<h3>Delete Website</h3>
+		<p>Deleting a website is permanent. Be absolutely sure before proceeding.</p>
+		{{ err, exists := form.FieldErrors["delete"] }}
+		<label for="delete">Type your site name in the form.</label>
+		if exists {
+			<label class="error">{ err }</label>
+		}
+		<input type="text" name="delete" id="delete" required/>
+		<input type="submit" value="Delete" class="danger"/>
+	</form>
+}
+
 templ WebsiteDashboardSettings(data CommonData, website models.Website, form forms.WebsiteSettingsForm) {
 	{{ title := fmt.Sprintf("%s - Settings", website.Name) }}
 	@base(title, data) {
@@ -254,14 +270,7 @@ templ WebsiteDashboardSettings(data CommonData, website models.Website, form for
 			@wSidebar(website)
 			<div>
 				@SettingsForm(data, website, form, "")
-				<form>
-					<input type="hidden" name="csrf_token" value={ data.CSRFToken }/>
-					<h3>Delete Website</h3>
-					<p>Deleting a website is permanent. Be absolutely sure before proceeding.</p>
-					<label for="delete">Type your site name in the form.</label>
-					<input type="text" name="delete" required/>
-					<input type="submit" value="Delete" class="danger"/>
-				</form>
+				@DeleteForm(data, website, forms.WebsiteDeleteForm{})
 			</div>
 		</div>
 	}

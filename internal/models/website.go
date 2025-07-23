@@ -101,6 +101,7 @@ type WebsiteModelInterface interface {
 	InitializeSettingsMap() error
 	UpdateGuestbookSettings(guestbookId int64, settings GuestbookSettings) error
 	UpdateSetting(guestbookId int64, setting Setting, value string) error
+	Delete(websiteId int64) error
 }
 
 func (m *WebsiteModel) Insert(shortId uint64, userId int64, siteName, siteUrl, authorName string) (int64, error) {
@@ -244,7 +245,7 @@ func (m *WebsiteModel) GetAllUser(userId int64) ([]Website, error) {
 	stmt := `SELECT w.Id, w.ShortId, w.Name, w.SiteUrl, w.AuthorName, w.UserId, w.Created, 
 	g.Id, g.ShortId, g.Created, g.IsActive
 	FROM websites AS w INNER JOIN guestbooks AS g ON w.Id = g.WebsiteId
-	WHERE w.UserId = ?`
+	WHERE w.UserId = ? AND w.Deleted IS NULL`
 	rows, err := m.DB.Query(stmt, userId)
 	if err != nil {
 		return nil, err
@@ -273,7 +274,7 @@ func (m *WebsiteModel) GetAllUser(userId int64) ([]Website, error) {
 func (m *WebsiteModel) GetAll() ([]Website, error) {
 	stmt := `SELECT w.Id, w.ShortId, w.Name, w.SiteUrl, w.AuthorName, w.UserId, w.Created, 
 	g.Id, g.ShortId, g.Created, g.IsActive
-	FROM websites AS w INNER JOIN guestbooks AS g ON w.Id = g.WebsiteId`
+	FROM websites AS w INNER JOIN guestbooks AS g ON w.Id = g.WebsiteId WHERE w.Deleted IS NULL`
 	rows, err := m.DB.Query(stmt)
 	if err != nil {
 		return nil, err
@@ -302,6 +303,21 @@ func (m *WebsiteModel) GetAll() ([]Website, error) {
 func (m *WebsiteModel) Update(w Website) error {
 	stmt := `UPDATE websites SET Name = ?, SiteUrl = ?, AuthorName = ? WHERE ID = ?`
 	r, err := m.DB.Exec(stmt, w.Name, w.Url.String(), w.AuthorName, w.ID)
+	if err != nil {
+		return err
+	}
+	if rows, err := r.RowsAffected(); rows != 1 {
+		if err != nil {
+			return err
+		}
+		return errors.New("Failed to update website")
+	}
+	return nil
+}
+
+func (m *WebsiteModel) Delete(websiteId int64) error {
+	stmt := `UPDATE websites SET Deleted = ? WHERE ID = ?`
+	r, err := m.DB.Exec(stmt, time.Now().UTC(), websiteId)
 	if err != nil {
 		return err
 	}

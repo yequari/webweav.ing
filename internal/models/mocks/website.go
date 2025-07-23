@@ -72,6 +72,9 @@ func (m *WebsiteModel) GetAll() ([]models.Website, error) {
 func (m *WebsiteModel) Update(w models.Website) error {
 	return nil
 }
+func (m *WebsiteModel) Delete(websiteId int64) error {
+	return nil
+}
 
 func (m *WebsiteModel) InitializeSettingsMap() error {
 	return nil

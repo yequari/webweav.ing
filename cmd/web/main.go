@@ -40,6 +40,7 @@ type applicationConfig struct {
 	localAuthEnabled bool
 	oauth            applicationOauthConfig
 	rootUrl          string
+	environment      string
 }
 
 type application struct {
@@ -158,7 +159,15 @@ func setupConfig(addr string) (applicationConfig, error) {
 		oauth2Provider    = os.Getenv("OAUTH2_PROVIDER")
 		clientID          = os.Getenv("OAUTH2_CLIENT_ID")
 		clientSecret      = os.Getenv("OAUTH2_CLIENT_SECRET")
+		environment       = os.Getenv("ENVIRONMENT")
 	)
+
+	if environment != "" {
+		c.environment = environment
+	} else {
+		c.environment = "DEV"
+	}
+
 	if rootUrl != "" {
 		c.rootUrl = rootUrl
 	} else {
@@ -214,6 +223,7 @@ func setupConfig(addr string) (applicationConfig, error) {
 	}
 
 	c.oauth = o
+
 	return c, nil
 }
 

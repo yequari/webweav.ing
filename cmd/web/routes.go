@@ -9,7 +9,12 @@ import (
 
 func (app *application) routes() http.Handler {
 	mux := http.NewServeMux()
-	mux.Handle("GET /static/", http.FileServerFS(ui.Files))
+	if app.config.environment == "PROD" {
+		mux.Handle("GET /static/", http.FileServerFS(ui.Files))
+	} else {
+		fileServer := http.FileServer(http.Dir("./ui/static/"))
+		mux.Handle("GET /static/", http.StripPrefix("/static", fileServer))
+	}
 
 	mux.HandleFunc("GET /ping", ping)
 

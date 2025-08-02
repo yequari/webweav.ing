@@ -9,10 +9,9 @@ import (
 )
 
 type Website struct {
-	ID      int64
-	ShortId uint64
-	Name    string
-	// SiteUrl    string
+	ID         int64
+	ShortId    uint64
+	Name       string
 	Url        *url.URL
 	AuthorName string
 	UserId     int64
@@ -317,15 +316,29 @@ func (m *WebsiteModel) Update(w Website) error {
 
 func (m *WebsiteModel) Delete(websiteId int64) error {
 	stmt := `UPDATE websites SET Deleted = ? WHERE ID = ?`
-	r, err := m.DB.Exec(stmt, time.Now().UTC(), websiteId)
+	tx, err := m.DB.Begin()
 	if err != nil {
+		return nil
+	}
+	t := time.Now().UTC()
+	_, err = tx.Exec(stmt, t, websiteId)
+	if err != nil {
+		if rbErr := tx.Rollback(); rbErr != nil {
+			return rbErr
+		}
 		return err
 	}
-	if rows, err := r.RowsAffected(); rows != 1 {
-		if err != nil {
-			return err
+	stmt = `UPDATE guestbooks SET Deleted = ? WHERE WebsiteId = ?`
+	_, err = tx.Exec(stmt, t, websiteId)
+	if err != nil {
+		if rbErr := tx.Rollback(); rbErr != nil {
+			return rbErr
 		}
-		return errors.New("Failed to update website")
+		return err
+	}
+	err = tx.Commit()
+	if err != nil {
+		return err
 	}
 	return nil
 }

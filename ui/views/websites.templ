@@ -61,32 +61,38 @@ templ wSidebar(website models.Website) {
 
 templ websiteCreateForm(csrfToken string, form forms.WebsiteCreateForm) {
 	<input type="hidden" name="csrf_token" value={ csrfToken }/>
+	<fieldset>
+		<legend id="website-create-heading">Website Settings</legend>
+		<div class="form-group">
+			{{ err, exists := form.FieldErrors["ws_name"] }}
+			<label for="ws_name">Site Name <span aria-label="required">*</span></label>
+			if exists {
+				<label class="error">{ err }</label>
+			}
+			<input type="text" name="ws_name" id="sitename" value={ form.Name } required aria-describedby="sitename-help"/>
+			<small id="sitename-help">The display name for your website</small>
+		</div>
+		<div class="form-group">
+			{{ err, exists = form.FieldErrors["ws_url"] }}
+			<label for="ws_url">Site URL <span aria-label="required">*</span></label>
+			if exists {
+				<label class="error">{ err }</label>
+			}
+			<input type="url" name="ws_url" id="ws_url" value={ form.SiteUrl } required aria-describedby="siteurl-help"/>
+			<small id="siteurl-help">The full URL where your website can be accessed</small>
+		</div>
+		<div>
+			{{ err, exists = form.FieldErrors["ws_author"] }}
+			<label for="ws_author">Site Author <span aria-label="required">*</span></label>
+			if exists {
+				<label class="error">{ err }</label>
+			}
+			<input type="text" name="ws_author" id="authorname" value={ form.AuthorName } required aria-describedby="authorname-help"/>
+			<small id="authorname-help">Your name or the website owner's name</small>
+		</div>
+	</fieldset>
 	<div>
-		{{ err, exists := form.FieldErrors["sitename"] }}
-		<label for="sitename">Site Name: </label>
-		if exists {
-			<label class="error">{ err }</label>
-		}
-		<input type="text" name="sitename" id="sitename" value={ form.Name } required/>
-	</div>
-	<div>
-		{{ err, exists = form.FieldErrors["siteurl"] }}
-		<label for="siteurl">Site URL: </label>
-		if exists {
-			<label class="error">{ err }</label>
-		}
-		<input type="text" name="siteurl" id="siteurl" value={ form.SiteUrl } required/>
-	</div>
-	<div>
-		{{ err, exists = form.FieldErrors["authorname"] }}
-		<label for="authorname">Site Author: </label>
-		if exists {
-			<label class="error">{ err }</label>
-		}
-		<input type="text" name="authorname" id="authorname" value={ form.AuthorName } required/>
-	</div>
-	<div>
-		<button type="submit">Submit</button>
+		<button type="submit">Add Website</button>
 	</div>
 }
 
@@ -382,8 +388,10 @@ templ WebsiteDashboardComingSoon(title string, data CommonData, website models.W
 
 templ WebsiteCreate(title string, data CommonData, form forms.WebsiteCreateForm) {
 	@base(title, data) {
-		<form action="/websites/create" method="post">
-			@websiteCreateForm(data.CSRFToken, form)
-		</form>
+		<section aria-labelledby="website-create-heading">
+			<form action="/websites/create" method="post">
+				@websiteCreateForm(data.CSRFToken, form)
+			</form>
+		</section>
 	}
 }

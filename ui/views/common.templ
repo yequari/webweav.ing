@@ -41,31 +41,33 @@ templ commonHeader() {
 
 templ topNav(data CommonData) {
 	{{ hxHeaders := fmt.Sprintf("{\"X-CSRF-Token\": \"%s\"}", data.CSRFToken) }}
-	<nav>
-		<div>
-			if data.IsAuthenticated {
-				Welcome, { data.CurrentUser.Username }
-			}
+	<nav aria-label="Site navigation">
+		<div class="nav-welcome">
+			<span>
+				if data.IsAuthenticated {
+					Welcome, { data.CurrentUser.Username }
+				}
+			</span>
 		</div>
-		<div>
+		<ul class="nav-links">
 			if data.IsAuthenticated {
-				<a href="/guestbooks">All Guestbooks</a> |
-				<a href="/websites">My Websites</a> | 
-				<a href="/users/settings">Settings</a> | 
-				<a href="#" hx-post="/users/logout" hx-headers={ hxHeaders }>Logout</a>
+				<li><a href="/guestbooks">All Guestbooks</a></li>
+				<li><a href="/websites">My Websites</a></li>
+				<li><a href="/users/settings">Settings</a></li>
+				<li><a href="#" hx-post="/users/logout" hx-headers={ hxHeaders }>Logout</a></li>
 			} else {
 				if data.LocalAuthEnabled {
-					<a href="/users/register">Create an Account</a> | 
+					<li><a href="/users/register">Create an Account</a></li> | 
 				}
-				<a href="/users/login">Login</a>
+				<li><a href="/users/login">Login</a></li>
 			}
-		</div>
+		</ul>
 	</nav>
 }
 
 templ commonFooter() {
 	<footer>
-		<p>A <a href="https://32bit.cafe">32bit.cafe</a> Project</p>
+		<p>A <a href="https://32bit.cafe" rel="noopener">32bit.cafe</a> Project</p>
 	</footer>
 }
 
@@ -76,18 +78,16 @@ templ base(title string, data CommonData) {
 			<title>{ title } - webweav.ing</title>
 			<meta charset="UTF-8"/>
 			<meta name="viewport" content="width=device-width, initial-scale=1"/>
-			<link href="/static/css/classless.min.css" rel="stylesheet"/>
 			<link href="/static/css/style.css" rel="stylesheet"/>
 			<script src="/static/js/htmx.min.js"></script>
 		</head>
 		<body>
 			@commonHeader()
 			@topNav(data)
-			<main>
+			<main role="main">
 				if data.Flash != "" {
-					<div class="flash">{ data.Flash }</div>
+					<div class="notice flash">{ data.Flash }</div>
 				}
-				<h1>{ title }</h1>
 				{ children... }
 			</main>
 			@commonFooter()

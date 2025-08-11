@@ -86,20 +86,27 @@ templ UserSettingsView(data CommonData, timezones []string) {
 	{{ user := data.CurrentUser }}
 	@base("User Settings", data) {
 		<div>
-			<form hx-put="/users/settings">
-				<input type="hidden" name="csrf_token" value={ data.CSRFToken }/>
-				<label>Local Timezone</label>
-				<select name="timezones" id="timezone-select">
-					for _, tz := range timezones {
-						if tz == user.Settings.LocalTimezone.String() {
-							<option value={ tz } selected="true">{ tz }</option>
-						} else {
-							<option value={ tz }>{ tz }</option>
-						}
-					}
-				</select>
-				<input type="submit" value="Submit"/>
-			</form>
+			<section aria-labelledby="user-settings-heading">
+				<form hx-put="/users/settings">
+					<input type="hidden" name="csrf_token" value={ data.CSRFToken }/>
+					<fieldset>
+						<legend id="user-settings-heading">User Settings</legend>
+						<div class="form-group">
+							<label>Local Timezone</label>
+							<select name="timezones" id="timezone-select">
+								for _, tz := range timezones {
+									if tz == user.Settings.LocalTimezone.String() {
+										<option value={ tz } selected="true">{ tz }</option>
+									} else {
+										<option value={ tz }>{ tz }</option>
+									}
+								}
+							</select>
+						</div>
+					</fieldset>
+					<button type="submit">Save Settings</button>
+				</form>
+			</section>
 		</div>
 	}
 }

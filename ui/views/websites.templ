@@ -14,38 +14,47 @@ func wUrl(w models.Website) string {
 templ wSidebar(website models.Website) {
 	{{ dashUrl := wUrl(website) + "/dashboard" }}
 	{{ gbUrl := wUrl(website) + "/guestbook" }}
-	<nav>
+	<nav aria-label="Dashboard navigation">
 		<div>
-			<ul>
-				<li><a href={ templ.URL(dashUrl) }>Dashboard</a></li>
-				<li><a href={ templ.URL(dashUrl + "/settings") }>Settings</a></li>
-				<li><a href={ templ.URL(externalUrl(website.Url.String())) } target="_blank">View Website</a></li>
-			</ul>
-			<h3>Guestbook</h3>
-			<ul>
-				<li><a href={ templ.URL(gbUrl) } target="_blank">View Guestbook</a></li>
-			</ul>
-			<ul>
-				<li><a href={ templ.URL(dashUrl + "/guestbook/comments") }>Manage messages</a></li>
-				<li><a href={ templ.URL(dashUrl + "/guestbook/comments/queue") }>Review message queue</a></li>
-				<li><a href={ templ.URL(dashUrl + "/guestbook/comments/trash") }>Trash</a></li>
-			</ul>
-			<ul>
-				//<li><a href={ templ.URL(dashUrl + "/guestbook/themes") }>Themes</a></li>
-				//<li><a href={ templ.URL(dashUrl + "/guestbook/customize") }>Custom CSS</a></li>
-			</ul>
+			<section aria-labelledby="main-nav-heading">
+				<h3 id="main-nav-heading">Website</h3>
+				<ul role="list">
+					<li><a href={ templ.URL(dashUrl) } aria-current="page">Dashboard</a></li>
+					<li><a href={ templ.URL(dashUrl + "/settings") }>Settings</a></li>
+					<li><a href={ templ.URL(externalUrl(website.Url.String())) } target="_blank">View Website</a></li>
+				</ul>
+			</section>
 		</div>
 		<div>
-			<h3>Feeds</h3>
-			<p>Coming Soon</p>
+			<section aria-labelledby="guestbook-nav-heading">
+				<h3 id="guestbook-nav-heading">Guestbook</h3>
+				<ul role="list">
+					<li><a href={ templ.URL(gbUrl) } target="_blank">View Guestbook</a></li>
+					<li><a href={ templ.URL(dashUrl + "/guestbook/comments") }>Manage messages</a></li>
+					<li><a href={ templ.URL(dashUrl + "/guestbook/comments/queue") }>Review message queue</a></li>
+					<li><a href={ templ.URL(dashUrl + "/guestbook/comments/trash") }>Trash</a></li>
+				</ul>
+			</section>
+			//<ul>
+			//<li><a href={ templ.URL(dashUrl + "/guestbook/themes") }>Themes</a></li>
+			//<li><a href={ templ.URL(dashUrl + "/guestbook/customize") }>Custom CSS</a></li>
+			//</ul>
 		</div>
 		<div>
-			<h3>Account</h3>
-			<ul>
-				<li><a href="/users/settings">Settings</a></li>
-				<li><a href="/users/privacy">Privacy</a></li>
-				<li><a href="/help">Help</a></li>
-			</ul>
+			<section aria-labelledby="feeds-nav-heading">
+				<h3 id="feeds-nav-heading">Feeds</h3>
+				<p>Coming Soon</p>
+			</section>
+		</div>
+		<div>
+			<section aria-labelledby="account-nav-heading">
+				<h3 id="account-nav-heading">Account</h3>
+				<ul role="list">
+					<li><a href="/users/settings">Settings</a></li>
+					<li><a href="/users/privacy">Privacy</a></li>
+					<li><a href="/help">Help</a></li>
+				</ul>
+			</section>
 		</div>
 	</nav>
 }
@@ -83,22 +92,48 @@ templ websiteCreateForm(csrfToken string, form forms.WebsiteCreateForm) {
 
 templ WebsiteList(title string, data CommonData, websites []models.Website) {
 	@base(title, data) {
-		<div>
-			<a href="/websites/create">Add Website</a>
-		</div>
-		<div>
-			if len(websites) == 0 {
-				<p>No Websites yet. <a href="">Register a website.</a></p>
-			} else {
-				<ul id="websites" hx-get="/websites" hx-trigger="newWebsite from:body" hx-swap="outerHTML">
-					for _, w := range websites {
-						<li>
-							<a href={ templ.URL(wUrl(w) + "/dashboard") }>{ w.Name }</a>
-						</li>
-					}
-				</ul>
-			}
-		</div>
+		<section aria-labelledby="websites-heading">
+			<header class="section-header">
+				<h1 id="websites-heading">My Websites</h1>
+				<a href="/websites/create" class="btn btn-primary" role="button" aria-label="Create a new website">Add Website</a>
+			</header>
+			<div class="websites-container">
+				if len(websites) == 0 {
+					<h2>No Websites yet.</h2>
+					<p>Create your first website to get started with webweav.ing tools.</p>
+					<a href="/websites/create" class="btn btn-primary">Create Your First Website</a>
+				} else {
+					<ul
+						id="websites"
+						role="list"
+						aria-label="Your websites"
+						hx-get="/websites"
+						hx-trigger="newWebsite from:body"
+						hx-swap="outerHTML"
+					>
+						for _, w := range websites {
+							<li role="listitem">
+								<article class="website-card">
+									<header class="website-header">
+										<h2 class="website-name">
+											<a href={ templ.URL(wUrl(w) + "/dashboard") } aria-label={ fmt.Sprintf("Manage %s website dashboard", w.Name) }>
+												{ w.Name }
+											</a>
+										</h2>
+										<span class="website-url" aria-label="Website URL">{ w.Url.String() }</span>
+									</header>
+									<div class="website-actions">
+										<a href={ templ.URL(wUrl(w) + "/dashboard") } class="btn btn-outline" aria-label={ fmt.Sprintf("Open %s dashboard", w.Name) }>Dashboard</a>
+										<a href={ templ.URL(wUrl(w) + "/guestbook") } target="_blank" rel="noopener" class="btn btn-outline" aria-label={ fmt.Sprintf("View %s website guestbook", w.Name) }>View Guestbook</a>
+										<a href={ templ.URL(externalUrl(w.Url.String())) } target="_blank" rel="noopener" class="btn btn-outline" aria-label={ fmt.Sprintf("View %s website", w.Name) }>Visit Site</a>
+									</div>
+								</article>
+							</li>
+						}
+					</ul>
+				}
+			</div>
+		</section>
 	}
 }
 
@@ -107,103 +142,142 @@ templ WebsiteDashboard(title string, data CommonData, website models.Website) {
 		<div id="dashboard">
 			@wSidebar(website)
 			<div>
-				<h1>Embed your Guestbook</h1>
-				<p>
-					Upload <a href="/static/js/guestbook.js" download>this JavaScript WebComponent</a> to your site and include it in your <code>{ `<head>` }</code> tag.
-				</p>
-				<div>
-					//<button>Copy to Clipboard</button>
-					<pre>
-						<code id="guestbookSnippet">
-							{ 
-`<head>
-    <script type="module" src="js/guestbook.js"></script>
-</head>` }
-						</code>
-					</pre>
-					<p>
-						Then add the custom elements where you want your form and comments to show up
-					</p>
-					{{ gbUrl := fmt.Sprintf("https://%s/websites/%s/guestbook", data.RootUrl, shortIdToSlug(website.ShortId)) }}
-					//<button>Copy to Clipboard</button>
-					<pre>
-						<code>
-							{ fmt.Sprintf(`<guestbook-form guestbook="%s"></guestbook-form>
+				{{ gbUrl := fmt.Sprintf("https://%s/websites/%s/guestbook", data.RootUrl, shortIdToSlug(website.ShortId)) }}
+				<section aria-labelledby="embed-instructions">
+					<h1 id="embed-instructions">Embed your Guestbook</h1>
+					<div class="instruction-overview">
+						<p>There are two ways to add your guestbook to your website: using our JavaScript component (recommended) or with an iframe.</p>
+					</div>
+					<article class="instruction-method">
+						<h2>Method 1: JavaScript Component (Recommended)</h2>
+						<div class="instruction-step">
+							<h3>Step 1: Download and upload the component</h3>
+							<p>Download <a href="/static/js/guestbook.js" download>this JavaScript WebComponent</a> and upload it to your website's JavaScript folder.</p>
+						</div>
+						<div class="instruction-step">
+							<h3>Step 2: Include in your HTML head</h3>
+							<figure class="code-example">
+								<figcaption>Add this script tag to your &lt;head&gt; section:</figcaption>
+								<pre>
+									<code id="guestbookSnippet" aria-label="HTML head script tag">
+										&lt;head&gt;
+										&lt;script type=&#34;module&#34; src=&#34;js/guestbook.js&#34;&gt;&lt;/script&gt;
+										&lt;/head&gt;
+									</code>
+								</pre>
+							</figure>
+						</div>
+						<div class="instruction-step">
+							<h3>Step 3: Add the custom elements</h3>
+							<figure class="code-example">
+								<figcaption>Place these elements where you want your guestbook to appear:</figcaption>
+								<pre>
+									<code aria-label="Custom guestbook elements">
+										{ fmt.Sprintf(`<guestbook-form guestbook="%s"></guestbook-form>
 <guestbook-comments guestbook="%s"></guestbook-comments>`, gbUrl, gbUrl) }
-						</code>
-					</pre>
-				</div>
-				<p>
-					If your web host does not allow CORS requests, use an iframe instead
-				</p>
-				<div>
-					<pre>
-						<code>
-							{ fmt.Sprintf(`<iframe src="%s" title="Guestbook"></iframe>`, gbUrl) }
-						</code>
-					</pre>
-				</div>
+									</code>
+								</pre>
+							</figure>
+						</div>
+					</article>
+					<article class="instruction-method">
+						<h2>Method 2: iframe (Alternative)</h2>
+						<details>
+							<summary>Use this method if your web host doesn't allow CORS requests</summary>
+							<div class="instruction-step">
+								<p>If your hosting provider blocks cross-origin requests, you can embed the guestbook using an iframe instead:</p>
+								<figure class="code-example">
+									<figcaption>iframe embedding code:</figcaption>
+									<pre>
+										<code aria-label="iframe embedding code">
+											{ fmt.Sprintf(`<iframe src="%s" 
+    title="Guestbook"
+    width="100%%"
+    height="600"
+    style="border: 1px solid #ccc; border-radius: 8px;"
+    >
+        <p>Your browser does not support iframes. <a href="%s">View the guestbook directly.</a></p>
+</iframe>`, gbUrl, gbUrl) }
+										</code>
+									</pre>
+								</figure>
+								<aside role="note" class="method-note">
+									<p><strong>Note:</strong> The iframe method may have styling limitations and won't integrate as seamlessly with your site's design.</p>
+								</aside>
+							</div>
+						</details>
+					</article>
+					<aside role="complementary" class="help-section">
+						<h2>Need Help?</h2>
+						<p>If you're having trouble embedding your guestbook, check out our <a href="/help">help documentation</a> or contact support.</p>
+					</aside>
+				</section>
 			</div>
 		</div>
 	}
 }
 
 templ websiteSettingsForm(data CommonData, website models.Website, form forms.WebsiteSettingsForm) {
-	<h3>Website Settings</h3>
-	<div>
+	<legend id="website-settings-heading">Website Settings</legend>
+	<div class="form-group">
 		{{ err, exists := form.FieldErrors["ws_name"] }}
-		<label for="ws_name">Site Name: </label>
+		<label for="ws_name">Site Name <span aria-label="required">*</span></label>
 		if exists {
 			<label class="error">{ err }</label>
 		}
 		if form.SiteName != "" {
-			<input type="text" name="ws_name" id="sitename" value={ form.SiteName } required/>
+			<input type="text" name="ws_name" id="sitename" value={ form.SiteName } required aria-describedby="sitename-help"/>
 		} else {
-			<input type="text" name="ws_name" id="sitename" value={ website.Name } required/>
+			<input type="text" name="ws_name" id="sitename" value={ website.Name } required aria-describedby="sitename-help"/>
 		}
+		<small id="sitename-help">The display name for your website</small>
 	</div>
-	<div>
+	<div class="form-group">
 		{{ err, exists = form.FieldErrors["ws_url"] }}
-		<label for="ws_url">Site URL: </label>
+		<label for="ws_url">Site URL <span aria-label="required">*</span></label>
 		if exists {
 			<label class="error">{ err }</label>
 		}
 		if form.SiteUrl != "" {
-			<input type="text" name="ws_url" id="ws_url" value={ form.SiteUrl } required/>
+			<input type="url" name="ws_url" id="ws_url" value={ form.SiteUrl } required aria-describedby="siteurl-help"/>
 		} else {
-			<input type="text" name="ws_url" id="ws_url" value={ website.Url.String() } required/>
+			<input type="url" name="ws_url" id="ws_url" value={ website.Url.String() } required aria-describedby="siteurl-help"/>
 		}
+		<small id="siteurl-help">The full URL where your website can be accessed</small>
 	</div>
 	<div>
 		{{ err, exists = form.FieldErrors["ws_author"] }}
-		<label for="ws_author">Site Author: </label>
+		<label for="ws_author">Site Author <span aria-label="required">*</span></label>
 		if exists {
 			<label class="error">{ err }</label>
 		}
 		if form.AuthorName != "" {
-			<input type="text" name="ws_author" id="authorname" value={ form.AuthorName } required/>
+			<input type="text" name="ws_author" id="authorname" value={ form.AuthorName } required aria-describedby="authorname-help"/>
 		} else {
-			<input type="text" name="ws_author" id="authorname" value={ website.AuthorName } required/>
+			<input type="text" name="ws_author" id="authorname" value={ website.AuthorName } required aria-describedby="authorname-help"/>
 		}
+		<small id="authorname-help">Your name or the website owner's name</small>
 	</div>
 }
 
 templ guestbookSettingsForm(data CommonData, website models.Website, gb models.Guestbook, form forms.WebsiteSettingsForm) {
-	<h3>Guestbook Settings</h3>
-	<div>
-		<label>Guestbook Visibility</label>
-		<label for="gb_visible_true">
-			<input type="radio" name="gb_visible" id="gb_visible_true" value="true" checked?={ gb.Settings.IsVisible }/>
-			Public
-		</label>
-		<label for="gb_visible_false">
-			<input type="radio" name="gb_visible" id="gb_visible_false" value="false" checked?={ !gb.Settings.IsVisible }/>
-			Private
-		</label>
+	<legend>Guestbook Settings</legend>
+	<div class="form-group">
+		<fieldset class="radio-group">
+			<legend>Guestbook Visibility</legend>
+			<label>
+				<input type="radio" name="gb_visible" id="gb_visible_true" value="true" checked?={ gb.Settings.IsVisible }/>
+				Public
+			</label>
+			<label>
+				<input type="radio" name="gb_visible" id="gb_visible_false" value="false" checked?={ !gb.Settings.IsVisible }/>
+				Private
+			</label>
+		</fieldset>
 	</div>
-	<div>
-		<label>Guestbook Commenting</label>
-		<select name="gb_commenting" id="gb-commenting">
+	<div class="form-group">
+		<label for="gb-commenting">Guestbook Commenting</label>
+		<select name="gb_commenting" id="gb-commenting" aria-describedby="commenting-help">
 			<option value="true" selected?={ gb.Settings.IsCommentingEnabled }>Enabled</option>
 			<option value="1h">Disabled for 1 Hour</option>
 			<option value="4h">Disabled for 4 Hours</option>
@@ -217,17 +291,21 @@ templ guestbookSettingsForm(data CommonData, website models.Website, gb models.G
 			{{ localtime := gb.Settings.ReenableCommenting.In(data.CurrentUser.Settings.LocalTimezone) }}
 			<label>Commenting re-enabled on <time value={ localtime.Format(time.RFC3339) }>{ localtime.Format("2 January 2006") } at { localtime.Format("3:04PM MST") }</time></label>
 		}
+		<small id="commenting-help">Control when users can post new comments</small>
 	</div>
-	<div>
-		<label>Enable Widgets</label>
-		<label for="gb_remote_true">
-			<input type="radio" name="gb_remote" id="gb_remote_true" value="true" checked?={ gb.Settings.AllowRemoteHostAccess }/>
-			Yes
-		</label>
-		<label for="gb_remote_false">
-			<input type="radio" name="gb_remote" id="gb_remote_false" value="false" checked?={ !gb.Settings.AllowRemoteHostAccess }/>
-			No
-		</label>
+	<div class="form-group">
+		<fieldset class="radio-group">
+			<legend>Enable Widgets</legend>
+			<label for="gb_remote_true">
+				<input type="radio" name="gb_remote" id="gb_remote_true" value="true" checked?={ gb.Settings.AllowRemoteHostAccess }/>
+				Yes
+			</label>
+			<label for="gb_remote_false">
+				<input type="radio" name="gb_remote" id="gb_remote_false" value="false" checked?={ !gb.Settings.AllowRemoteHostAccess }/>
+				No
+			</label>
+		</fieldset>
+		<small>Allow embedding guestbook on external websites</small>
 	</div>
 }
 
@@ -239,27 +317,36 @@ templ SettingsForm(data CommonData, website models.Website, form forms.WebsiteSe
 			{ msg }
 		</p>
 		<input type="hidden" name="csrf_token" value={ data.CSRFToken }/>
-		<div id="settings_form">
+		<fieldset>
 			@websiteSettingsForm(data, website, form)
+		</fieldset>
+		<fieldset>
 			@guestbookSettingsForm(data, website, gb, form)
-		</div>
-		<input type="submit" value="Submit"/>
+		</fieldset>
+		<button type="submit">Save Settings</button>
 	</form>
 }
 
 templ DeleteForm(data CommonData, website models.Website, form forms.WebsiteDeleteForm) {
 	{{ putUrl := fmt.Sprintf("/websites/%s", shortIdToSlug(website.ShortId)) }}
-	<form hx-put={ putUrl } hx-swap="outerHTML">
+	<form hx-put={ putUrl } hx-swap="outerHTML" aria-label="Delete website">
 		<input type="hidden" name="csrf_token" value={ data.CSRFToken }/>
-		<h3>Delete Website</h3>
-		<p>Deleting a website is permanent. Be absolutely sure before proceeding.</p>
-		{{ err, exists := form.FieldErrors["delete"] }}
-		<label for="delete">Type your site name in the form.</label>
-		if exists {
-			<label class="error">{ err }</label>
-		}
-		<input type="text" name="delete" id="delete" required/>
-		<input type="submit" value="Delete" class="danger"/>
+		<fieldset class="danger-zone">
+			<legend id="danger-zone-heading">Delete Website</legend>
+			<aside role="alert" class="warning-notice">
+				<p><strong>Warning:</strong> Deleting a website is permanent. Be absolutely sure before proceeding.</p>
+			</aside>
+			{{ err, exists := form.FieldErrors["delete"] }}
+			<div class="form-group">
+				if exists {
+					<label class="error">{ err }</label>
+				}
+				<label for="delete">Type your site name to confirm deletion</label>
+				<input type="text" name="delete" id="delete" required aria-describedby="delete-help" placeholder={ website.Name }/>
+				<small id="delete-help">Type { website.Name } exactly as shown to confirm deletion</small>
+			</div>
+			<button type="submit" class="danger">Delete Website</button>
+		</fieldset>
 	</form>
 }
 
@@ -269,8 +356,12 @@ templ WebsiteDashboardSettings(data CommonData, website models.Website, form for
 		<div id="dashboard">
 			@wSidebar(website)
 			<div>
-				@SettingsForm(data, website, form, "")
-				@DeleteForm(data, website, forms.WebsiteDeleteForm{})
+				<section aria-labelledby="website-settings-heading">
+					@SettingsForm(data, website, form, "")
+				</section>
+				<section aria-labelledby="danger-zone-heading">
+					@DeleteForm(data, website, forms.WebsiteDeleteForm{})
+				</section>
 			</div>
 		</div>
 	}

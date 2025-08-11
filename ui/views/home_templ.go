@@ -41,7 +41,7 @@ func Home(title string, data CommonData) templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<h2>Welcome</h2><p>Welcome to webweav.ing, a collection of webmastery tools created by the <a href=\"https://32bit.cafe\">32-Bit Cafe</a>.</p><p>Note this service is in a pre-alpha state. Your account and data can disappear at any time. </p>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<section aria-labelledby=\"welcome-heading\"><h2 id=\"welcome-heading\">Welcome</h2><p>Welcome to webweav.ing, a collection of webmastery tools created by the <a href=\"https://32bit.cafe\" rel=\"noopener\">32-Bit Cafe</a>.</p><aside class=\"notice\" role=\"alert\" aria-labelledby=\"service-status\"><h3 id=\"service-status\" class=\"sr-only\">Service Status Notice</h3><p><strong>Important:</strong> This service is in a pre-alpha state. Your account and data can disappear at any time.</p></aside></section>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

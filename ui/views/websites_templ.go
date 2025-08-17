@@ -87,7 +87,7 @@ func wSidebar(website models.Website) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "\">Manage Comments</a></li></ul></section></div><div><section aria-labelledby=\"feeds-nav-heading\"><h3 id=\"feeds-nav-heading\">Feeds</h3><p>Coming Soon</p></section></div><div><section aria-labelledby=\"account-nav-heading\"><h3 id=\"account-nav-heading\">Account</h3><ul role=\"list\"><li><a href=\"/users/settings\">Settings</a></li><li><a href=\"/users/privacy\">Privacy</a></li><li><a href=\"/help\">Help</a></li></ul></section></div></nav>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "\">Manage Comments</a></li></ul></section></div><div><section aria-labelledby=\"feeds-nav-heading\"><h3 id=\"feeds-nav-heading\">Feeds</h3><p>Coming Soon</p></section></div></nav>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -123,7 +123,7 @@ func websiteCreateForm(csrfToken string, form forms.WebsiteCreateForm) templ.Com
 		var templ_7745c5c3_Var8 string
 		templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(csrfToken)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/views/websites.templ`, Line: 57, Col: 57}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/views/websites.templ`, Line: 47, Col: 57}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 		if templ_7745c5c3_Err != nil {
@@ -146,7 +146,7 @@ func websiteCreateForm(csrfToken string, form forms.WebsiteCreateForm) templ.Com
 			var templ_7745c5c3_Var9 string
 			templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(err)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/views/websites.templ`, Line: 64, Col: 30}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/views/websites.templ`, Line: 54, Col: 30}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 			if templ_7745c5c3_Err != nil {
@@ -164,7 +164,7 @@ func websiteCreateForm(csrfToken string, form forms.WebsiteCreateForm) templ.Com
 		var templ_7745c5c3_Var10 string
 		templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(form.Name)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/views/websites.templ`, Line: 66, Col: 68}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/views/websites.templ`, Line: 56, Col: 68}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 		if templ_7745c5c3_Err != nil {
@@ -187,7 +187,7 @@ func websiteCreateForm(csrfToken string, form forms.WebsiteCreateForm) templ.Com
 			var templ_7745c5c3_Var11 string
 			templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(err)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/views/websites.templ`, Line: 73, Col: 30}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/views/websites.templ`, Line: 63, Col: 30}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 			if templ_7745c5c3_Err != nil {
@@ -205,7 +205,7 @@ func websiteCreateForm(csrfToken string, form forms.WebsiteCreateForm) templ.Com
 		var templ_7745c5c3_Var12 string
 		templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(form.SiteUrl)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/views/websites.templ`, Line: 75, Col: 67}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/views/websites.templ`, Line: 65, Col: 67}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
 		if templ_7745c5c3_Err != nil {
@@ -228,7 +228,7 @@ func websiteCreateForm(csrfToken string, form forms.WebsiteCreateForm) templ.Com
 			var templ_7745c5c3_Var13 string
 			templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(err)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/views/websites.templ`, Line: 82, Col: 30}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/views/websites.templ`, Line: 72, Col: 30}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
 			if templ_7745c5c3_Err != nil {
@@ -246,7 +246,7 @@ func websiteCreateForm(csrfToken string, form forms.WebsiteCreateForm) templ.Com
 		var templ_7745c5c3_Var14 string
 		templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(form.AuthorName)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/views/websites.templ`, Line: 84, Col: 78}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/views/websites.templ`, Line: 74, Col: 78}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
 		if templ_7745c5c3_Err != nil {
@@ -324,7 +324,7 @@ func WebsiteList(title string, data CommonData, websites []models.Website) templ
 					var templ_7745c5c3_Var18 string
 					templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("Manage %s website dashboard", w.Name))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/views/websites.templ`, Line: 119, Col: 120}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/views/websites.templ`, Line: 109, Col: 120}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var18))
 					if templ_7745c5c3_Err != nil {
@@ -337,7 +337,7 @@ func WebsiteList(title string, data CommonData, websites []models.Website) templ
 					var templ_7745c5c3_Var19 string
 					templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinStringErrs(w.Name)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/views/websites.templ`, Line: 120, Col: 20}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/views/websites.templ`, Line: 110, Col: 20}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var19))
 					if templ_7745c5c3_Err != nil {
@@ -350,7 +350,7 @@ func WebsiteList(title string, data CommonData, websites []models.Website) templ
 					var templ_7745c5c3_Var20 string
 					templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.JoinStringErrs(w.Url.String())
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/views/websites.templ`, Line: 123, Col: 77}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/views/websites.templ`, Line: 113, Col: 77}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var20))
 					if templ_7745c5c3_Err != nil {
@@ -372,7 +372,7 @@ func WebsiteList(title string, data CommonData, websites []models.Website) templ
 					var templ_7745c5c3_Var22 string
 					templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("Open %s dashboard", w.Name))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/views/websites.templ`, Line: 126, Col: 133}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/views/websites.templ`, Line: 116, Col: 133}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var22))
 					if templ_7745c5c3_Err != nil {
@@ -394,7 +394,7 @@ func WebsiteList(title string, data CommonData, websites []models.Website) templ
 					var templ_7745c5c3_Var24 string
 					templ_7745c5c3_Var24, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("View %s website guestbook", w.Name))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/views/websites.templ`, Line: 127, Col: 172}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/views/websites.templ`, Line: 117, Col: 172}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var24))
 					if templ_7745c5c3_Err != nil {
@@ -416,7 +416,7 @@ func WebsiteList(title string, data CommonData, websites []models.Website) templ
 					var templ_7745c5c3_Var26 string
 					templ_7745c5c3_Var26, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("View %s website", w.Name))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/views/websites.templ`, Line: 128, Col: 167}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/views/websites.templ`, Line: 118, Col: 167}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var26))
 					if templ_7745c5c3_Err != nil {
@@ -500,7 +500,7 @@ func WebsiteDashboard(title string, data CommonData, website models.Website) tem
 			templ_7745c5c3_Var29, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf(`<guestbook-form guestbook="%s"></guestbook-form>
 <guestbook-comments guestbook="%s"></guestbook-comments>`, gbUrl, gbUrl))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/views/websites.templ`, Line: 177, Col: 72}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/views/websites.templ`, Line: 167, Col: 72}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var29))
 			if templ_7745c5c3_Err != nil {
@@ -520,7 +520,7 @@ func WebsiteDashboard(title string, data CommonData, website models.Website) tem
         <p>Your browser does not support iframes. <a href="%s">View the guestbook directly.</a></p>
 </iframe>`, gbUrl, gbUrl))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/views/websites.templ`, Line: 200, Col: 25}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/views/websites.templ`, Line: 190, Col: 25}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var30))
 			if templ_7745c5c3_Err != nil {
@@ -578,7 +578,7 @@ func websiteSettingsForm(data CommonData, website models.Website, form forms.Web
 			var templ_7745c5c3_Var32 string
 			templ_7745c5c3_Var32, templ_7745c5c3_Err = templ.JoinStringErrs(err)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/views/websites.templ`, Line: 226, Col: 29}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/views/websites.templ`, Line: 216, Col: 29}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var32))
 			if templ_7745c5c3_Err != nil {
@@ -597,7 +597,7 @@ func websiteSettingsForm(data CommonData, website models.Website, form forms.Web
 			var templ_7745c5c3_Var33 string
 			templ_7745c5c3_Var33, templ_7745c5c3_Err = templ.JoinStringErrs(form.SiteName)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/views/websites.templ`, Line: 229, Col: 72}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/views/websites.templ`, Line: 219, Col: 72}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var33))
 			if templ_7745c5c3_Err != nil {
@@ -615,7 +615,7 @@ func websiteSettingsForm(data CommonData, website models.Website, form forms.Web
 			var templ_7745c5c3_Var34 string
 			templ_7745c5c3_Var34, templ_7745c5c3_Err = templ.JoinStringErrs(website.Name)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/views/websites.templ`, Line: 231, Col: 71}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/views/websites.templ`, Line: 221, Col: 71}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var34))
 			if templ_7745c5c3_Err != nil {
@@ -643,7 +643,7 @@ func websiteSettingsForm(data CommonData, website models.Website, form forms.Web
 			var templ_7745c5c3_Var35 string
 			templ_7745c5c3_Var35, templ_7745c5c3_Err = templ.JoinStringErrs(err)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/views/websites.templ`, Line: 239, Col: 29}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/views/websites.templ`, Line: 229, Col: 29}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var35))
 			if templ_7745c5c3_Err != nil {
@@ -662,7 +662,7 @@ func websiteSettingsForm(data CommonData, website models.Website, form forms.Web
 			var templ_7745c5c3_Var36 string
 			templ_7745c5c3_Var36, templ_7745c5c3_Err = templ.JoinStringErrs(form.SiteUrl)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/views/websites.templ`, Line: 242, Col: 67}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/views/websites.templ`, Line: 232, Col: 67}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var36))
 			if templ_7745c5c3_Err != nil {
@@ -680,7 +680,7 @@ func websiteSettingsForm(data CommonData, website models.Website, form forms.Web
 			var templ_7745c5c3_Var37 string
 			templ_7745c5c3_Var37, templ_7745c5c3_Err = templ.JoinStringErrs(website.Url.String())
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/views/websites.templ`, Line: 244, Col: 75}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/views/websites.templ`, Line: 234, Col: 75}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var37))
 			if templ_7745c5c3_Err != nil {
@@ -708,7 +708,7 @@ func websiteSettingsForm(data CommonData, website models.Website, form forms.Web
 			var templ_7745c5c3_Var38 string
 			templ_7745c5c3_Var38, templ_7745c5c3_Err = templ.JoinStringErrs(err)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/views/websites.templ`, Line: 252, Col: 29}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/views/websites.templ`, Line: 242, Col: 29}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var38))
 			if templ_7745c5c3_Err != nil {
@@ -727,7 +727,7 @@ func websiteSettingsForm(data CommonData, website models.Website, form forms.Web
 			var templ_7745c5c3_Var39 string
 			templ_7745c5c3_Var39, templ_7745c5c3_Err = templ.JoinStringErrs(form.AuthorName)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/views/websites.templ`, Line: 255, Col: 78}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/views/websites.templ`, Line: 245, Col: 78}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var39))
 			if templ_7745c5c3_Err != nil {
@@ -745,7 +745,7 @@ func websiteSettingsForm(data CommonData, website models.Website, form forms.Web
 			var templ_7745c5c3_Var40 string
 			templ_7745c5c3_Var40, templ_7745c5c3_Err = templ.JoinStringErrs(website.AuthorName)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/views/websites.templ`, Line: 257, Col: 81}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/views/websites.templ`, Line: 247, Col: 81}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var40))
 			if templ_7745c5c3_Err != nil {
@@ -838,7 +838,7 @@ func guestbookSettingsForm(data CommonData, website models.Website, gb models.Gu
 			var templ_7745c5c3_Var42 string
 			templ_7745c5c3_Var42, templ_7745c5c3_Err = templ.JoinStringErrs(localtime.Format(time.RFC3339))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/views/websites.templ`, Line: 292, Col: 79}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/views/websites.templ`, Line: 282, Col: 79}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var42))
 			if templ_7745c5c3_Err != nil {
@@ -851,7 +851,7 @@ func guestbookSettingsForm(data CommonData, website models.Website, gb models.Gu
 			var templ_7745c5c3_Var43 string
 			templ_7745c5c3_Var43, templ_7745c5c3_Err = templ.JoinStringErrs(localtime.Format("2 January 2006"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/views/websites.templ`, Line: 292, Col: 118}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/views/websites.templ`, Line: 282, Col: 118}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var43))
 			if templ_7745c5c3_Err != nil {
@@ -864,7 +864,7 @@ func guestbookSettingsForm(data CommonData, website models.Website, gb models.Gu
 			var templ_7745c5c3_Var44 string
 			templ_7745c5c3_Var44, templ_7745c5c3_Err = templ.JoinStringErrs(localtime.Format("3:04PM MST"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/views/websites.templ`, Line: 292, Col: 156}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/views/websites.templ`, Line: 282, Col: 156}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var44))
 			if templ_7745c5c3_Err != nil {
@@ -933,7 +933,7 @@ func SettingsForm(data CommonData, website models.Website, form forms.WebsiteSet
 		var templ_7745c5c3_Var46 string
 		templ_7745c5c3_Var46, templ_7745c5c3_Err = templ.JoinStringErrs(putUrl)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/views/websites.templ`, Line: 315, Col: 22}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/views/websites.templ`, Line: 305, Col: 22}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var46))
 		if templ_7745c5c3_Err != nil {
@@ -946,7 +946,7 @@ func SettingsForm(data CommonData, website models.Website, form forms.WebsiteSet
 		var templ_7745c5c3_Var47 string
 		templ_7745c5c3_Var47, templ_7745c5c3_Err = templ.JoinStringErrs(msg)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/views/websites.templ`, Line: 317, Col: 8}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/views/websites.templ`, Line: 307, Col: 8}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var47))
 		if templ_7745c5c3_Err != nil {
@@ -959,7 +959,7 @@ func SettingsForm(data CommonData, website models.Website, form forms.WebsiteSet
 		var templ_7745c5c3_Var48 string
 		templ_7745c5c3_Var48, templ_7745c5c3_Err = templ.JoinStringErrs(data.CSRFToken)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/views/websites.templ`, Line: 319, Col: 63}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/views/websites.templ`, Line: 309, Col: 63}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var48))
 		if templ_7745c5c3_Err != nil {
@@ -1018,7 +1018,7 @@ func DeleteForm(data CommonData, website models.Website, form forms.WebsiteDelet
 		var templ_7745c5c3_Var50 string
 		templ_7745c5c3_Var50, templ_7745c5c3_Err = templ.JoinStringErrs(putUrl)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/views/websites.templ`, Line: 332, Col: 22}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/views/websites.templ`, Line: 322, Col: 22}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var50))
 		if templ_7745c5c3_Err != nil {
@@ -1031,7 +1031,7 @@ func DeleteForm(data CommonData, website models.Website, form forms.WebsiteDelet
 		var templ_7745c5c3_Var51 string
 		templ_7745c5c3_Var51, templ_7745c5c3_Err = templ.JoinStringErrs(data.CSRFToken)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/views/websites.templ`, Line: 333, Col: 63}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/views/websites.templ`, Line: 323, Col: 63}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var51))
 		if templ_7745c5c3_Err != nil {
@@ -1054,7 +1054,7 @@ func DeleteForm(data CommonData, website models.Website, form forms.WebsiteDelet
 			var templ_7745c5c3_Var52 string
 			templ_7745c5c3_Var52, templ_7745c5c3_Err = templ.JoinStringErrs(err)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/views/websites.templ`, Line: 342, Col: 31}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/views/websites.templ`, Line: 332, Col: 31}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var52))
 			if templ_7745c5c3_Err != nil {
@@ -1072,7 +1072,7 @@ func DeleteForm(data CommonData, website models.Website, form forms.WebsiteDelet
 		var templ_7745c5c3_Var53 string
 		templ_7745c5c3_Var53, templ_7745c5c3_Err = templ.JoinStringErrs(website.Name)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/views/websites.templ`, Line: 345, Col: 115}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/views/websites.templ`, Line: 335, Col: 115}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var53))
 		if templ_7745c5c3_Err != nil {
@@ -1085,7 +1085,7 @@ func DeleteForm(data CommonData, website models.Website, form forms.WebsiteDelet
 		var templ_7745c5c3_Var54 string
 		templ_7745c5c3_Var54, templ_7745c5c3_Err = templ.JoinStringErrs(website.Name)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/views/websites.templ`, Line: 346, Col: 47}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/views/websites.templ`, Line: 336, Col: 47}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var54))
 		if templ_7745c5c3_Err != nil {

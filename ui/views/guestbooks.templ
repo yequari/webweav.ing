@@ -12,15 +12,15 @@ templ GuestbookDashboardCommentsView(title string, data CommonData, website mode
 			<div>
 				<section aria-labelledby="comments-management-heading">
 					<header class="section-header">
-						<h1 id="comments-management-heading">Comments on yq</h1>
+						<h1 id="comments-management-heading">Comments on { website.Name }</h1>
 						<p class="section-description">Manage, moderate, and organize comments on your guestbook</p>
 					</header>
 					<hr role="separator"/>
 					if len(comments) == 0 {
 						<p>No comments yet!</p>
 					}
-					for  _, c := range comments {
-						@GuestbookDashboardCommentView(data, website, c)
+					for  i, c := range comments {
+						@GuestbookDashboardCommentView(data, website, c, i)
 					}
 				</section>
 			</div>
@@ -28,40 +28,77 @@ templ GuestbookDashboardCommentsView(title string, data CommonData, website mode
 	}
 }
 
-templ GuestbookDashboardCommentView(data CommonData, w models.Website, c models.GuestbookComment) {
+templ GuestbookDashboardCommentDeletePart(text string) {
+	<div class="comment-update-msg">
+		<p>{ text }</p>
+	</div>
+}
+
+templ GuestbookDashboardUpdateButtonPart(data CommonData, w models.Website, c models.GuestbookComment) {
+	{{ hxHeaders := fmt.Sprintf("{\"X-CSRF-Token\": \"%s\"}", data.CSRFToken) }}
+	{{ commentUrl := fmt.Sprintf("%s/dashboard/guestbook/comments/%s", wUrl(w), shortIdToSlug(c.ShortId)) }}
+	<button
+		type="button"
+		class="outline"
+		hx-put={ commentUrl }
+		hx-headers={ hxHeaders }
+		hx-swap="outerHTML"
+	>
+		if !c.IsPublished {
+			Publish
+		} else {
+			Hide
+		}
+	</button>
+}
+
+templ GuestbookDashboardCommentView(data CommonData, w models.Website, c models.GuestbookComment, i int) {
 	{{ commentUrl := fmt.Sprintf("%s/dashboard/guestbook/comments/%s", wUrl(w), shortIdToSlug(c.ShortId)) }}
 	{{ hxHeaders := fmt.Sprintf("{\"X-CSRF-Token\": \"%s\"}", data.CSRFToken) }}
-	<div class="comment">
-		<div>
-			if c.Deleted.IsZero() {
-				<button class="danger" hx-delete={ commentUrl } hx-target="closest div.comment" hx-headers={ hxHeaders }>Delete</button>
-				<button class="outline" hx-put={ commentUrl } hx-target="closest div.comment" hx-headers={ hxHeaders }>
-					if !c.IsPublished {
-						Publish
-					} else {
-						Hide
-					}
-				</button>
-			}
-		</div>
-		<div>
-			<strong>{ c.AuthorName }</strong>
-			if len(c.AuthorEmail) > 0 {
-				{{ email := "mailto:" + c.AuthorEmail }}
-				| <a href={ templ.URL(email) } target="_blank">{ c.AuthorEmail }</a>
-			}
-			if len(c.AuthorSite) > 0 {
-				| <a href={ templ.URL(externalUrl(c.AuthorSite)) } target="_blank">{ c.AuthorSite }</a>
-			}
+	{{ authorClass := fmt.Sprintf("comment-author-%d", i) }}
+	<article class="comment" role="article" aria-labelledby={ authorClass }>
+		<div class="comment-update-msg"></div>
+		<header class="comment-header">
+			<div class="comment-meta">
+				<h3 id={ authorClass } class="comment-author">{ c.AuthorName }</h3>
+				<time datetime={ c.Created.In(data.CurrentUser.Settings.LocalTimezone).Format("01-02-2006 03:04PM") }>{ c.Created.In(data.CurrentUser.Settings.LocalTimezone).Format("01-02-2006 03:04PM") }</time>
+				if len(c.AuthorEmail) > 0 {
+					<div class="comment-contact">
+						{{ email := "mailto:" + c.AuthorEmail }}
+						<i class="fa-solid fa-envelope"></i>
+						<a href={ templ.URL(email) } target="_blank">{ c.AuthorEmail }</a>
+					</div>
+				}
+				if len(c.AuthorSite) > 0 {
+					<div class="comment-contact">
+						<i class="fa-solid fa-house"></i>
+						<a href={ templ.URL(externalUrl(c.AuthorSite)) } target="_blank">{ c.AuthorSite }</a>
+					</div>
+				}
+			</div>
+			<div class="comment-actions" role="group" aria-label={ fmt.Sprintf("Actions for comment by %s", c.AuthorName) }>
+				if c.Deleted.IsZero() {
+					<button
+						type="button"
+						class="danger"
+						hx-delete={ commentUrl }
+						hx-target="closest article.comment"
+						hx-confirm="Are you sure you want to delete this comment? This action cannot be undone."
+						hx-headers={ hxHeaders }
+					>
+						Delete
+					</button>
+					@GuestbookDashboardUpdateButtonPart(data, w, c)
+				}
+			</div>
+		</header>
+		<div class="comment-content">
 			<p>
-				{ c.Created.In(data.CurrentUser.Settings.LocalTimezone).Format("01-02-2006 03:04PM") }
+				{ c.CommentText }
 			</p>
 		</div>
-		<p>
-			{ c.CommentText }
-		</p>
-		<hr/>
-	</div>
+		<hr role="separator"/>
+	</article>
 }
 
 templ commentForm(form forms.CommentCreateForm) {
@@ -83,7 +120,7 @@ templ commentForm(form forms.CommentCreateForm) {
 				<label class="error">{ error }</label>
 			}
 			<input type="email" name="authoremail" id="authoremail" aria-describedby="authoremail-help"/>
-			<small id="authoremail-help">We won't share your email address, except with the guestbook's owner</small>
+			<small id="authoremail-help">Your email address will only be shared with the guestbook's owner</small>
 		</div>
 		<div class="form-group">
 			<label for="authorsite">Website URL (Optional)</label>

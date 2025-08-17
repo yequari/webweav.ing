@@ -30,15 +30,9 @@ templ wSidebar(website models.Website) {
 				<h3 id="guestbook-nav-heading">Guestbook</h3>
 				<ul role="list">
 					<li><a href={ templ.URL(gbUrl) } target="_blank">View Guestbook</a></li>
-					<li><a href={ templ.URL(dashUrl + "/guestbook/comments") }>Manage messages</a></li>
-					<li><a href={ templ.URL(dashUrl + "/guestbook/comments/queue") }>Review message queue</a></li>
-					<li><a href={ templ.URL(dashUrl + "/guestbook/comments/trash") }>Trash</a></li>
+					<li><a href={ templ.URL(dashUrl + "/guestbook/comments") }>Manage Comments</a></li>
 				</ul>
 			</section>
-			//<ul>
-			//<li><a href={ templ.URL(dashUrl + "/guestbook/themes") }>Themes</a></li>
-			//<li><a href={ templ.URL(dashUrl + "/guestbook/customize") }>Custom CSS</a></li>
-			//</ul>
 		</div>
 		<div>
 			<section aria-labelledby="feeds-nav-heading">

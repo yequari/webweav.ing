@@ -196,6 +196,16 @@ footer {
   margin-top: auto;
 }
 
+.footer-links {
+  padding: 0;
+  list-style: none;
+}
+
+.footer-links li {
+    display: inline-block;
+    padding: 0 1rem;
+}
+
 /* Dashboard Layout */
 #dashboard {
   display: grid;
@@ -702,15 +712,9 @@ hr {
   margin: var(--space-lg) 0;
 }
 
-.htmx-indicator {
-  opacity: 0;
-  transition: opacity 200ms ease-in;
-}
-
-.htmx-request .htmx-indicator,
-.htmx-request.htmx-indicator {
-  opacity: 1;
-}
+.htmx-indicator{opacity:0}
+.htmx-request .htmx-indicator{opacity:1; transition: opacity 200ms ease-in;}
+.htmx-request.htmx-indicator{opacity:1; transition: opacity 200ms ease-in;}
 
 /* Responsive Design */
 @media (max-width: 768px) {

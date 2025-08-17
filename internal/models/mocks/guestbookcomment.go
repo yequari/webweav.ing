@@ -40,7 +40,7 @@ func (m *GuestbookCommentModel) Get(shortId uint64) (models.GuestbookComment, er
 	}
 }
 
-func (m *GuestbookCommentModel) GetAll(guestbookId int64) ([]models.GuestbookComment, error) {
+func (m *GuestbookCommentModel) GetVisible(guestbookId int64) ([]models.GuestbookComment, error) {
 	switch guestbookId {
 	case 1:
 		return []models.GuestbookComment{mockGuestbookComment}, nil
@@ -51,7 +51,7 @@ func (m *GuestbookCommentModel) GetAll(guestbookId int64) ([]models.GuestbookCom
 	}
 }
 
-func (m *GuestbookCommentModel) GetAllSerialized(guestbookId int64) ([]models.GuestbookCommentSerialized, error) {
+func (m *GuestbookCommentModel) GetVisibleSerialized(guestbookId int64) ([]models.GuestbookCommentSerialized, error) {
 	switch guestbookId {
 	case 1:
 		return []models.GuestbookCommentSerialized{mockSerializedGuestbookComment}, nil
@@ -69,7 +69,7 @@ func (m *GuestbookCommentModel) GetDeleted(guestbookId int64) ([]models.Guestboo
 	}
 }
 
-func (m *GuestbookCommentModel) GetUnpublished(guestbookId int64) ([]models.GuestbookComment, error) {
+func (m *GuestbookCommentModel) GetAll(guestbookId int64) ([]models.GuestbookComment, error) {
 	switch guestbookId {
 	default:
 		return []models.GuestbookComment{}, models.ErrNoRecord

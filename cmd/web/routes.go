@@ -35,6 +35,7 @@ func (app *application) routes() http.Handler {
 	mux.Handle("/users/login/oidc", dynamic.ThenFunc(app.userLoginOIDC))
 	mux.Handle("/users/login/oidc/callback", dynamic.ThenFunc(app.userLoginOIDCCallback))
 	mux.Handle("GET /help", dynamic.ThenFunc(app.notImplemented))
+	mux.Handle("GET /about", dynamic.ThenFunc(app.about))
 
 	protected := dynamic.Append(app.requireAuthentication)
 
@@ -43,7 +44,6 @@ func (app *application) routes() http.Handler {
 	mux.Handle("POST /users/logout", protected.ThenFunc(app.postUserLogout))
 	mux.Handle("GET /users/settings", protected.ThenFunc(app.getUserSettings))
 	mux.Handle("PUT /users/settings", protected.ThenFunc(app.putUserSettings))
-	mux.Handle("GET /users/privacy", protected.ThenFunc(app.notImplemented))
 	mux.Handle("GET /guestbooks", protected.ThenFunc(app.getAllGuestbooks))
 
 	mux.Handle("GET /websites", protected.ThenFunc(app.getWebsiteList))
@@ -51,13 +51,12 @@ func (app *application) routes() http.Handler {
 	mux.Handle("POST /websites/create", protected.ThenFunc(app.postWebsiteCreate))
 	mux.Handle("GET /websites/{id}/dashboard", protected.ThenFunc(app.getWebsiteDashboard))
 	mux.Handle("GET /websites/{id}/dashboard/guestbook/comments", protected.ThenFunc(app.getGuestbookComments))
-	mux.Handle("GET /websites/{id}/dashboard/guestbook/comments/queue", protected.ThenFunc(app.getCommentQueue))
+	mux.Handle("GET /websites/{id}/dashboard/guestbook/comments/hidden", protected.ThenFunc(app.getCommentQueue))
 	mux.Handle("DELETE /websites/{id}/dashboard/guestbook/comments/{commentId}", protected.ThenFunc(app.deleteGuestbookComment))
 	mux.Handle("PUT /websites/{id}/dashboard/guestbook/comments/{commentId}", protected.ThenFunc(app.putHideGuestbookComment))
 	mux.Handle("GET /websites/{id}/dashboard/settings", protected.ThenFunc(app.getWebsiteSettings))
 	mux.Handle("PUT /websites/{id}/settings", protected.ThenFunc(app.putWebsiteSettings))
 	mux.Handle("PUT /websites/{id}", protected.ThenFunc(app.deleteWebsite))
-	mux.Handle("GET /websites/{id}/dashboard/guestbook/comments/trash", protected.ThenFunc(app.getCommentTrash))
 	mux.Handle("GET /websites/{id}/dashboard/guestbook/themes", protected.ThenFunc(app.getComingSoon))
 	mux.Handle("GET /websites/{id}/dashboard/guestbook/customize", protected.ThenFunc(app.getComingSoon))
 

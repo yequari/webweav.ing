@@ -14,6 +14,10 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 	views.Home("Home", app.newCommonData(r)).Render(r.Context(), w)
 }
 
+func (app *application) about(w http.ResponseWriter, r *http.Request) {
+	views.AboutPage("About Webweav.ing", app.newCommonData(r)).Render(r.Context(), w)
+}
+
 func (app *application) notImplemented(w http.ResponseWriter, r *http.Request) {
 	views.ComingSoon("Coming Soon", app.newCommonData(r)).Render(r.Context(), w)
 }

@@ -1,0 +1,4 @@
+[submodule "ui/static/fontawesome"]
+	path = ui/static/fontawesome
+	url = https://github.com/FortAwesome/Font-Awesome.git
+	branch = fa-release-7.0.0

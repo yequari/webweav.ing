@@ -33,10 +33,10 @@ type GuestbookCommentModel struct {
 type GuestbookCommentModelInterface interface {
 	Insert(shortId uint64, guestbookId, parentId int64, authorName, authorEmail, authorSite, commentText, pageUrl string, isPublished bool) (int64, error)
 	Get(shortId uint64) (GuestbookComment, error)
-	GetAll(guestbookId int64) ([]GuestbookComment, error)
-	GetAllSerialized(guestbookId int64) ([]GuestbookCommentSerialized, error)
+	GetVisible(guestbookId int64) ([]GuestbookComment, error)
+	GetVisibleSerialized(guestbookId int64) ([]GuestbookCommentSerialized, error)
 	GetDeleted(guestbookId int64) ([]GuestbookComment, error)
-	GetUnpublished(guestbookId int64) ([]GuestbookComment, error)
+	GetAll(guestbookId int64) ([]GuestbookComment, error)
 	UpdateComment(comment *GuestbookComment) error
 }
 
@@ -74,7 +74,7 @@ func (m *GuestbookCommentModel) Get(shortId uint64) (GuestbookComment, error) {
 	return c, nil
 }
 
-func (m *GuestbookCommentModel) GetAll(guestbookId int64) ([]GuestbookComment, error) {
+func (m *GuestbookCommentModel) GetVisible(guestbookId int64) ([]GuestbookComment, error) {
 	stmt := `SELECT Id, ShortId, GuestbookId, ParentId, AuthorName, AuthorEmail, AuthorSite,
     CommentText, PageUrl, Created, IsPublished 
 	    FROM guestbook_comments 
@@ -100,7 +100,7 @@ func (m *GuestbookCommentModel) GetAll(guestbookId int64) ([]GuestbookComment, e
 	return comments, nil
 }
 
-func (m *GuestbookCommentModel) GetAllSerialized(guestbookId int64) ([]GuestbookCommentSerialized, error) {
+func (m *GuestbookCommentModel) GetVisibleSerialized(guestbookId int64) ([]GuestbookCommentSerialized, error) {
 	stmt := `SELECT AuthorName, CommentText, Created
 	    FROM guestbook_comments 
 	    WHERE GuestbookId = ? AND IsPublished = TRUE AND DELETED IS NULL
@@ -154,11 +154,11 @@ func (m *GuestbookCommentModel) GetDeleted(guestbookId int64) ([]GuestbookCommen
 	return comments, nil
 }
 
-func (m *GuestbookCommentModel) GetUnpublished(guestbookId int64) ([]GuestbookComment, error) {
+func (m *GuestbookCommentModel) GetAll(guestbookId int64) ([]GuestbookComment, error) {
 	stmt := `SELECT Id, ShortId, GuestbookId, ParentId, AuthorName, AuthorEmail, AuthorSite,
     CommentText, PageUrl, Created, IsPublished 
 	    FROM guestbook_comments 
-	    WHERE GuestbookId = ? AND Deleted IS NULL AND IsPublished = FALSE
+	    WHERE GuestbookId = ? AND Deleted IS NULL
 	    ORDER BY Created DESC`
 	rows, err := m.DB.Query(stmt, guestbookId)
 	if err != nil {

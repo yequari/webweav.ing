@@ -36,7 +36,7 @@ func (app *application) getGuestbook(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	comments, err := app.guestbookComments.GetAll(website.Guestbook.ID)
+	comments, err := app.guestbookComments.GetVisible(website.Guestbook.ID)
 	if err != nil {
 		app.serverError(w, r, err)
 		return
@@ -79,7 +79,7 @@ func (app *application) getGuestbookCommentsSerialized(w http.ResponseWriter, r 
 	if !website.Guestbook.Settings.IsVisible || !website.Guestbook.Settings.AllowRemoteHostAccess {
 		app.clientError(w, http.StatusForbidden)
 	}
-	comments, err := app.guestbookComments.GetAllSerialized(website.Guestbook.ID)
+	comments, err := app.guestbookComments.GetVisibleSerialized(website.Guestbook.ID)
 	if err != nil {
 		app.serverError(w, r, err)
 		return
@@ -151,7 +151,7 @@ func (app *application) postGuestbookCommentCreate(w http.ResponseWriter, r *htt
 			views.EmbeddableGuestbookCommentForm(data, website, form).Render(r.Context(), w)
 		}
 		// TODO: use htmx to avoid getting comments again
-		comments, err := app.guestbookComments.GetAll(website.Guestbook.ID)
+		comments, err := app.guestbookComments.GetVisible(website.Guestbook.ID)
 		if err != nil {
 			app.serverError(w, r, err)
 			return
@@ -243,7 +243,7 @@ func (app *application) getCommentQueue(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	comments, err := app.guestbookComments.GetUnpublished(website.Guestbook.ID)
+	comments, err := app.guestbookComments.GetAll(website.Guestbook.ID)
 	if err != nil {
 		if errors.Is(err, models.ErrNoRecord) {
 			http.NotFound(w, r)
@@ -315,6 +315,8 @@ func (app *application) putHideGuestbookComment(w http.ResponseWriter, r *http.R
 	if err != nil {
 		app.serverError(w, r, err)
 	}
+	data := app.newCommonData(r)
+	views.GuestbookDashboardUpdateButtonPart(data, website, comment).Render(r.Context(), w)
 }
 
 func (app *application) deleteGuestbookComment(w http.ResponseWriter, r *http.Request) {
@@ -349,6 +351,7 @@ func (app *application) deleteGuestbookComment(w http.ResponseWriter, r *http.Re
 	if err != nil {
 		app.serverError(w, r, err)
 	}
+	views.GuestbookDashboardCommentDeletePart("Comment was successfully deleted").Render(r.Context(), w)
 }
 
 func (app *application) getAllGuestbooks(w http.ResponseWriter, r *http.Request) {

@@ -32,6 +32,7 @@ html {
   --color-surface: #f9fafb;
   --color-border: #e5e7eb;
   --color-border-light: #f3f4f6;
+  --color-btn-primary: #000000;
 
   --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
 
@@ -67,12 +68,15 @@ html {
 /* Dark mode colors */
 @media (prefers-color-scheme: dark) {
   :root {
+    --color-primary: #97B5F7;
+    --color-primary-hover: #b8cdfa;
     --color-text: #f9fafb;
     --color-text-muted: #9ca3af;
     --color-background: #111827;
     --color-surface: #1f2937;
     --color-border: #374151;
     --color-border-light: #4b5563;
+    --color-btn-primary: #111827;
   }
 }
 
@@ -421,12 +425,12 @@ button.outline:hover {
 
 .btn-primary {
   background-color: var(--color-primary);
-  color: white;
+  color: var(--color-btn-primary);
 }
 
 .btn-primary:hover {
   background-color: var(--color-primary-hover);
-  color: white;
+  color: var(--color-btn-primary);
   text-decoration: none;
 }
 

@@ -10,6 +10,13 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+type UserGroupId int64
+
+const (
+	AdminGroup UserGroupId = 1
+	UserGroup  UserGroupId = 2
+)
+
 type UserSettings struct {
 	LocalTimezone *time.Location
 }
@@ -24,10 +31,11 @@ type User struct {
 	Username       string
 	Email          string
 	Deleted        bool
-	IsBanned       bool
 	HashedPassword []byte
 	Created        time.Time
+	Banned         time.Time
 	Settings       UserSettings
+	Groups         []UserGroupId
 }
 
 type UserModel struct {
@@ -57,6 +65,9 @@ type UserModelInterface interface {
 	UpdateUserSettings(userId int64, settings UserSettings) error
 	UpdateSetting(userId int64, setting Setting, value string) error
 	UpdateSubject(userId int64, subject string) error
+	GetNumberOfUsers() int
+	AddUserToGroup(userId int64, groupId UserGroupId) error
+	BanUser(userId int64) error
 }
 
 func (m *UserModel) InitializeSettingsMap() error {
@@ -96,8 +107,8 @@ func (m *UserModel) Insert(shortId uint64, username string, email string, passwo
 	if err != nil {
 		return err
 	}
-	stmt := `INSERT INTO users (ShortId, Username, Email, IsBanned, HashedPassword, Created)
-    VALUES (?, ?, ?, FALSE, ?, ?)`
+	stmt := `INSERT INTO users (ShortId, Username, Email, HashedPassword, Created)
+    VALUES (?, ?, ?, ?, ?)`
 	tx, err := m.DB.Begin()
 	if err != nil {
 		return err
@@ -107,7 +118,8 @@ func (m *UserModel) Insert(shortId uint64, username string, email string, passwo
 		if rollbackErr := tx.Rollback(); rollbackErr != nil {
 			return err
 		}
-		if sqliteError, ok := err.(sqlite3.Error); ok {
+		var sqliteError sqlite3.Error
+		if errors.As(err, &sqliteError) {
 			if sqliteError.ExtendedCode == 2067 && strings.Contains(sqliteError.Error(), "Email") {
 				return ErrDuplicateEmail
 			}
@@ -130,17 +142,20 @@ func (m *UserModel) Insert(shortId uint64, username string, email string, passwo
 		}
 		return err
 	}
+	err = m.addUserToGroup(tx, id, UserGroup)
+	if err != nil {
+		return err
+	}
 	err = tx.Commit()
 	if err != nil {
 		return err
 	}
-
 	return nil
 }
 
 func (m *UserModel) InsertWithoutPassword(shortId uint64, username string, email string, subject string, settings UserSettings) (int64, error) {
-	stmt := `INSERT INTO users (ShortId, Username, Email, IsBanned, OIDCSubject, Created)
-    VALUES (?, ?, ?, FALSE, ?, ?)`
+	stmt := `INSERT INTO users (ShortId, Username, Email, OIDCSubject, Created)
+    VALUES (?, ?, ?, ?, ?)`
 	tx, err := m.DB.Begin()
 	if err != nil {
 		return -1, err
@@ -150,7 +165,8 @@ func (m *UserModel) InsertWithoutPassword(shortId uint64, username string, email
 		if rollbackErr := tx.Rollback(); rollbackErr != nil {
 			return -1, err
 		}
-		if sqliteError, ok := err.(sqlite3.Error); ok {
+		var sqliteError sqlite3.Error
+		if errors.As(err, &sqliteError) {
 			if sqliteError.ExtendedCode == 2067 && strings.Contains(sqliteError.Error(), "Email") {
 				return -1, ErrDuplicateEmail
 			}
@@ -173,6 +189,7 @@ func (m *UserModel) InsertWithoutPassword(shortId uint64, username string, email
 		}
 		return -1, err
 	}
+	err = m.addUserToGroup(tx, id, UserGroup)
 	err = tx.Commit()
 	if err != nil {
 		return -1, err
@@ -182,14 +199,15 @@ func (m *UserModel) InsertWithoutPassword(shortId uint64, username string, email
 }
 
 func (m *UserModel) Get(shortId uint64) (User, error) {
-	stmt := `SELECT Id, ShortId, Username, Email, Created FROM users WHERE ShortId = ? AND Deleted IS NULL`
+	stmt := `SELECT Id, ShortId, Username, Email, Created, Banned FROM users WHERE ShortId = ? AND Deleted IS NULL`
 	tx, err := m.DB.Begin()
 	if err != nil {
 		return User{}, err
 	}
 	row := tx.QueryRow(stmt, shortId)
 	var u User
-	err = row.Scan(&u.ID, &u.ShortId, &u.Username, &u.Email, &u.Created)
+	var b sql.NullTime
+	err = row.Scan(&u.ID, &u.ShortId, &u.Username, &u.Email, &u.Created, &b)
 	if err != nil {
 		if rollbackErr := tx.Rollback(); rollbackErr != nil {
 			return User{}, err
@@ -199,6 +217,9 @@ func (m *UserModel) Get(shortId uint64) (User, error) {
 		}
 		return User{}, err
 	}
+	if b.Valid {
+		u.Banned = b.Time
+	}
 	settings, err := m.getSettings(tx, u.ID)
 	if err != nil {
 		if rollbackErr := tx.Rollback(); rollbackErr != nil {
@@ -207,6 +228,14 @@ func (m *UserModel) Get(shortId uint64) (User, error) {
 		return User{}, err
 	}
 	u.Settings = settings
+	groups, err := m.getGroups(tx, u.ID)
+	if err != nil {
+		if rollbackErr := tx.Rollback(); rollbackErr != nil {
+			return User{}, err
+		}
+		return User{}, err
+	}
+	u.Groups = groups
 	err = tx.Commit()
 	if err != nil {
 		return User{}, err
@@ -215,14 +244,15 @@ func (m *UserModel) Get(shortId uint64) (User, error) {
 }
 
 func (m *UserModel) GetById(id int64) (User, error) {
-	stmt := `SELECT Id, ShortId, Username, Email, Created FROM users WHERE Id = ? AND Deleted IS NULL`
+	stmt := `SELECT Id, ShortId, Username, Email, Created, Banned FROM users WHERE Id = ? AND Deleted IS NULL`
 	tx, err := m.DB.Begin()
 	if err != nil {
 		return User{}, err
 	}
 	row := tx.QueryRow(stmt, id)
 	var u User
-	err = row.Scan(&u.ID, &u.ShortId, &u.Username, &u.Email, &u.Created)
+	var b sql.NullTime
+	err = row.Scan(&u.ID, &u.ShortId, &u.Username, &u.Email, &u.Created, &b)
 	if err != nil {
 		if rollbackErr := tx.Rollback(); rollbackErr != nil {
 			return User{}, err
@@ -232,6 +262,9 @@ func (m *UserModel) GetById(id int64) (User, error) {
 		}
 		return User{}, err
 	}
+	if b.Valid {
+		u.Banned = b.Time
+	}
 	settings, err := m.getSettings(tx, u.ID)
 	if err != nil {
 		if rollbackErr := tx.Rollback(); rollbackErr != nil {
@@ -240,6 +273,14 @@ func (m *UserModel) GetById(id int64) (User, error) {
 		return User{}, err
 	}
 	u.Settings = settings
+	groups, err := m.getGroups(tx, u.ID)
+	if err != nil {
+		if rollbackErr := tx.Rollback(); rollbackErr != nil {
+			return User{}, err
+		}
+		return User{}, err
+	}
+	u.Groups = groups
 	err = tx.Commit()
 	if err != nil {
 		return User{}, err
@@ -399,4 +440,67 @@ func (m *UserModel) UpdateSetting(userId int64, setting Setting, value string) e
 		return ErrInvalidSettingValue
 	}
 	return nil
+}
+
+func (m *UserModel) GetNumberOfUsers() int {
+	stmt := `SELECT COUNT(Id) FROM users WHERE Deleted IS NULL;`
+	row := m.DB.QueryRow(stmt)
+	var count int
+	err := row.Scan(&count)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			count = 0
+		} else {
+			count = 1
+		}
+	}
+	return count
+}
+
+func (m *UserModel) AddUserToGroup(userId int64, groupId UserGroupId) error {
+	stmt := `INSERT INTO users_groups (UserId, GroupId) VALUES (?, ?)`
+	_, err := m.DB.Exec(stmt, userId, groupId)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (m *UserModel) BanUser(userId int64) error {
+	stmt := `UPDATE users SET Banned=? WHERE Id=?`
+	_, err := m.DB.Exec(stmt, time.Now().UTC().Format(time.RFC3339), userId)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (m *UserModel) addUserToGroup(tx *sql.Tx, userId int64, groupId UserGroupId) error {
+	stmt := `INSERT INTO users_groups (UserId, GroupId) VALUES (?, ?)`
+	_, err := tx.Exec(stmt, userId, groupId)
+	if err != nil {
+		if rollbackErr := tx.Rollback(); rollbackErr != nil {
+			return err
+		}
+		return err
+	}
+	return nil
+}
+
+func (m *UserModel) getGroups(tx *sql.Tx, userId int64) ([]UserGroupId, error) {
+	stmt := `SELECT DISTINCT GroupId FROM users_groups WHERE UserId = ?`
+	rows, err := tx.Query(stmt, userId)
+	result := make([]UserGroupId, 0, 10)
+	if err != nil {
+		return result, err
+	}
+	for rows.Next() {
+		var g UserGroupId
+		err = rows.Scan(&g)
+		if err != nil {
+			return result, err
+		}
+		result = append(result, g)
+	}
+	return result, nil
 }

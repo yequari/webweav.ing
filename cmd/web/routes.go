@@ -39,13 +39,11 @@ func (app *application) routes() http.Handler {
 
 	protected := dynamic.Append(app.requireAuthentication)
 
-	// mux.Handle("GET /users", protected.ThenFunc(app.getUsersList))
 	mux.Handle("GET /users/{id}", protected.ThenFunc(app.getUser))
 	mux.Handle("POST /users/logout", protected.ThenFunc(app.postUserLogout))
 	mux.Handle("GET /users/settings", protected.ThenFunc(app.getUserSettings))
 	mux.Handle("PUT /users/settings", protected.ThenFunc(app.putUserSettings))
 	mux.Handle("GET /guestbooks", protected.ThenFunc(app.getAllGuestbooks))
-
 	mux.Handle("GET /websites", protected.ThenFunc(app.getWebsiteList))
 	mux.Handle("GET /websites/create", protected.ThenFunc(app.getWebsiteCreate))
 	mux.Handle("POST /websites/create", protected.ThenFunc(app.postWebsiteCreate))
@@ -59,6 +57,11 @@ func (app *application) routes() http.Handler {
 	mux.Handle("PUT /websites/{id}", protected.ThenFunc(app.deleteWebsite))
 	mux.Handle("GET /websites/{id}/dashboard/guestbook/themes", protected.ThenFunc(app.getComingSoon))
 	mux.Handle("GET /websites/{id}/dashboard/guestbook/customize", protected.ThenFunc(app.getComingSoon))
+
+	adminOnly := protected.Append(app.requireAdmin)
+	mux.Handle("GET /admin", adminOnly.ThenFunc(app.getAdminPanelLanding))
+	mux.Handle("GET /admin/users", adminOnly.ThenFunc(app.getAdminPanelAllUsers))
+	mux.Handle("GET /admin/users/{id}", adminOnly.ThenFunc(app.getAdminPanelUser))
 
 	return standard.Then(mux)
 }

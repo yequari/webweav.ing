@@ -56,6 +56,12 @@ type application struct {
 	timezones         []string
 }
 
+type appInstaller struct {
+	app          *application
+	srv          *http.Server
+	installModel models.InstallModelInterface
+}
+
 func main() {
 	addr := flag.String("addr", ":3000", "HTTP network address")
 	dsn := flag.String("dsn", "guestbook.db", "data source name")
@@ -102,6 +108,29 @@ func main() {
 		timezones:         getAvailableTimezones(),
 	}
 
+	tlsConfig := &tls.Config{
+		CurvePreferences: []tls.CurveID{tls.X25519, tls.CurveP256},
+	}
+
+	installer := &appInstaller{
+		app:          app,
+		installModel: &models.InstallModel{DB: db},
+	}
+	installer.srv = &http.Server{
+		Addr:         *addr,
+		Handler:      installer.installRoutes(),
+		ErrorLog:     slog.NewLogLogger(logger.Handler(), slog.LevelError),
+		TLSConfig:    tlsConfig,
+		IdleTimeout:  time.Minute,
+		ReadTimeout:  5 * time.Second,
+		WriteTimeout: 10 * time.Second,
+	}
+	err = runInstaller(installer)
+	if err != nil {
+		logger.Error(err.Error())
+		os.Exit(1)
+	}
+
 	err = app.users.InitializeSettingsMap()
 	if err != nil {
 		logger.Error(err.Error())
@@ -111,10 +140,6 @@ func main() {
 	if err != nil {
 		logger.Error(err.Error())
 		os.Exit(1)
-	}
-
-	tlsConfig := &tls.Config{
-		CurvePreferences: []tls.CurveID{tls.X25519, tls.CurveP256},
 	}
 
 	srv := &http.Server{
@@ -272,4 +297,32 @@ func walkTzDir(path string, zones []string) []string {
 	}
 	return zones
 
+}
+
+func runInstaller(i *appInstaller) error {
+	i.app.logger.Info("Performing migrations")
+	err := i.installModel.SetupDatabase()
+	if err != nil {
+		return err
+	}
+	installed, _ := i.installModel.GetInstalledFlag()
+	if installed {
+		return nil
+	}
+	i.app.logger.Info("App not installed, running installer...")
+	i.app.logger.Info("Starting installation server", slog.Any("addr", i.srv.Addr))
+	if i.app.debug {
+		err = i.srv.ListenAndServeTLS("./tls/cert.pem", "./tls/key.pem")
+	} else {
+		err = i.srv.ListenAndServe()
+	}
+	if err != nil && !errors.Is(err, http.ErrServerClosed) {
+		return err
+	}
+	i.app.logger.Info("Installation complete")
+	err = i.installModel.SetInstalledFlag()
+	if err != nil {
+		return err
+	}
+	return nil
 }

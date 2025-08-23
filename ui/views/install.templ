@@ -1,0 +1,75 @@
+package views
+
+import "git.32bit.cafe/32bitcafe/guestbook/internal/forms"
+
+templ installBase(title string) {
+	<!DOCTYPE html>
+	<html lang="en">
+		<head>
+			<title>{ title } - webweav.ing</title>
+			<meta charset="UTF-8"/>
+			<meta name="viewport" content="width=device-width, initial-scale=1"/>
+			<link href="/static/css/style.css" rel="stylesheet"/>
+			<script src="/static/js/htmx.min.js"></script>
+		</head>
+		<body>
+			<main>
+				<h1>{ title }</h1>
+				{ children... }
+			</main>
+			@commonFooter()
+		</body>
+	</html>
+}
+
+templ InitialInstallView(title string) {
+	@installBase(title) {
+		<p>Installing</p>
+		<a href="/install">Next</a>
+	}
+}
+
+templ InstallFormView(title string, form forms.InstallForm) {
+	@installBase(title) {
+		<form action="/install" method="post">
+			<fieldset>
+				<legend>Admin User</legend>
+				<div class="form-group">
+					<div>
+						{{ error, exists := form.FieldErrors[""] }}
+						<label for="username">Username: </label>
+						if exists {
+							<label class="error">{ error }</label>
+						}
+						<input type="text" name="username" id="username" value={ form.Name } required/>
+					</div>
+					<div>
+						{{ error, exists = form.FieldErrors["email"] }}
+						<label for="email">Email: </label>
+						if exists {
+							<label class="error">{ error }</label>
+						}
+						<input type="text" name="email" id="email" value={ form.Email } required/>
+					</div>
+					<div>
+						{{ error, exists = form.FieldErrors["password"] }}
+						<label for="password">Password: </label>
+						if exists {
+							<label class="error">{ error }</label>
+						}
+						<input type="password" name="password" id="password"/>
+					</div>
+				</div>
+			</fieldset>
+			<div>
+				<input type="submit" value="Install"/>
+			</div>
+		</form>
+	}
+}
+
+templ InstallSuccessView() {
+	@installBase("Success") {
+		<p>Installation was successful. Go <a href="/">home</a>.</p>
+	}
+}

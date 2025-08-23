@@ -13,7 +13,6 @@ var mockUser = models.User{
 	Username: "tester",
 	Email:    "test@example.com",
 	Deleted:  false,
-	IsBanned: false,
 	Created:  time.Now(),
 	Settings: mockUserSettings,
 }
@@ -119,4 +118,8 @@ func (m *UserModel) UpdateSubject(userId int64, subject string) error {
 		return nil
 	}
 	return errors.New("invalid")
+}
+
+func (m *UserModel) GetNumberOfUsers() int {
+	return 1
 }

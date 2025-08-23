@@ -1,9 +1,12 @@
 package views
 
-import "git.32bit.cafe/32bitcafe/guestbook/internal/models"
-import "strconv"
-import "fmt"
-import "strings"
+import (
+	"fmt"
+	"git.32bit.cafe/32bitcafe/guestbook/internal/models"
+	"slices"
+	"strconv"
+	"strings"
+)
 
 type CommonData struct {
 	CurrentYear      int
@@ -33,6 +36,16 @@ func externalUrl(url string) string {
 	return url
 }
 
+func getGroupName(id models.UserGroupId) string {
+	switch id {
+	case 1:
+		return "Admin"
+	case 2:
+		return "User"
+	}
+	return "Unknown"
+}
+
 templ commonHeader() {
 	<header>
 		<h1><a href="/">webweav.ing</a></h1>
@@ -54,6 +67,9 @@ templ topNav(data CommonData) {
 				<li><a href="/guestbooks">All Guestbooks</a></li>
 				<li><a href="/websites">My Websites</a></li>
 				<li><a href="/users/settings">Settings</a></li>
+				if slices.Contains(data.CurrentUser.Groups, models.AdminGroup) {
+					<li><a href="/admin">Admin Panel</a></li>
+				}
 				<li><a href="#" hx-post="/users/logout" hx-headers={ hxHeaders }>Logout</a></li>
 			} else {
 				if data.LocalAuthEnabled {

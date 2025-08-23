@@ -4,7 +4,9 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"slices"
 
+	"git.32bit.cafe/32bitcafe/guestbook/internal/models"
 	"github.com/justinas/nosurf"
 )
 
@@ -56,6 +58,17 @@ func (app *application) requireAuthentication(next http.Handler) http.Handler {
 	})
 }
 
+func (app *application) requireAdmin(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		user := app.getCurrentUser(r)
+		if !slices.Contains(user.Groups, models.AdminGroup) {
+			app.clientError(w, http.StatusForbidden)
+			return
+		}
+		next.ServeHTTP(w, r)
+	})
+}
+
 func noSurf(next http.Handler) http.Handler {
 	csrfHandler := nosurf.New(next)
 	csrfHandler.SetBaseCookie(http.Cookie{
@@ -83,6 +96,9 @@ func (app *application) authenticate(next http.Handler) http.Handler {
 		if err != nil {
 			app.serverError(w, r, err)
 			return
+		}
+		if !user.Banned.IsZero() {
+			http.Redirect(w, r, "/banned", http.StatusSeeOther)
 		}
 		if exists {
 			ctx := context.WithValue(r.Context(), isAuthenticatedContextKey, true)

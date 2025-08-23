@@ -25,9 +25,9 @@ type CommentCreateForm struct {
 }
 
 type WebsiteCreateForm struct {
-	Name                string `schema:"sitename"`
-	SiteUrl             string `schema:"siteurl"`
-	AuthorName          string `schema:"authorname"`
+	Name                string `schema:"ws_name""`
+	SiteUrl             string `schema:"ws_url"`
+	AuthorName          string `schema:"ws_author"`
 	validator.Validator `schema:"-"`
 }
 
@@ -48,5 +48,15 @@ type WebsiteSettingsForm struct {
 	Visibility          string `schema:"gb_visible"`
 	CommentingEnabled   string `schema:"gb_commenting"`
 	WidgetsEnabled      string `schema:"gb_remote"`
+	validator.Validator `schema:"-"`
+}
+
+type AdminUserMgmtForm struct {
+}
+
+type InstallForm struct {
+	Name                string `schema:"username"`
+	Email               string `schema:"email"`
+	Password            string `schema:"password"`
 	validator.Validator `schema:"-"`
 }

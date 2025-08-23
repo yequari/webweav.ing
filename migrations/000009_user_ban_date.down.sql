@@ -1,0 +1,2 @@
+ALTER TABLE users DROP COLUMN Banned;
+ALTER TABLE users ADD COLUMN IsBanned boolean NOT NULL DEFAULT false;

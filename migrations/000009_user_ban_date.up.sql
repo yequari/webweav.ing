@@ -1,0 +1,2 @@
+ALTER TABLE users DROP COLUMN IsBanned;
+ALTER TABLE users ADD COLUMN Banned datetime NULL;

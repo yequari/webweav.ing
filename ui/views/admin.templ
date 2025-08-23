@@ -1,0 +1,117 @@
+package views
+
+import (
+	"fmt"
+	"git.32bit.cafe/32bitcafe/guestbook/internal/models"
+	"time"
+)
+
+templ adminBase(title string, data CommonData) {
+	<!DOCTYPE html>
+	<html lang="en">
+		<head>
+			<title>{ title } - webweav.ing</title>
+			<meta charset="UTF-8"/>
+			<meta name="viewport" content="width=device-width, initial-scale=1"/>
+			<meta name="htmx-config" content={ `{"includeIndicatorStyles":false}` }/>
+			<link href="/static/css/style.css" rel="stylesheet"/>
+			<link href="/static/fontawesome/css/fontawesome.css" rel="stylesheet"/>
+			<link href="/static/fontawesome/css/solid.css" rel="stylesheet"/>
+			<script src="/static/js/htmx.min.js"></script>
+		</head>
+		<body>
+			<header>
+				<a href="/">Back to webweav.ing</a>
+			</header>
+			<main>
+				{ children... }
+			</main>
+			@commonFooter()
+		</body>
+	</html>
+}
+
+templ adminSidebar() {
+	<nav aria-label="Admin panel navigation">
+		<div>
+			<section>
+				<h3>Administration</h3>
+				<ul role="list">
+					<li><a href="/admin/users">Users</a></li>
+					<li><a href="/admin/guestbooks">Guestbooks</a></li>
+					<li><a href="/admin/comments">Comments</a></li>
+				</ul>
+			</section>
+		</div>
+	</nav>
+}
+
+templ AdminPanelLandingView(title string, data CommonData) {
+	@adminBase(title, data) {
+		<div id="dashboard">
+			@adminSidebar()
+			<div>
+				<h1>{ title }</h1>
+				<p>Welcome to the admin panel</p>
+			</div>
+		</div>
+	}
+}
+
+templ AdminPanelUsersView(title string, data CommonData, users []models.User) {
+	@adminBase(title, data) {
+		<div id="dashboard">
+			@adminSidebar()
+			<div>
+				<section>
+					<table>
+						<th>Username</th>
+						<th>Joined</th>
+						<th>Email</th>
+						<tr>
+							for _, u := range users {
+								{{ url := fmt.Sprintf("/admin/users/%s", shortIdToSlug(u.ShortId)) }}
+								<td><a href={ templ.URL(url) }>{ u.Username }</a></td>
+								<td>{ u.Created.Format(time.RFC3339) }</td>
+								<td>{ u.Email }</td>
+							}
+						</tr>
+					</table>
+				</section>
+			</div>
+		</div>
+	}
+}
+
+templ AdminPanelUserMgmtView(title string, data CommonData, user models.User) {
+	@adminBase(title, data) {
+		<div id="dashboard">
+			@adminSidebar()
+			<div>
+				<section>
+					<h3>User Info</h3>
+					<div>
+						<h5>Username</h5>
+						<p>{ user.Username }</p>
+					</div>
+					<div>
+						<h5>Email</h5>
+						<p>{ user.Email }</p>
+					</div>
+					<div>
+						<h5>Joined</h5>
+						<p>{ user.Created.Format(time.RFC3339) }</p>
+					</div>
+				</section>
+				<section>
+					<h3>Groups</h3>
+					<ul>
+						for _, g := range user.Groups {
+							<li>{ fmt.Sprintf("%d %s", g, getGroupName(g)) }</li>
+						}
+					</ul>
+				</section>
+			</div>
+		</div>
+	}
+}

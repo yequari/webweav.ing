@@ -9,25 +9,27 @@ templ UserLogin(title string, data CommonData, form forms.UserLoginForm) {
 	@base(title, data) {
 		<h1>Login</h1>
 		<form action="/users/login" method="POST" novalidate>
-			<input type="hidden" name="csrf_token" value={ data.CSRFToken }/>
-			for _, error := range form.NonFieldErrors {
-				<div class="error">{ error }</div>
-			}
-			<div>
-				<label>Email: </label>
-				{{ error, exists := form.FieldErrors["email"] }}
-				if exists {
-					<label class="error">{ error }</label>
+			<div class="form-group">
+				<input type="hidden" name="csrf_token" value={ data.CSRFToken }/>
+				for _, error := range form.NonFieldErrors {
+					<div class="error">{ error }</div>
 				}
-				<input type="email" name="email" value={ form.Email }/>
-			</div>
-			<div>
-				<label>Password: </label>
-				{{ error, exists = form.FieldErrors["password"] }}
-				if exists {
-					<label class="error">{ error }</label>
-				}
-				<input type="password" name="password"/>
+				<div>
+					<label>Email: </label>
+					{{ error, exists := form.FieldErrors["email"] }}
+					if exists {
+						<label class="error">{ error }</label>
+					}
+					<input type="email" name="email" value={ form.Email }/>
+				</div>
+				<div>
+					<label>Password: </label>
+					{{ error, exists = form.FieldErrors["password"] }}
+					if exists {
+						<label class="error">{ error }</label>
+					}
+					<input type="password" name="password"/>
+				</div>
 			</div>
 			<div>
 				<input type="submit" value="Login"/>
@@ -44,29 +46,31 @@ templ UserRegistration(title string, data CommonData, form forms.UserRegistratio
 		<h1>User Registration</h1>
 		<form action="/users/register" method="post">
 			<input type="hidden" name="csrf_token" value={ data.CSRFToken }/>
-			<div>
-				{{ error, exists := form.FieldErrors["name"] }}
-				<label for="username">Username: </label>
-				if exists {
-					<label class="error">{ error }</label>
-				}
-				<input type="text" name="username" id="username" value={ form.Name } required/>
-			</div>
-			<div>
-				{{ error, exists = form.FieldErrors["email"] }}
-				<label for="email">Email: </label>
-				if exists {
-					<label class="error">{ error }</label>
-				}
-				<input type="text" name="email" id="email" value={ form.Email } required/>
-			</div>
-			<div>
-				{{ error, exists = form.FieldErrors["password"] }}
-				<label for="password">Password: </label>
-				if exists {
-					<label class="error">{ error }</label>
-				}
-				<input type="password" name="password" id="password"/>
+			<div class="form-group">
+				<div>
+					{{ error, exists := form.FieldErrors["name"] }}
+					<label for="username">Username: </label>
+					if exists {
+						<label class="error">{ error }</label>
+					}
+					<input type="text" name="username" id="username" value={ form.Name } required/>
+				</div>
+				<div>
+					{{ error, exists = form.FieldErrors["email"] }}
+					<label for="email">Email: </label>
+					if exists {
+						<label class="error">{ error }</label>
+					}
+					<input type="text" name="email" id="email" value={ form.Email } required/>
+				</div>
+				<div>
+					{{ error, exists = form.FieldErrors["password"] }}
+					<label for="password">Password: </label>
+					if exists {
+						<label class="error">{ error }</label>
+					}
+					<input type="password" name="password" id="password"/>
+				</div>
 			</div>
 			<div>
 				<input type="submit" value="Register"/>
@@ -90,7 +94,6 @@ templ UserSettingsView(data CommonData, timezones []string) {
 				<form hx-put="/users/settings">
 					<input type="hidden" name="csrf_token" value={ data.CSRFToken }/>
 					<fieldset>
-						<legend id="user-settings-heading">User Settings</legend>
 						<div class="form-group">
 							<label>Local Timezone</label>
 							<select name="timezones" id="timezone-select">

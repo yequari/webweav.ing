@@ -68,6 +68,9 @@ type UserModelInterface interface {
 	GetNumberOfUsers() int
 	AddUserToGroup(userId int64, groupId UserGroupId) error
 	BanUser(userId int64) error
+	UpdateUser(u User) error
+	UpdatePassword(userId int64, password string) error
+	Delete(userId int64) error
 }
 
 func (m *UserModel) InitializeSettingsMap() error {
@@ -468,6 +471,37 @@ func (m *UserModel) AddUserToGroup(userId int64, groupId UserGroupId) error {
 
 func (m *UserModel) BanUser(userId int64) error {
 	stmt := `UPDATE users SET Banned=? WHERE Id=?`
+	_, err := m.DB.Exec(stmt, time.Now().UTC().Format(time.RFC3339), userId)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (m *UserModel) UpdateUser(u User) error {
+	stmt := `UPDATE users SET Email=?, Name=? WHERE Id=?`
+	_, err := m.DB.Exec(stmt, u.Email, u.Username, u.ID)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (m *UserModel) UpdatePassword(userId int64, password string) error {
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), 12)
+	if err != nil {
+		return err
+	}
+	stmt := `UPDATE users SET HashedPassword=? WHERE Id=?`
+	_, err = m.DB.Exec(stmt, hashedPassword, userId)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (m *UserModel) Delete(userId int64) error {
+	stmt := `UPDATE users SET Deleted=? WHERE Id=?`
 	_, err := m.DB.Exec(stmt, time.Now().UTC().Format(time.RFC3339), userId)
 	if err != nil {
 		return err

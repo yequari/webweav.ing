@@ -25,6 +25,31 @@ type UserModel struct {
 	Settings map[string]models.Setting
 }
 
+func (m *UserModel) AddUserToGroup(userId int64, groupId models.UserGroupId) error {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (m *UserModel) BanUser(userId int64) error {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (m *UserModel) UpdateUser(u models.User) error {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (m *UserModel) UpdatePassword(userId int64, password string) error {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (m *UserModel) Delete(userId int64) error {
+	//TODO implement me
+	panic("implement me")
+}
+
 func (m *UserModel) InitializeSettingsMap() error {
 	return nil
 }

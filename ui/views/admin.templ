@@ -39,7 +39,6 @@ templ adminSidebar() {
 				<ul role="list">
 					<li><a href="/admin/users">Users</a></li>
 					<li><a href="/admin/guestbooks">Guestbooks</a></li>
-					<li><a href="/admin/comments">Comments</a></li>
 				</ul>
 			</section>
 		</div>
@@ -68,14 +67,14 @@ templ AdminPanelUsersView(title string, data CommonData, users []models.User) {
 						<th>Username</th>
 						<th>Joined</th>
 						<th>Email</th>
-						<tr>
 							for _, u := range users {
+                            <tr>
 								{{ url := fmt.Sprintf("/admin/users/%s", shortIdToSlug(u.ShortId)) }}
 								<td><a href={ templ.URL(url) }>{ u.Username }</a></td>
 								<td>{ u.Created.Format(time.RFC3339) }</td>
 								<td>{ u.Email }</td>
+                            </tr>
 							}
-						</tr>
 					</table>
 				</section>
 			</div>
@@ -107,7 +106,7 @@ templ AdminPanelUserMgmtView(title string, data CommonData, user models.User) {
 					<h3>Groups</h3>
 					<ul>
 						for _, g := range user.Groups {
-							<li>{ fmt.Sprintf("%d %s", g, getGroupName(g)) }</li>
+							<li>{ fmt.Sprintf("%s", getGroupName(g)) }</li>
 						}
 					</ul>
 				</section>

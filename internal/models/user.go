@@ -461,7 +461,16 @@ func (m *UserModel) GetNumberOfUsers() int {
 }
 
 func (m *UserModel) AddUserToGroup(userId int64, groupId UserGroupId) error {
-	stmt := `INSERT INTO users_groups (UserId, GroupId) VALUES (?, ?)`
+	stmt := `INSERT OR IGNORE INTO users_groups (UserId, GroupId) VALUES (?, ?)`
+	_, err := m.DB.Exec(stmt, userId, groupId)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (m *UserModel) RemoveUserFromGroup(userId int64, groupId UserGroupId) error {
+	stmt := `DELETE FROM users_groups WHERE UserId = ? AND GroupId = ?`
 	_, err := m.DB.Exec(stmt, userId, groupId)
 	if err != nil {
 		return err
@@ -479,7 +488,7 @@ func (m *UserModel) BanUser(userId int64) error {
 }
 
 func (m *UserModel) UpdateUser(u User) error {
-	stmt := `UPDATE users SET Email=?, Name=? WHERE Id=?`
+	stmt := `UPDATE users SET Email=?, Username=? WHERE Id=?`
 	_, err := m.DB.Exec(stmt, u.Email, u.Username, u.ID)
 	if err != nil {
 		return err

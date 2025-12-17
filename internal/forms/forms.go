@@ -1,6 +1,9 @@
 package forms
 
-import "git.32bit.cafe/32bitcafe/guestbook/internal/validator"
+import (
+	"git.32bit.cafe/32bitcafe/guestbook/internal/models"
+	"git.32bit.cafe/32bitcafe/guestbook/internal/validator"
+)
 
 type UserRegistrationForm struct {
 	Name                string `schema:"username"`
@@ -52,6 +55,10 @@ type WebsiteSettingsForm struct {
 }
 
 type AdminUserMgmtForm struct {
+	Username            string               `schema:"admin_username"`
+	Email               string               `schema:"admin_useremail"`
+	Groups              []models.UserGroupId `schema:"admin_usergroups"`
+	validator.Validator `schema:"-"`
 }
 
 type InstallForm struct {

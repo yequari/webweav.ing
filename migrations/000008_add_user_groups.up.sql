@@ -16,4 +16,5 @@ CREATE TABLE IF NOT EXISTS users_groups (
     FOREIGN KEY (GroupId) REFERENCES groups(Id)
         ON DELETE RESTRICT
         ON UPDATE RESTRICT
+    UNIQUE(UserId, GroupId)
 );

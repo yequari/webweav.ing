@@ -28,7 +28,7 @@ type CommentCreateForm struct {
 }
 
 type WebsiteCreateForm struct {
-	Name                string `schema:"ws_name""`
+	Name                string `schema:"ws_name"`
 	SiteUrl             string `schema:"ws_url"`
 	AuthorName          string `schema:"ws_author"`
 	validator.Validator `schema:"-"`

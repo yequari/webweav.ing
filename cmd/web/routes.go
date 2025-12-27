@@ -65,6 +65,8 @@ func (app *application) routes() http.Handler {
 	mux.Handle("GET /admin/users/{id}/edit", adminOnly.ThenFunc(app.getAdminPanelUserMgmtForm))
 	mux.Handle("GET /admin/users/{id}/detail", adminOnly.ThenFunc(app.getAdminPanelUserMgmtDetail))
 	mux.Handle("PUT /admin/users/{id}/edit", adminOnly.ThenFunc(app.putAdminPanelUserMgmtForm))
+	mux.Handle("PUT /admin/users/{id}/ban", adminOnly.ThenFunc(app.putAdminPanelBanUser))
+	mux.Handle("PUT /admin/users/{id}/unban", adminOnly.ThenFunc(app.putAdminPanelUnbanUser))
 
 	return standard.Then(mux)
 }

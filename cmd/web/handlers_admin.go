@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"time"
 
 	"git.32bit.cafe/32bitcafe/guestbook/internal/forms"
 	"git.32bit.cafe/32bitcafe/guestbook/internal/models"
@@ -52,7 +53,8 @@ func (app *application) getAdminPanelUserMgmtDetail(w http.ResponseWriter, r *ht
 		}
 		return
 	}
-	views.AdminPanelUserMgmtDetail(u).Render(r.Context(), w)
+	commonData := app.newCommonData(r)
+	views.AdminPanelUserMgmtDetail(commonData.CSRFToken, u).Render(r.Context(), w)
 }
 
 func (app *application) getAdminPanelUserMgmtForm(w http.ResponseWriter, r *http.Request) {
@@ -108,7 +110,8 @@ func (app *application) putAdminPanelUserMgmtForm(w http.ResponseWriter, r *http
 		app.serverError(w, r, err)
 		return
 	}
-	views.AdminPanelUserMgmtDetail(updatedUser).Render(r.Context(), w)
+	commonData := app.newCommonData(r)
+	views.AdminPanelUserMgmtDetail(commonData.CSRFToken, updatedUser).Render(r.Context(), w)
 
 }
 
@@ -128,6 +131,30 @@ func (app *application) putAdminPanelBanUser(w http.ResponseWriter, r *http.Requ
 		app.serverError(w, r, err)
 		return
 	}
+	u.Banned = time.Now()
+	commonData := app.newCommonData(r)
+	views.AdminPanelUserMgmtDetail(commonData.CSRFToken, u).Render(r.Context(), w)
+}
+
+func (app *application) putAdminPanelUnbanUser(w http.ResponseWriter, r *http.Request) {
+	slug := r.PathValue("id")
+	u, err := app.users.Get(slugToShortId(slug))
+	if err != nil {
+		if errors.Is(err, models.ErrNoRecord) {
+			http.NotFound(w, r)
+		} else {
+			app.serverError(w, r, err)
+		}
+		return
+	}
+	err = app.users.UnbanUser(u.ID)
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
+	u.Banned = time.Time{}
+	commonData := app.newCommonData(r)
+	views.AdminPanelUserMgmtDetail(commonData.CSRFToken, u).Render(r.Context(), w)
 }
 
 func (app *application) getAdminPanelWebsites(w http.ResponseWriter, r *http.Request) {

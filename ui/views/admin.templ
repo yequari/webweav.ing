@@ -2,9 +2,10 @@ package views
 
 import (
 	"fmt"
-	"git.32bit.cafe/32bitcafe/guestbook/internal/models"
-	"time"
 	"git.32bit.cafe/32bitcafe/guestbook/internal/forms"
+	"git.32bit.cafe/32bitcafe/guestbook/internal/models"
+	"slices"
+	"time"
 )
 
 templ adminBase(title string, data CommonData) {
@@ -38,6 +39,7 @@ templ adminSidebar() {
 			<section>
 				<h3>Administration</h3>
 				<ul role="list">
+					<li><a href="/admin">Dashboard</a></li>
 					<li><a href="/admin/users">Users</a></li>
 					<li><a href="/admin/guestbooks">Guestbooks</a></li>
 				</ul>
@@ -68,14 +70,14 @@ templ AdminPanelUsersView(title string, data CommonData, users []models.User) {
 						<th>Username</th>
 						<th>Joined</th>
 						<th>Email</th>
-							for _, u := range users {
-                            <tr>
+						for _, u := range users {
+							<tr>
 								{{ url := fmt.Sprintf("/admin/users/%s", shortIdToSlug(u.ShortId)) }}
 								<td><a href={ templ.URL(url) }>{ u.Username }</a></td>
 								<td>{ u.Created.Format(time.RFC3339) }</td>
 								<td>{ u.Email }</td>
-                            </tr>
-							}
+							</tr>
+						}
 					</table>
 				</section>
 			</div>
@@ -83,84 +85,98 @@ templ AdminPanelUsersView(title string, data CommonData, users []models.User) {
 	}
 }
 
-templ AdminPanelUserMgmtDetail(user models.User) {
-    <div id="user-info">
-        <section>
-            <h3>User Info</h3>
-            <div>
-                <h5>Username</h5>
-                <p>{ user.Username }</p>
-            </div>
-            <div>
-                <h5>Email</h5>
-                <p>{ user.Email }</p>
-            </div>
-            <div>
-                <h5>Joined</h5>
-                <p>{ user.Created.Format(time.RFC3339) }</p>
-            </div>
-        </section>
-        <section>
-            <h3>Groups</h3>
-            <ul>
-                for _, g := range user.Groups {
-                    <li>{ fmt.Sprintf("%s", getGroupName(g)) }</li>
-                }
-            </ul>
-        </section>
-        <section>
-            <h3>Actions</h3>
-            {{ getFormUrl := fmt.Sprintf("/admin/users/%s/edit", shortIdToSlug(user.ShortId)) }}
-            <button type="button" hx-get={ getFormUrl } hx-target="#user-info">Edit</button>
-            <button type="button" class="danger">Ban</button>
-            <button type="button" class="danger">Delete</button>
-        </section>
-    </div>
+templ AdminPanelUserMgmtDetail(csrfToken string, user models.User) {
+	<div id="user-info">
+		<form>
+			<input type="hidden" name="csrf_token" value={ csrfToken }/>
+			<section>
+				<h3>User Info</h3>
+				<div>
+					<h5>Username</h5>
+					<p>{ user.Username }</p>
+				</div>
+				<div>
+					<h5>Email</h5>
+					<p>{ user.Email }</p>
+				</div>
+				<div>
+					<h5>Joined</h5>
+					<p>{ user.Created.Format(time.RFC3339) }</p>
+				</div>
+			</section>
+			<section>
+				<h3>Groups</h3>
+				<ul>
+					for _, g := range user.Groups {
+						<li>{ fmt.Sprintf("%s", getGroupName(g)) }</li>
+					}
+				</ul>
+			</section>
+			<section>
+				<h3>Actions</h3>
+				{{ getFormUrl := fmt.Sprintf("/admin/users/%s/edit", shortIdToSlug(user.ShortId)) }}
+				{{ putBanUrl := fmt.Sprintf("/admin/users/%s/ban", shortIdToSlug(user.ShortId)) }}
+				{{ putUnbanUrl := fmt.Sprintf("/admin/users/%s/unban", shortIdToSlug(user.ShortId)) }}
+				{{ deleteUrl := fmt.Sprintf("/admin/users/%s", shortIdToSlug(user.ShortId)) }}
+				<button type="button" hx-get={ getFormUrl } hx-target="#user-info">Edit</button>
+				if user.ID != 1 {
+					if user.Banned.IsZero() {
+						<button type="button" hx-put={ putBanUrl } hx-confirm="Are you sure you want to ban this user?" hx-target="#user-info" class="danger">Ban</button>
+					} else {
+						<button type="button" hx-put={ putUnbanUrl } hx-confirm="Are you sure you want to unban this user?" hx-target="#user-info">Unban</button>
+					}
+					<button type="button" hx-delete={ deleteUrl } hx-confirm="Are you sure you want to delete this user? This is irreversible" class="danger">Delete</button>
+				}
+			</section>
+		</form>
+	</div>
 }
 
 templ AdminPanelUserMgmtView(title string, data CommonData, user models.User) {
 	@adminBase(title, data) {
 		<div id="dashboard">
 			@adminSidebar()
-			@AdminPanelUserMgmtDetail(user)
+			@AdminPanelUserMgmtDetail(data.CSRFToken, user)
 		</div>
 	}
 }
 
 templ AdminPanelUserMgmtEditForm(csrfToken string, form forms.AdminUserMgmtForm, user models.User, groups []models.UserGroupId) {
-    <div id="user-info">
-        <form>
-        <input type="hidden" name="csrf_token" value={ csrfToken } />
-        <fieldset>
-            <h3>User Info</h3>
-            <div>
-                <h5>Username</h5>
-                <input type="text" name="admin_username" id="username" value={ form.Username } required>
-            </div>
-            <div>
-                <h5>Email</h5>
-                <input type="text" name="admin_useremail" id="useremail" value={ form.Email } required>
-            </div>
-            <div>
-                <h5>Joined</h5>
-                <p>{ user.Created.Format(time.RFC3339) }</p>
-            </div>
-        </fieldset>
-        <section>
-            <h3>Groups</h3>
-            <ul>
-                for _, g := range groups {
-                    <li>{ fmt.Sprintf("%s", getGroupName(g)) }</li>
-                }
-            </ul>
-        </section>
-        <section>
-            <h3>Actions</h3>
-            {{ putFormUrl := fmt.Sprintf("/admin/users/%s/edit", shortIdToSlug(user.ShortId)) }}
-            {{ getDetailUrl := fmt.Sprintf("/admin/users/%s/detail", shortIdToSlug(user.ShortId)) }}
-            <button type="button" hx-put={ putFormUrl } hx-target="#user-info">Save</button>
-            <button type="reset" hx-get={ getDetailUrl } hx-target="#user-info">Cancel</button>
-        </section>
-        </form>
-    </div>
+	<div id="user-info">
+		<form>
+			<input type="hidden" name="csrf_token" value={ csrfToken }/>
+			<fieldset>
+				<h3>User Info</h3>
+				<div>
+					<h5>Username</h5>
+					<input type="text" name="admin_username" id="username" value={ form.Username } required/>
+				</div>
+				<div>
+					<h5>Email</h5>
+					<input type="text" name="admin_useremail" id="useremail" value={ form.Email } required/>
+				</div>
+				<div>
+					<h5>Joined</h5>
+					<p>{ user.Created.Format(time.RFC3339) }</p>
+				</div>
+			</fieldset>
+			<section>
+				<fieldset>
+					<h3>Groups</h3>
+					{{ isAdmin := slices.Contains(user.Groups, models.AdminGroup) }}
+					<input type="checkbox" name="admin_usergroup_admin" id="usergroup_admin" checked?={ isAdmin } disabled?={ user.ID == 1 }/>
+					<label for="usergroup_admin">Administrator</label>
+					<input type="checkbox" name="admin_usergroup_user" id="usergroup_user" checked disabled/>
+					<label for="usergroup_user">User</label>
+				</fieldset>
+			</section>
+			<section>
+				<h3>Actions</h3>
+				{{ putFormUrl := fmt.Sprintf("/admin/users/%s/edit", shortIdToSlug(user.ShortId)) }}
+				{{ getDetailUrl := fmt.Sprintf("/admin/users/%s/detail", shortIdToSlug(user.ShortId)) }}
+				<button type="button" hx-put={ putFormUrl } hx-target="#user-info">Save</button>
+				<button type="reset" hx-get={ getDetailUrl } hx-target="#user-info">Cancel</button>
+			</section>
+		</form>
+	</div>
 }

@@ -68,6 +68,7 @@ type UserModelInterface interface {
 	GetNumberOfUsers() int
 	AddUserToGroup(userId int64, groupId UserGroupId) error
 	BanUser(userId int64) error
+	UnbanUser(userId int64) error
 	UpdateUser(u User) error
 	UpdatePassword(userId int64, password string) error
 	Delete(userId int64) error
@@ -481,6 +482,15 @@ func (m *UserModel) RemoveUserFromGroup(userId int64, groupId UserGroupId) error
 func (m *UserModel) BanUser(userId int64) error {
 	stmt := `UPDATE users SET Banned=? WHERE Id=?`
 	_, err := m.DB.Exec(stmt, time.Now().UTC().Format(time.RFC3339), userId)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (m *UserModel) UnbanUser(userId int64) error {
+	stmt := `UPDATE users SET Banned=NULL WHERE Id=?`
+	_, err := m.DB.Exec(stmt, userId)
 	if err != nil {
 		return err
 	}

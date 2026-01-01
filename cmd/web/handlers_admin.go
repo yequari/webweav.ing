@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strconv"
 	"time"
 
 	"git.32bit.cafe/32bitcafe/guestbook/internal/forms"
@@ -13,8 +14,28 @@ import (
 )
 
 func (app *application) getAdminPanelLanding(w http.ResponseWriter, r *http.Request) {
+	websites, err := app.websites.GetCount()
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
+	users, err := app.users.GetCount()
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
+	comments, err := app.guestbookComments.GetCount()
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
+	stats := views.AdminStat{
+		WebsiteCount: websites,
+		UserCount:    users,
+		CommentCount: comments,
+	}
 	data := app.newCommonData(r)
-	views.AdminPanelLandingView("Admin Panel", data).Render(r.Context(), w)
+	views.AdminPanelLandingView("Admin Panel", data, stats).Render(r.Context(), w)
 }
 
 func (app *application) getAdminPanelAllUsers(w http.ResponseWriter, r *http.Request) {
@@ -158,4 +179,70 @@ func (app *application) putAdminPanelUnbanUser(w http.ResponseWriter, r *http.Re
 }
 
 func (app *application) getAdminPanelWebsites(w http.ResponseWriter, r *http.Request) {
+	page := r.URL.Query().Get("page")
+	count := r.URL.Query().Get("count")
+	var pageNum int64 = 1
+	var pageSize int64 = 5
+	var err error
+	if page != "" {
+		pageNum, err = strconv.ParseInt(page, 10, 0)
+		if err != nil {
+			app.clientError(w, http.StatusBadRequest)
+			return
+		}
+	}
+	if count != "" {
+		pageSize, err = strconv.ParseInt(count, 10, 0)
+		if err != nil {
+			app.clientError(w, http.StatusBadRequest)
+			return
+		}
+	}
+	websites, err := app.websites.GetAllPage(pageNum, pageSize)
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
+	total, err := app.websites.GetCount()
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
+	commonData := app.newCommonData(r)
+	views.AdminPanelAllWebsitesView("All websites", commonData, websites, pageNum, total).Render(r.Context(), w)
+}
+
+func (app *application) getAdminPanelWebsiteDetails(w http.ResponseWriter, r *http.Request) {
+	slug := r.PathValue("id")
+	// page := r.URL.Query().Get("page")
+	// count := r.URL.Query().Get("count")
+	// var pageNum int64 = 1
+	// var pageSize int64 = 5
+	// var err error
+	// if page != "" {
+	// 	pageNum, err = strconv.ParseInt(page, 10, 0)
+	// 	if err != nil {
+	// 		app.clientError(w, http.StatusBadRequest)
+	// 		return
+	// 	}
+	// }
+	// if count != "" {
+	// 	pageSize, err = strconv.ParseInt(count, 10, 0)
+	// 	if err != nil {
+	// 		app.clientError(w, http.StatusBadRequest)
+	// 		return
+	// 	}
+	// }
+	website, err := app.websites.Get(slugToShortId(slug))
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
+	comments, err := app.guestbookComments.GetAll(website.Guestbook.ID)
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
+	commonData := app.newCommonData(r)
+	views.AdminPanelWebsiteDetailView(fmt.Sprintf("Admin - %s", website.Name), commonData, website, comments).Render(r.Context(), w)
 }

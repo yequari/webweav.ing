@@ -56,6 +56,7 @@ type UserModelInterface interface {
 	Insert(shortId uint64, username string, email string, password string, settings UserSettings) error
 	InsertWithoutPassword(shortId uint64, username string, email string, subject string, settings UserSettings) (int64, error)
 	Get(shortId uint64) (User, error)
+	GetCount() (int64, error)
 	GetById(id int64) (User, error)
 	GetByEmail(email string) (int64, error)
 	GetBySubject(subject string) (int64, error)
@@ -245,6 +246,20 @@ func (m *UserModel) Get(shortId uint64) (User, error) {
 		return User{}, err
 	}
 	return u, nil
+}
+
+func (m *UserModel) GetCount() (int64, error) {
+	stmt := `SELECT COUNT(*) FROM users WHERE Deleted IS NULL`
+	row := m.DB.QueryRow(stmt)
+	var result int64
+	err := row.Scan(&result)
+	if err != nil {
+		return -1, err
+	}
+	if err = row.Err(); err != nil {
+		return -1, err
+	}
+	return result, nil
 }
 
 func (m *UserModel) GetById(id int64) (User, error) {

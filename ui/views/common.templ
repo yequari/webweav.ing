@@ -3,6 +3,7 @@ package views
 import (
 	"fmt"
 	"git.32bit.cafe/32bitcafe/guestbook/internal/models"
+	"math"
 	"slices"
 	"strconv"
 	"strings"
@@ -116,4 +117,36 @@ templ base(title string, data CommonData) {
 			@commonFooter()
 		</body>
 	</html>
+}
+
+templ pagination(baseUrl string, currentPage int64, recordsAmount int64, recordsPerPage int64) {
+	{{ totalPages := int64(math.Ceil(float64(recordsAmount) / float64(recordsPerPage))) }}
+	<div class="pagination">
+		<span class="pagination-btn">
+			if currentPage > 1 {
+				{{ url := fmt.Sprintf("%s?page=%d", baseUrl, currentPage-1) }}
+				<a href={ templ.URL(url) }>Prev</a>
+			} else {
+				Prev
+			}
+		</span>
+		for i := range totalPages {
+			<span class="pagination-btn">
+				{{ url := fmt.Sprintf("%s?page=%d", baseUrl, i+1) }}
+				if i+1 == currentPage {
+					{ fmt.Sprintf("%d",i+1) }
+				} else {
+					<a href={ templ.URL(url) }>{ fmt.Sprintf("%d",i+1) }</a>
+				}
+			</span>
+		}
+		<span class="pagination-btn">
+			if currentPage < totalPages {
+				{{ url := fmt.Sprintf("%s?page=%d", baseUrl, currentPage+1) }}
+				<a href={ templ.URL(url) }>Next</a>
+			} else {
+				Next
+			}
+		</span>
+	</div>
 }

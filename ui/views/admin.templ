@@ -8,6 +8,12 @@ import (
 	"time"
 )
 
+type AdminStat struct {
+	WebsiteCount int64
+	UserCount    int64
+	CommentCount int64
+}
+
 templ adminBase(title string, data CommonData) {
 	<!DOCTYPE html>
 	<html lang="en">
@@ -41,20 +47,36 @@ templ adminSidebar() {
 				<ul role="list">
 					<li><a href="/admin">Dashboard</a></li>
 					<li><a href="/admin/users">Users</a></li>
-					<li><a href="/admin/guestbooks">Guestbooks</a></li>
+					<li><a href="/admin/websites">Websites</a></li>
 				</ul>
 			</section>
 		</div>
 	</nav>
 }
 
-templ AdminPanelLandingView(title string, data CommonData) {
+templ AdminPanelLandingView(title string, data CommonData, stats AdminStat) {
 	@adminBase(title, data) {
 		<div id="dashboard">
 			@adminSidebar()
 			<div>
-				<h1>{ title }</h1>
-				<p>Welcome to the admin panel</p>
+				<section class="admin-section">
+					<h1>{ title }</h1>
+					<p>Welcome to the admin panel</p>
+				</section>
+				<section class="admin-flex">
+					<section class="admin-section admin-info">
+						<h2>Users</h2>
+						<p>{ fmt.Sprintf("%d", stats.UserCount) }</p>
+					</section>
+					<section class="admin-section admin-info">
+						<h2>Websites</h2>
+						<p>{ fmt.Sprintf("%d", stats.WebsiteCount) }</p>
+					</section>
+					<section class="admin-section admin-info">
+						<h2>Comments</h2>
+						<p>{ fmt.Sprintf("%d", stats.CommentCount) }</p>
+					</section>
+				</section>
 			</div>
 		</div>
 	}
@@ -65,7 +87,7 @@ templ AdminPanelUsersView(title string, data CommonData, users []models.User) {
 		<div id="dashboard">
 			@adminSidebar()
 			<div>
-				<section>
+				<section class="admin-section">
 					<table>
 						<th>Username</th>
 						<th>Joined</th>
@@ -179,4 +201,63 @@ templ AdminPanelUserMgmtEditForm(csrfToken string, form forms.AdminUserMgmtForm,
 			</section>
 		</form>
 	</div>
+}
+
+templ AdminPanelAllWebsitesView(title string, data CommonData, websites []models.Website, pageNum int64, total int64) {
+	@adminBase(title, data) {
+		<div id="dashboard">
+			@adminSidebar()
+			<div>
+				<section class="admin-section">
+					<table>
+						<th>Site Name</th>
+						<th>Owner</th>
+						<th>URL</th>
+						<th>Created</th>
+						<th>Guestbook</th>
+						for _, w := range websites {
+							<tr>
+								{{ detailUrl := fmt.Sprintf("/admin/websites/%s", shortIdToSlug(w.ShortId)) }}
+								<td><a href={ templ.SafeURL(detailUrl) }>{ w.Name }</a></td>
+								<td>{ w.AuthorName }</td>
+								<td><a href={ templ.SafeURL(w.Url.String()) }>{ w.Url.String() }</a></td>
+								<td>{ w.Created.Format(time.RFC1123) }</td>
+								{{ gbUrl := fmt.Sprintf("/websites/%s/guestbook", shortIdToSlug(w.ShortId)) }}
+								<td><a href={ templ.SafeURL(gbUrl) }>View</a></td>
+							</tr>
+						}
+					</table>
+				</section>
+				@pagination("/admin/websites", pageNum, total, 5)
+			</div>
+		</div>
+	}
+}
+
+templ AdminPanelWebsiteDetailView(title string, data CommonData, website models.Website, comments []models.GuestbookComment) {
+	@adminBase(title, data) {
+		<div id="dashboard">
+			@adminSidebar()
+			<div>
+				<section class="admin-section">
+					<table>
+						<th>Author</th>
+						<th>Created</th>
+						<th>Email</th>
+						<th>Homepage</th>
+						<th>Comment</th>
+						for _, c := range comments {
+							<tr>
+								<td>{ c.AuthorName }</td>
+								<td>{ c.Created.Format(time.RFC1123) }</td>
+								<td>{ c.AuthorEmail }</td>
+								<td>{ c.AuthorSite }</td>
+								<td>{ c.CommentText }</td>
+							</tr>
+						}
+					</table>
+				</section>
+			</div>
+		</div>
+	}
 }

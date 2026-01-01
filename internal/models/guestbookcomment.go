@@ -33,6 +33,7 @@ type GuestbookCommentModel struct {
 type GuestbookCommentModelInterface interface {
 	Insert(shortId uint64, guestbookId, parentId int64, authorName, authorEmail, authorSite, commentText, pageUrl string, isPublished bool) (int64, error)
 	Get(shortId uint64) (GuestbookComment, error)
+	GetCount() (int64, error)
 	GetVisible(guestbookId int64) ([]GuestbookComment, error)
 	GetVisibleSerialized(guestbookId int64) ([]GuestbookCommentSerialized, error)
 	GetDeleted(guestbookId int64) ([]GuestbookComment, error)
@@ -72,6 +73,20 @@ func (m *GuestbookCommentModel) Get(shortId uint64) (GuestbookComment, error) {
 		c.Deleted = t.Time
 	}
 	return c, nil
+}
+
+func (m *GuestbookCommentModel) GetCount() (int64, error) {
+	stmt := `SELECT COUNT(*) FROM guestbook_comments WHERE Deleted IS NULL`
+	row := m.DB.QueryRow(stmt)
+	var result int64
+	err := row.Scan(&result)
+	if err != nil {
+		return -1, err
+	}
+	if err = row.Err(); err != nil {
+		return -1, err
+	}
+	return result, nil
 }
 
 func (m *GuestbookCommentModel) GetVisible(guestbookId int64) ([]GuestbookComment, error) {

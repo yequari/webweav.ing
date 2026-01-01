@@ -95,7 +95,11 @@ type WebsiteModelInterface interface {
 	Insert(shortId uint64, userId int64, siteName, siteUrl, authorName string) (int64, error)
 	Get(shortId uint64) (Website, error)
 	GetAllUser(userId int64) ([]Website, error)
+	GetCountUser(userId int64) (int64, error)
+	GetAllUserPage(userId int64, pageNum int64, pageSize int64) ([]Website, error)
 	GetAll() ([]Website, error)
+	GetCount() (int64, error)
+	GetAllPage(pageNum int64, pageSize int64) ([]Website, error)
 	Update(w Website) error
 	InitializeSettingsMap() error
 	UpdateGuestbookSettings(guestbookId int64, settings GuestbookSettings) error
@@ -270,11 +274,100 @@ func (m *WebsiteModel) GetAllUser(userId int64) ([]Website, error) {
 	return websites, nil
 }
 
+func (m *WebsiteModel) GetCountUser(userId int64) (int64, error) {
+	stmt := `SELECT COUNT(*) FROM websites WHERE UserId = ? AND Deleted IS NULL`
+	row := m.DB.QueryRow(stmt, userId)
+	var result int64
+	err := row.Scan(&result)
+	if err != nil {
+		return -1, err
+	}
+	if err = row.Err(); err != nil {
+		return -1, err
+	}
+	return result, nil
+}
+
+func (m *WebsiteModel) GetAllUserPage(userId int64, pageNum int64, pageSize int64) ([]Website, error) {
+	stmt := `SELECT w.Id, w.ShortId, w.Name, w.SiteUrl, w.AuthorName, w.UserId, w.Created, 
+	g.Id, g.ShortId, g.Created, g.IsActive
+	FROM websites AS w INNER JOIN guestbooks AS g ON w.Id = g.WebsiteId
+	WHERE w.UserId = ? AND w.Deleted IS NULL
+	LIMIT ? OFFSET ?`
+	rows, err := m.DB.Query(stmt, userId, pageSize, (pageNum-1)*pageSize)
+	if err != nil {
+		return nil, err
+	}
+	var websites []Website
+	for rows.Next() {
+		var w Website
+		var u string
+		err := rows.Scan(&w.ID, &w.ShortId, &w.Name, &u, &w.AuthorName, &w.UserId, &w.Created,
+			&w.Guestbook.ID, &w.Guestbook.ShortId, &w.Guestbook.Created, &w.Guestbook.IsActive)
+		if err != nil {
+			return nil, err
+		}
+		w.Url, err = url.Parse(u)
+		if err != nil {
+			return nil, err
+		}
+		websites = append(websites, w)
+	}
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+	return websites, nil
+}
+
 func (m *WebsiteModel) GetAll() ([]Website, error) {
 	stmt := `SELECT w.Id, w.ShortId, w.Name, w.SiteUrl, w.AuthorName, w.UserId, w.Created, 
 	g.Id, g.ShortId, g.Created, g.IsActive
 	FROM websites AS w INNER JOIN guestbooks AS g ON w.Id = g.WebsiteId WHERE w.Deleted IS NULL`
 	rows, err := m.DB.Query(stmt)
+	if err != nil {
+		return nil, err
+	}
+	var websites []Website
+	for rows.Next() {
+		var w Website
+		var u string
+		err := rows.Scan(&w.ID, &w.ShortId, &w.Name, &u, &w.AuthorName, &w.UserId, &w.Created,
+			&w.Guestbook.ID, &w.Guestbook.ShortId, &w.Guestbook.Created, &w.Guestbook.IsActive)
+		if err != nil {
+			return nil, err
+		}
+		w.Url, err = url.Parse(u)
+		if err != nil {
+			return nil, err
+		}
+		websites = append(websites, w)
+	}
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+	return websites, nil
+}
+
+func (m *WebsiteModel) GetCount() (int64, error) {
+	stmt := `SELECT COUNT(*) FROM websites WHERE Deleted IS NULL`
+	row := m.DB.QueryRow(stmt)
+	var result int64
+	err := row.Scan(&result)
+	if err != nil {
+		return -1, err
+	}
+	if err = row.Err(); err != nil {
+		return -1, err
+	}
+	return result, nil
+}
+
+func (m *WebsiteModel) GetAllPage(pageNum int64, pageSize int64) ([]Website, error) {
+	stmt := `SELECT w.Id, w.ShortId, w.Name, w.SiteUrl, w.AuthorName, w.UserId, w.Created, 
+	g.Id, g.ShortId, g.Created, g.IsActive
+	FROM websites AS w INNER JOIN guestbooks AS g ON w.Id = g.WebsiteId WHERE w.Deleted IS NULL
+	LIMIT ? OFFSET ?`
+	rows, err := m.DB.Query(stmt, pageSize, (pageNum-1)*pageSize)
 	if err != nil {
 		return nil, err
 	}

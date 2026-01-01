@@ -56,6 +56,14 @@ func (m *WebsiteModel) GetAllUser(userId int64) ([]models.Website, error) {
 	return []models.Website{mockWebsite}, nil
 }
 
+func GetCountUser(userId int64) (int64, error) {
+	return 1, nil
+}
+
+func (m *WebsiteModel) GetAllUserPage(userId int64, pageNum int64) ([]models.Website, error) {
+	return []models.Website{mockWebsite}, nil
+}
+
 func (m *WebsiteModel) GetById(id int64) (models.Website, error) {
 	switch id {
 	case 1:
@@ -66,6 +74,14 @@ func (m *WebsiteModel) GetById(id int64) (models.Website, error) {
 }
 
 func (m *WebsiteModel) GetAll() ([]models.Website, error) {
+	return []models.Website{mockWebsite}, nil
+}
+
+func GetCount() (int64, error) {
+	return 1, nil
+}
+
+func (m *WebsiteModel) GetAllPage(pageNum int64) ([]models.Website, error) {
 	return []models.Website{mockWebsite}, nil
 }
 

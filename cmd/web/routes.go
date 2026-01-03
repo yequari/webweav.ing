@@ -43,7 +43,6 @@ func (app *application) routes() http.Handler {
 	mux.Handle("POST /users/logout", protected.ThenFunc(app.postUserLogout))
 	mux.Handle("GET /users/settings", protected.ThenFunc(app.getUserSettings))
 	mux.Handle("PUT /users/settings", protected.ThenFunc(app.putUserSettings))
-	mux.Handle("GET /guestbooks", protected.ThenFunc(app.getAllGuestbooks))
 	mux.Handle("GET /websites", protected.ThenFunc(app.getWebsiteList))
 	mux.Handle("GET /websites/create", protected.ThenFunc(app.getWebsiteCreate))
 	mux.Handle("POST /websites/create", protected.ThenFunc(app.postWebsiteCreate))
@@ -59,6 +58,7 @@ func (app *application) routes() http.Handler {
 	mux.Handle("GET /websites/{id}/dashboard/guestbook/customize", protected.ThenFunc(app.getComingSoon))
 
 	adminOnly := protected.Append(app.requireAdmin)
+	mux.Handle("GET /guestbooks", adminOnly.ThenFunc(app.getAllGuestbooks))
 	mux.Handle("GET /admin", adminOnly.ThenFunc(app.getAdminPanelLanding))
 	mux.Handle("GET /admin/users", adminOnly.ThenFunc(app.getAdminPanelAllUsers))
 	mux.Handle("GET /admin/users/{id}", adminOnly.ThenFunc(app.getAdminPanelUser))

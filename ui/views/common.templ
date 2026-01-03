@@ -65,7 +65,6 @@ templ topNav(data CommonData) {
 		</div>
 		<ul class="nav-links">
 			if data.IsAuthenticated {
-				<li><a href="/guestbooks">All Guestbooks</a></li>
 				<li><a href="/websites">My Websites</a></li>
 				<li><a href="/users/settings">Settings</a></li>
 				if slices.Contains(data.CurrentUser.Groups, models.AdminGroup) {

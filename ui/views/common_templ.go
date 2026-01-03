@@ -253,7 +253,7 @@ func base(title string, data CommonData) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "\"><link href=\"/static/css/style.css\" rel=\"stylesheet\"><link href=\"/static/fontawesome/css/fontawesome.css\" rel=\"stylesheet\"><link href=\"/static/fontawesome/css/solid.css\" rel=\"stylesheet\"><script src=\"/static/js/htmx.min.js\"></script></head><body>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "\"><link href=\"/static/css/style.css\" rel=\"stylesheet\"><link href=\"/static/fontawesome/css/fontawesome.css\" rel=\"stylesheet\"><link href=\"/static/fontawesome/css/solid.css\" rel=\"stylesheet\"><link href=\"/static/favicon.png\" rel=\"icon\" type=\"image/x-icon\"><script src=\"/static/js/htmx.min.js\"></script></head><body>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -277,7 +277,7 @@ func base(title string, data CommonData) templ.Component {
 			var templ_7745c5c3_Var9 string
 			templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(data.Flash)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/views/common.templ`, Line: 116, Col: 43}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/views/common.templ`, Line: 117, Col: 43}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 			if templ_7745c5c3_Err != nil {
@@ -369,7 +369,7 @@ func pagination(baseUrl string, currentPage int64, recordsAmount int64, recordsP
 				var templ_7745c5c3_Var12 string
 				templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", i+1))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/views/common.templ`, Line: 140, Col: 28}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/views/common.templ`, Line: 141, Col: 28}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
 				if templ_7745c5c3_Err != nil {
@@ -392,7 +392,7 @@ func pagination(baseUrl string, currentPage int64, recordsAmount int64, recordsP
 				var templ_7745c5c3_Var14 string
 				templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", i+1))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/views/common.templ`, Line: 142, Col: 55}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/views/common.templ`, Line: 143, Col: 55}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
 				if templ_7745c5c3_Err != nil {

@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -57,14 +58,16 @@ type application struct {
 }
 
 type appInstaller struct {
-	app          *application
-	srv          *http.Server
-	installModel models.InstallModelInterface
+	app            *application
+	srv            *http.Server
+	installModel   models.InstallModelInterface
+	migrationsPath string
 }
 
 func main() {
 	addr := flag.String("addr", ":3000", "HTTP network address")
 	dsn := flag.String("dsn", "guestbook.db", "data source name")
+	migrations := flag.String("migrations", "migrations", "folder containing sql migrations")
 	debug := flag.Bool("debug", false, "enable debug mode")
 	env := flag.String("env", ".env", ".env file path")
 	flag.Parse()
@@ -113,8 +116,9 @@ func main() {
 	}
 
 	installer := &appInstaller{
-		app:          app,
-		installModel: &models.InstallModel{DB: db},
+		app:            app,
+		installModel:   &models.InstallModel{DB: db},
+		migrationsPath: filepath.Clean(*migrations),
 	}
 	installer.srv = &http.Server{
 		Addr:         *addr,
@@ -301,7 +305,7 @@ func walkTzDir(path string, zones []string) []string {
 
 func runInstaller(i *appInstaller) error {
 	i.app.logger.Info("Performing migrations")
-	err := i.installModel.SetupDatabase()
+	err := i.installModel.SetupDatabase(i.migrationsPath)
 	if err != nil {
 		return err
 	}

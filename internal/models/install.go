@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/golang-migrate/migrate/v4"
@@ -14,26 +14,21 @@ import (
 )
 
 type InstallModel struct {
-	DB     *sql.DB
-	DBPath string
+	DB *sql.DB
 }
 
 type InstallModelInterface interface {
-	SetupDatabase() error
+	SetupDatabase(migrations string) error
 	SetInstalledFlag() error
 	GetInstalledFlag() (bool, error)
 }
 
-func (m *InstallModel) SetupDatabase() error {
+func (m *InstallModel) SetupDatabase(migrations string) error {
 	driver, err := sqlite3.WithInstance(m.DB, &sqlite3.Config{})
 	if err != nil {
 		return err
 	}
-	wd, err := os.Getwd()
-	if err != nil {
-		return err
-	}
-	mFolder := fmt.Sprintf("file://%s/migrations", wd)
+	mFolder := fmt.Sprintf("file://%s", filepath.Clean(migrations))
 	fmt.Printf("migrations %s\n", mFolder)
 	mi, err := migrate.NewWithDatabaseInstance(mFolder, "sqlite", driver)
 	if err != nil {

@@ -39,13 +39,37 @@ func (app *application) getAdminPanelLanding(w http.ResponseWriter, r *http.Requ
 }
 
 func (app *application) getAdminPanelAllUsers(w http.ResponseWriter, r *http.Request) {
-	users, err := app.users.GetAll()
+	page := r.URL.Query().Get("page")
+	count := r.URL.Query().Get("count")
+	var pageNum int64 = 1
+	var pageSize int64 = 5
+	var err error
+	if page != "" {
+		pageNum, err = strconv.ParseInt(page, 10, 0)
+		if err != nil {
+			app.clientError(w, http.StatusBadRequest)
+			return
+		}
+	}
+	if count != "" {
+		pageSize, err = strconv.ParseInt(count, 10, 0)
+		if err != nil {
+			app.clientError(w, http.StatusBadRequest)
+			return
+		}
+	}
+	users, err := app.users.GetAllPage(pageNum, pageSize)
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
+	total, err := app.users.GetCount()
 	if err != nil {
 		app.serverError(w, r, err)
 		return
 	}
 	data := app.newCommonData(r)
-	views.AdminPanelUsersView("All Users - Admin", data, users).Render(r.Context(), w)
+	views.AdminPanelUsersView("All Users - Admin", data, users, pageNum, pageSize, total).Render(r.Context(), w)
 }
 
 func (app *application) getAdminPanelUser(w http.ResponseWriter, r *http.Request) {
@@ -209,40 +233,45 @@ func (app *application) getAdminPanelWebsites(w http.ResponseWriter, r *http.Req
 		return
 	}
 	commonData := app.newCommonData(r)
-	views.AdminPanelAllWebsitesView("All websites", commonData, websites, pageNum, total).Render(r.Context(), w)
+	views.AdminPanelAllWebsitesView("All websites", commonData, websites, pageNum, pageSize, total).Render(r.Context(), w)
 }
 
 func (app *application) getAdminPanelWebsiteDetails(w http.ResponseWriter, r *http.Request) {
 	slug := r.PathValue("id")
-	// page := r.URL.Query().Get("page")
-	// count := r.URL.Query().Get("count")
-	// var pageNum int64 = 1
-	// var pageSize int64 = 5
-	// var err error
-	// if page != "" {
-	// 	pageNum, err = strconv.ParseInt(page, 10, 0)
-	// 	if err != nil {
-	// 		app.clientError(w, http.StatusBadRequest)
-	// 		return
-	// 	}
-	// }
-	// if count != "" {
-	// 	pageSize, err = strconv.ParseInt(count, 10, 0)
-	// 	if err != nil {
-	// 		app.clientError(w, http.StatusBadRequest)
-	// 		return
-	// 	}
-	// }
+	page := r.URL.Query().Get("page")
+	count := r.URL.Query().Get("count")
+	var pageNum int64 = 1
+	var pageSize int64 = 25
+	var err error
+	if page != "" {
+		pageNum, err = strconv.ParseInt(page, 10, 0)
+		if err != nil {
+			app.clientError(w, http.StatusBadRequest)
+			return
+		}
+	}
+	if count != "" {
+		pageSize, err = strconv.ParseInt(count, 10, 0)
+		if err != nil {
+			app.clientError(w, http.StatusBadRequest)
+			return
+		}
+	}
 	website, err := app.websites.Get(slugToShortId(slug))
 	if err != nil {
 		app.serverError(w, r, err)
 		return
 	}
-	comments, err := app.guestbookComments.GetAll(website.Guestbook.ID)
+	total, err := app.guestbookComments.GetAllCount(website.Guestbook.ID)
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
+	comments, err := app.guestbookComments.GetAllPage(website.Guestbook.ID, pageNum, pageSize)
 	if err != nil {
 		app.serverError(w, r, err)
 		return
 	}
 	commonData := app.newCommonData(r)
-	views.AdminPanelWebsiteDetailView(fmt.Sprintf("Admin - %s", website.Name), commonData, website, comments).Render(r.Context(), w)
+	views.AdminPanelWebsiteDetailView(fmt.Sprintf("Admin - %s", website.Name), commonData, website, comments, pageNum, pageSize, total).Render(r.Context(), w)
 }

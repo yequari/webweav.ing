@@ -38,6 +38,8 @@ type GuestbookCommentModelInterface interface {
 	GetVisibleSerialized(guestbookId int64) ([]GuestbookCommentSerialized, error)
 	GetDeleted(guestbookId int64) ([]GuestbookComment, error)
 	GetAll(guestbookId int64) ([]GuestbookComment, error)
+	GetAllCount(guestbookId int64) (int64, error)
+	GetAllPage(guestbookId int64, pageNum int64, pageSize int64) ([]GuestbookComment, error)
 	UpdateComment(comment *GuestbookComment) error
 }
 
@@ -176,6 +178,47 @@ func (m *GuestbookCommentModel) GetAll(guestbookId int64) ([]GuestbookComment, e
 	    WHERE GuestbookId = ? AND Deleted IS NULL
 	    ORDER BY Created DESC`
 	rows, err := m.DB.Query(stmt, guestbookId)
+	if err != nil {
+		return nil, err
+	}
+	var comments []GuestbookComment
+	for rows.Next() {
+		var c GuestbookComment
+		err = rows.Scan(&c.ID, &c.ShortId, &c.GuestbookId, &c.ParentId, &c.AuthorName, &c.AuthorEmail, &c.AuthorSite,
+			&c.CommentText, &c.PageUrl, &c.Created, &c.IsPublished)
+		if err != nil {
+			return nil, err
+		}
+		comments = append(comments, c)
+	}
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+	return comments, nil
+}
+
+func (m *GuestbookCommentModel) GetAllCount(guestbookId int64) (int64, error) {
+	stmt := `SELECT COUNT(*) FROM guestbook_comments WHERE GuestbookId = ? AND Deleted IS NULL`
+	row := m.DB.QueryRow(stmt, guestbookId)
+	var result int64
+	err := row.Scan(&result)
+	if err != nil {
+		return -1, err
+	}
+	if err = row.Err(); err != nil {
+		return -1, err
+	}
+	return result, nil
+}
+
+func (m *GuestbookCommentModel) GetAllPage(guestbookId int64, pageNum int64, pageSize int64) ([]GuestbookComment, error) {
+	stmt := `SELECT Id, ShortId, GuestbookId, ParentId, AuthorName, AuthorEmail, AuthorSite,
+    CommentText, PageUrl, Created, IsPublished 
+	    FROM guestbook_comments 
+	    WHERE GuestbookId = ? AND Deleted IS NULL
+	    ORDER BY Created DESC
+		LIMIT ? OFFSET ?`
+	rows, err := m.DB.Query(stmt, guestbookId, pageSize, (pageNum-1)*pageSize)
 	if err != nil {
 		return nil, err
 	}

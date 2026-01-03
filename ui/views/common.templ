@@ -124,7 +124,7 @@ templ pagination(baseUrl string, currentPage int64, recordsAmount int64, records
 	<div class="pagination">
 		<span class="pagination-btn">
 			if currentPage > 1 {
-				{{ url := fmt.Sprintf("%s?page=%d", baseUrl, currentPage-1) }}
+				{{ url := fmt.Sprintf("%s?page=%d&count=%d", baseUrl, currentPage-1, recordsPerPage) }}
 				<a href={ templ.URL(url) }>Prev</a>
 			} else {
 				Prev
@@ -132,7 +132,7 @@ templ pagination(baseUrl string, currentPage int64, recordsAmount int64, records
 		</span>
 		for i := range totalPages {
 			<span class="pagination-btn">
-				{{ url := fmt.Sprintf("%s?page=%d", baseUrl, i+1) }}
+				{{ url := fmt.Sprintf("%s?page=%d&count=%d", baseUrl, i+1, recordsPerPage) }}
 				if i+1 == currentPage {
 					{ fmt.Sprintf("%d",i+1) }
 				} else {
@@ -142,7 +142,7 @@ templ pagination(baseUrl string, currentPage int64, recordsAmount int64, records
 		}
 		<span class="pagination-btn">
 			if currentPage < totalPages {
-				{{ url := fmt.Sprintf("%s?page=%d", baseUrl, currentPage+1) }}
+				{{ url := fmt.Sprintf("%s?page=%d&count=%d", baseUrl, currentPage+1, recordsPerPage) }}
 				<a href={ templ.URL(url) }>Next</a>
 			} else {
 				Next

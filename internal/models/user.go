@@ -61,6 +61,7 @@ type UserModelInterface interface {
 	GetByEmail(email string) (int64, error)
 	GetBySubject(subject string) (int64, error)
 	GetAll() ([]User, error)
+	GetAllPage(pageNum, pageSize int64) ([]User, error)
 	Authenticate(email, password string) (int64, error)
 	Exists(id int64) (bool, error)
 	UpdateUserSettings(userId int64, settings UserSettings) error
@@ -310,6 +311,27 @@ func (m *UserModel) GetById(id int64) (User, error) {
 func (m *UserModel) GetAll() ([]User, error) {
 	stmt := `SELECT Id, ShortId, Username, Email, Created FROM users WHERE DELETED IS NULL`
 	rows, err := m.DB.Query(stmt)
+	if err != nil {
+		return nil, err
+	}
+	var users []User
+	for rows.Next() {
+		var u User
+		err = rows.Scan(&u.ID, &u.ShortId, &u.Username, &u.Email, &u.Created)
+		if err != nil {
+			return nil, err
+		}
+		users = append(users, u)
+	}
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+	return users, nil
+}
+
+func (m *UserModel) GetAllPage(pageNum, pageSize int64) ([]User, error) {
+	stmt := `SELECT Id, ShortId, Username, Email, Created FROM users WHERE DELETED IS NULL LIMIT ? OFFSET ?`
+	rows, err := m.DB.Query(stmt, pageSize, (pageNum-1)*pageSize)
 	if err != nil {
 		return nil, err
 	}

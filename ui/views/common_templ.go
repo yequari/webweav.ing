@@ -335,7 +335,7 @@ func pagination(baseUrl string, currentPage int64, recordsAmount int64, recordsP
 			return templ_7745c5c3_Err
 		}
 		if currentPage > 1 {
-			url := fmt.Sprintf("%s?page=%d", baseUrl, currentPage-1)
+			url := fmt.Sprintf("%s?page=%d&count=%d", baseUrl, currentPage-1, recordsPerPage)
 			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 22, "<a href=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -364,7 +364,7 @@ func pagination(baseUrl string, currentPage int64, recordsAmount int64, recordsP
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			url := fmt.Sprintf("%s?page=%d", baseUrl, i+1)
+			url := fmt.Sprintf("%s?page=%d&count=%d", baseUrl, i+1, recordsPerPage)
 			if i+1 == currentPage {
 				var templ_7745c5c3_Var12 string
 				templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", i+1))
@@ -413,7 +413,7 @@ func pagination(baseUrl string, currentPage int64, recordsAmount int64, recordsP
 			return templ_7745c5c3_Err
 		}
 		if currentPage < totalPages {
-			url := fmt.Sprintf("%s?page=%d", baseUrl, currentPage+1)
+			url := fmt.Sprintf("%s?page=%d&count=%d", baseUrl, currentPage+1, recordsPerPage)
 			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 32, "<a href=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err

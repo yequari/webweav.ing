@@ -14,7 +14,8 @@ import (
 )
 
 type InstallModel struct {
-	DB *sql.DB
+	DB     *sql.DB
+	DBPath string
 }
 
 type InstallModelInterface interface {
@@ -34,7 +35,7 @@ func (m *InstallModel) SetupDatabase() error {
 	}
 	mFolder := fmt.Sprintf("file://%s/migrations", wd)
 	fmt.Printf("migrations %s\n", mFolder)
-	mi, err := migrate.NewWithDatabaseInstance("file://migrations", "sqlite", driver)
+	mi, err := migrate.NewWithDatabaseInstance(mFolder, "sqlite", driver)
 	if err != nil {
 		return err
 	}

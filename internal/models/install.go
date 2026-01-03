@@ -3,6 +3,8 @@ package models
 import (
 	"database/sql"
 	"errors"
+	"fmt"
+	"os"
 	"time"
 
 	"github.com/golang-migrate/migrate/v4"
@@ -26,6 +28,12 @@ func (m *InstallModel) SetupDatabase() error {
 	if err != nil {
 		return err
 	}
+	wd, err := os.Getwd()
+	if err != nil {
+		return err
+	}
+	mFolder := fmt.Sprintf("file://%s/migrations", wd)
+	fmt.Printf("migrations %s\n", mFolder)
 	mi, err := migrate.NewWithDatabaseInstance("file://migrations", "sqlite", driver)
 	if err != nil {
 		return err

@@ -313,6 +313,10 @@ func runInstaller(i *appInstaller) error {
 	if installed {
 		return nil
 	}
+	err = i.app.users.InitializeSettingsMap()
+	if err != nil {
+		return err
+	}
 	i.app.logger.Info("App not installed, running installer...")
 	i.app.logger.Info("Starting installation server", slog.Any("addr", i.srv.Addr))
 	if i.app.debug {

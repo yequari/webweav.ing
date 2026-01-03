@@ -251,6 +251,7 @@ func (app *application) putUserSettings(w http.ResponseWriter, r *http.Request) 
 	if !form.Valid() {
 		// TODO: rerender template with errors
 		app.clientError(w, http.StatusUnprocessableEntity)
+		return
 	}
 	user.Settings.LocalTimezone, err = time.LoadLocation(form.LocalTimezone)
 	if err != nil {

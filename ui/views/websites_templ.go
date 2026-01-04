@@ -491,7 +491,7 @@ func WebsiteDashboard(title string, data CommonData, website models.Website) tem
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			gbUrl := fmt.Sprintf("https://%s/websites/%s/guestbook", data.RootUrl, shortIdToSlug(website.ShortId))
+			gbUrl := fmt.Sprintf("%s/websites/%s/guestbook", data.RootUrl, shortIdToSlug(website.ShortId))
 			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 42, "<section aria-labelledby=\"embed-instructions\"><h1 id=\"embed-instructions\">Embed your Guestbook</h1><div class=\"instruction-overview\"><p>There are two ways to add your guestbook to your website: using our JavaScript component (recommended) or with an iframe.</p></div><article class=\"instruction-method\"><h2>Method 1: JavaScript Component (Recommended)</h2><div class=\"instruction-step\"><h3>Step 1: Download and upload the component</h3><p>Download <a href=\"/static/js/guestbook.js\" download>this JavaScript WebComponent</a> and upload it to your website's JavaScript folder.</p></div><div class=\"instruction-step\"><h3>Step 2: Include in your HTML head</h3><figure class=\"code-example\"><figcaption>Add this script tag to your &lt;head&gt; section:</figcaption><pre><code id=\"guestbookSnippet\" aria-label=\"HTML head script tag\">&lt;head&gt; &lt;script type=&#34;module&#34; src=&#34;js/guestbook.js&#34;&gt;&lt;/script&gt; &lt;/head&gt;</code></pre></figure></div><div class=\"instruction-step\"><h3>Step 3: Add the custom elements</h3><figure class=\"code-example\"><figcaption>Place these elements where you want your guestbook to appear:</figcaption><pre><code aria-label=\"Custom guestbook elements\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err

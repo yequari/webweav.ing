@@ -132,7 +132,7 @@ templ WebsiteDashboard(title string, data CommonData, website models.Website) {
 		<div id="dashboard">
 			@wSidebar(website)
 			<div>
-				{{ gbUrl := fmt.Sprintf("https://%s/websites/%s/guestbook", data.RootUrl, shortIdToSlug(website.ShortId)) }}
+				{{ gbUrl := fmt.Sprintf("%s/websites/%s/guestbook", data.RootUrl, shortIdToSlug(website.ShortId)) }}
 				<section aria-labelledby="embed-instructions">
 					<h1 id="embed-instructions">Embed your Guestbook</h1>
 					<div class="instruction-overview">

@@ -7,8 +7,6 @@ class GuestbookForm extends HTMLElement {
     constructor() {
         super();
         this.attachShadow({ mode: 'open' });
-        let template = document.getElementById("custom-guestbook-form");
-        this.templateContent = template.content;
         this._guestbook = this.getAttribute('guestbook') || '';
         this._postUrl = `${this._guestbook}/comments/create/remote`
         this.render();
@@ -66,7 +64,11 @@ class GuestbookForm extends HTMLElement {
         </div>
       </form>
     `;
-        this.shadowRoot.appendChild(document.importNode(this.templateContent, true))
+        let template = document.getElementById("custom-guestbook-form");
+        if (template) {
+            this.templateContent = template.content;
+            this.shadowRoot.appendChild(document.importNode(this.templateContent, true))
+        }
     }
 }
 
@@ -78,8 +80,6 @@ class CommentList extends HTMLElement {
     constructor() {
         super();
         this.attachShadow({ mode: 'open' });
-        let template = document.getElementById("custom-guestbook-comments");
-        this.templateContent = template.content;
         this.comments = [];
         this.loading = false;
         this.error = null;
@@ -176,7 +176,11 @@ class CommentList extends HTMLElement {
             }
       </div>
     `;
-        this.shadowRoot.appendChild(document.importNode(this.templateContent, true))
+        let template = document.getElementById("custom-guestbook-comments");
+        if (template) {
+            this.templateContent = template.content;
+            this.shadowRoot.appendChild(document.importNode(this.templateContent, true))
+        }
     }
 }
 

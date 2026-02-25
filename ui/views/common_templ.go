@@ -265,7 +265,7 @@ func base(title string, data CommonData) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "<main role=\"main\"><aside class=\"notice\" role=\"alert\" aria-labelledby=\"service-status\"><h3 id=\"service-status\" class=\"sr-only\">Service Status Notice</h3><p><strong>Important:</strong> This service is in a beta state. Please report any bugs or issues to the <a href=\"https://git.32bit.cafe/32bitcafe/webweav.ing/issues/\">git repository</a>.</p></aside>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "<main role=\"main\"><aside class=\"notice\" role=\"alert\" aria-labelledby=\"service-status\"><h3 id=\"service-status\" class=\"sr-only\">Service Status Notice</h3><p><strong>Important:</strong> This service is in a beta state. Please report any bugs or issues to the <a href=\"https://discourse.32bit.cafe/t/announcing-webweav-ing-tools-for-the-indie-web/4208\">32-Bit Cafe forum</a>.</p></aside>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

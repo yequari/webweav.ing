@@ -72,10 +72,10 @@ func (app *application) requireAdmin(next http.Handler) http.Handler {
 func noSurf(next http.Handler) http.Handler {
 	csrfHandler := nosurf.New(next)
 	csrfHandler.SetBaseCookie(http.Cookie{
-		HttpOnly: true,
-		Path:     "/",
-		Secure:   true,
-		SameSite: http.SameSiteNoneMode,
+		HttpOnly:    true,
+		Path:        "/",
+		Secure:      true,
+		Partitioned: true,
 	})
 
 	return csrfHandler

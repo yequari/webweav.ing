@@ -159,7 +159,7 @@ templ WebsiteDashboard(title string, data CommonData, website models.Website) {
 								<pre>
 									<code aria-label="Custom guestbook elements">
 										{ fmt.Sprintf(`<guestbook-form guestbook="%s"></guestbook-form>
-                    <guestbook-comments guestbook="%s"></guestbook-comments>`, gbUrl, gbUrl) }
+<guestbook-comments guestbook="%s"></guestbook-comments>`, gbUrl, gbUrl) }
 									</code>
 								</pre>
 							</figure>
@@ -211,6 +211,18 @@ templ WebsiteDashboard(title string, data CommonData, website models.Website) {
 </template>`
 											}}
 											{ example }
+										</code>
+									</pre>
+								</details>
+							</figure>
+							<figure class="code-example">
+								<figcaption>Hide email or website URL fields</figcaption>
+								<details>
+									<summary>Code Snippet</summary>
+									<p>Add <code>nosite</code> or <code>noemail</code> attributes to your form to hide the fields</p>
+									<pre>
+										<code aria-label="Custom CSS for guestbook elements">
+											{ fmt.Sprintf(`<guestbook-form guestbook="%s" noemail nosite></guestbook-form>`, gbUrl) }
 										</code>
 									</pre>
 								</details>

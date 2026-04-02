@@ -22,6 +22,7 @@ type GuestbookComment struct {
 
 type GuestbookCommentSerialized struct {
 	AuthorName  string
+	AuthorSite  string
 	CommentText string
 	Created     string
 }
@@ -118,7 +119,7 @@ func (m *GuestbookCommentModel) GetVisible(guestbookId int64) ([]GuestbookCommen
 }
 
 func (m *GuestbookCommentModel) GetVisibleSerialized(guestbookId int64) ([]GuestbookCommentSerialized, error) {
-	stmt := `SELECT AuthorName, CommentText, Created
+	stmt := `SELECT AuthorName, AuthorSite, CommentText, Created
 	    FROM guestbook_comments 
 	    WHERE GuestbookId = ? AND IsPublished = TRUE AND DELETED IS NULL
 	    ORDER BY Created DESC`
@@ -129,7 +130,7 @@ func (m *GuestbookCommentModel) GetVisibleSerialized(guestbookId int64) ([]Guest
 	var comments []GuestbookCommentSerialized
 	for rows.Next() {
 		var c GuestbookCommentSerialized
-		err = rows.Scan(&c.AuthorName, &c.CommentText, &c.Created)
+		err = rows.Scan(&c.AuthorName, &c.AuthorSite, &c.CommentText, &c.Created)
 		if err != nil {
 			return nil, err
 		}
